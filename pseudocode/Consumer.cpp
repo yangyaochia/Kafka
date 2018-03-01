@@ -1,10 +1,3 @@
-class ConsumerRecord {
-	string topic;
-	//int partition;
-	//K key;
-	V value;
-	long offset;
-};
 
 class Consumer {
 	string ip;
