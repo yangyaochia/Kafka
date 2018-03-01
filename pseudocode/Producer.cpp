@@ -1,11 +1,3 @@
-class ProducerRecord {
-	string topic;
-	//int partition;
-	//K key;
-	V value;
-};
-
-
 class Producer {
 	// zookeeper list
 	// 起始知道的某些人
