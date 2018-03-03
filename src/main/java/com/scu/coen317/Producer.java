@@ -1,28 +1,35 @@
 package com.scu.coen317;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
+
 public class Producer {
-        string ip;
-        string port;
-    public:
-        Producer(string ip, string port) {
-            this.ip = ip;
-            this.port = port;
-        }
-        void sendMessage() {
-            String sentence;
-            String modifiedSentence;
-            BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-            Socket clientSocket = new Socket (ip, port);
+    String ip;
+    int port;
 
-            DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-            BufferedReader inFromServer =
-                    new BufferedReader(new InputStreamReader (clientSocket.getInputStream ()));
+    public Producer(String ip, int port) {
+        this.ip = ip;
+        this.port = port;
+    }
 
-            sentence = inFromUser.readLine();
-            outToServer.writeBytes(sentence + '\n');
-            modifiedSentence = inFromServer.readLine();
-            System.out.println("FROM SERVER: " + modifiedSentence);
+    public void sendMessage() throws IOException {
+        String sentence;
+        String modifiedSentence;
+        BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+        Socket clientSocket = new Socket(ip, port);
 
-            clientSocket.close();
-        }
+        DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+        BufferedReader inFromServer =
+                new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+        sentence = inFromUser.readLine();
+        outToServer.writeBytes(sentence + '\n');
+        modifiedSentence = inFromServer.readLine();
+        System.out.println("FROM SERVER: " + modifiedSentence);
+
+        clientSocket.close();
+    }
 }
