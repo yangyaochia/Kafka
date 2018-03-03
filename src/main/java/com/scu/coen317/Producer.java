@@ -1,16 +1,15 @@
 package com.scu.coen317;
 
 public class Producer {
-        string ip;
-        string port;
+        String ip;
+        String port;
     public:
-        Producer(string ip, string port) {
+        Producer(String ip, String port) {
             this.ip = ip;
             this.port = port;
         }
-        void sendMessage() {
-            String sentence;
-            String modifiedSentence;
+        void sendMessage(String topic, String message) {
+
             BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
             Socket clientSocket = new Socket (ip, port);
 
@@ -18,7 +17,6 @@ public class Producer {
             BufferedReader inFromServer =
                     new BufferedReader(new InputStreamReader (clientSocket.getInputStream ()));
 
-            sentence = inFromUser.readLine();
             outToServer.writeBytes(sentence + '\n');
             modifiedSentence = inFromServer.readLine();
             System.out.println("FROM SERVER: " + modifiedSentence);
