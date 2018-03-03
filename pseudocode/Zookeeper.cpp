@@ -16,6 +16,8 @@ class Zookeeper{
 	}
 	// 某個broker來問的
 	vector<pair<int,Broker>> response_topic_partition_leader(string topic) {
+
+
 		// pair of partition and Broker
 		return vector<pair<int,Broker>>();
 	}
