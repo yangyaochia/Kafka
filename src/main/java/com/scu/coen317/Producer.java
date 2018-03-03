@@ -9,6 +9,11 @@ import java.net.Socket;
 //import javafx.util.Pair;
 import java.io.*;
 
+import java.util.ArrayList;
+import java.util.List;
+//import javafx.util.Pair;
+import java.io.*;
+
 public class Producer {
     String ip;
     int port;
@@ -18,8 +23,27 @@ public class Producer {
         this.port = port;
     }
     public void sendMessage() throws IOException {
-        String sentence;
+        //String sentence;
         String modifiedSentence;
+        Topic t1 = new Topic("Test1", 1,1);
+        Topic t2 = new Topic("Test2", 1,1);
+        List<Object> mylist = new ArrayList<>();
+        mylist.add(t1);
+        mylist.add(t2);
+        //BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+        Socket clientSocket = new Socket("localhost", 6789);
+        ObjectOutputStream outToServer = new ObjectOutputStream(clientSocket.getOutputStream());
+        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        //sentence = inFromUser.readLine();
+        //outToServer.writeBytes(sentence + '\n');
+
+        outToServer.writeObject(mylist);
+        modifiedSentence = inFromServer.readLine();
+        System.out.println("FROM SERVER: " + modifiedSentence);
+        clientSocket.close();
+    }
+    /*public void sendMessage(Topic topic, String msg) throws IOException {
+        String metaData;
         BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
         Socket clientSocket = new Socket("localhost", 6789);
         DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
