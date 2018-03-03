@@ -4,19 +4,30 @@ import java.io.*;
 import java.net.*;
 
 public class Broker {
-    public static void main(String argv[]) throws Exception {
+    String ip;
+    int port;
+    public Broker(String ip, int port) {
+        this.ip = ip;
+        this.port = port;
+    }
+    public void receive_msg() throws IOException {
         String clientSentence;
-        String response;
-        ServerSocket welcomeSocket = new ServerSocket(9000);
-        while (true) {
+        String capitalizedSentence;
+        ServerSocket welcomeSocket = new ServerSocket(6789);
+        while(true) {
             Socket connectionSocket = welcomeSocket.accept();
             BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 
-            DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+            DataOutputStream outToClient = new DataOutputStream (connectionSocket.getOutputStream());
             clientSentence = inFromClient.readLine();
-            response = "received : " + clientSentence;
-            outToClient.writeBytes(response);
+            capitalizedSentence = clientSentence.toUpperCase() + '\n';
+            outToClient.writeBytes (capitalizedSentence);
         }
+    }
+
+    public static void main(String argv[]) throws Exception {
+        Broker b = new Broker("localhost", 6789);
+        b.receive_msg();
     }
 }
 
