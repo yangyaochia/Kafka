@@ -1,27 +1,37 @@
 package com.scu.coen317;
 
+import javafx.util.Pair;
+
 import java.io.BufferedReader;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.ServerSocket;
 import java.net.Socket;
 
-//import javafx.util.Pair;
 import java.io.*;
 
-import java.util.ArrayList;
-import java.util.List;
-//import javafx.util.Pair;
+import java.util.*;
 import java.io.*;
 
 public class Producer {
     String ip;
     int port;
+    ServerSocket receiveSocket;
 
-    public Producer(String ip, int port) {
+    List<Broker> brokersCache;
+
+    // topic, <partition, 負責的broker>
+    Map<String, List<Pair<Integer,Broker>> > topic_partition_leaders;
+
+    public Producer (String ip, int port) throws IOException {
         this.ip = ip;
         this.port = port;
+        receiveSocket = new ServerSocket(port);
+        brokersCache = new ArrayList<>();
+        topic_partition_leaders = new HashMap<>();
     }
+
     public void sendMessage() throws IOException {
         //String sentence;
         String modifiedSentence;
