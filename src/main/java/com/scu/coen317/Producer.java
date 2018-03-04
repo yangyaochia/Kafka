@@ -32,9 +32,25 @@ public class Producer {
         topic_partition_leaders = new HashMap<>();
     }
 
-    public void sendMessage() throws IOException {
+    private int hashCode(String msg) {
+        int hash = 5381;
+        int i = 0;
+        while (i < msg.length()) {
+            hash = ((hash << 5) + hash) + msg.charAt(i++); /* hash * 33 + c */
+        }
+        return hash;
+    }
+
+    public void sendMessage(String topic, String msg) throws IOException {
         //String sentence;
-        String modifiedSentence;
+        List<Pair<Integer,Broker>> ls= topic_partition_leaders.get(topic);
+        if ( topic_partition_leaders.get(topic) == null ) {
+            // 先問default broker list
+        }
+        //int totalPartition = topic_partition_leaders.get(topic).size();
+        int partition = hashCode(msg) % 4;
+        
+        /*String modifiedSentence;
         Topic t1 = new Topic("Test1", 1,1);
         Topic t2 = new Topic("Test2", 1,1);
         List<Object> mylist = new ArrayList<>();
@@ -51,7 +67,7 @@ public class Producer {
         outToServer.writeObject(mylist);
         modifiedSentence = inFromServer.readLine();
         System.out.println("FROM SERVER: " + modifiedSentence);
-        clientSocket.close();
+        clientSocket.close();*/
     }
     /*public void sendMessage(Topic topic, String msg) throws IOException {
         String metaData;
@@ -84,6 +100,6 @@ public class Producer {
     }*/
     public static void main(String argv[]) throws Exception {
         Producer p = new Producer("localhost", 9000);
-        p.sendMessage();
+        p.sendMessage("topic", "haha");
     }
 }

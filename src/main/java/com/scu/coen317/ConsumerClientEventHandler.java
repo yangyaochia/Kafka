@@ -4,9 +4,8 @@ import java.util.List;
 
 public class ConsumerClientEventHandler implements TcpClientEventHandler {
 
-
     @Override
-    public void onMessage(List<Object> message) {
+    public void onMessage(List<Object> msg) {
 
     }
 

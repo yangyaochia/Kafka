@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.ConnectException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class TcpServer {
     private ServerSocket server;
@@ -34,28 +35,6 @@ public class TcpServer {
     }
 
     public void listen(){
-//        BrokerClientEventHandler h = new BrokerClientEventHandler();
-//        Runnable r = new MyRunnable(h) {
-//            @Override
-//            public void run() {
-//                while(!closer){
-//                    try{
-//                        TcpClient sock = new TcpClient(server.accept());
-//                        clients.add(sock);
-//                        final int cid = clients.size()-1; // client id
-//                        handler.onAccept(cid);
-//                        if(handler != null){
-//                            sock.addEventHandler(h);
-//                        }
-//                        sock.run();
-//                    }
-//                    catch(Exception ex){
-//                    }
-//                }
-//            }
-//        }
-
-//        new Thread(r).start();
         new Thread(){
             public void run(){
                 while(!closer){
@@ -63,18 +42,9 @@ public class TcpServer {
                         TcpClient sock = new TcpClient(server.accept());
                         clients.add(sock);
                         final int cid = clients.size()-1; // client id
-                        handler.onAccept(cid);
-                        if(handler != null){
-                            sock.addEventHandler(new TcpClientEventHandler(){
-                                public void onMessage(String line){
-                                    handler.onMessage(cid, line);
-                                }
-                                public void onOpen(){
-                                }
-                                public void onClose(){
-                                    handler.onClose(cid);
-                                }
-                            });
+                        serverHandler.onAccept(cid);
+                        if(serverHandler != null){
+                            sock.addEventHandler(clientHandler);
                         }
                         sock.run();
                     }
@@ -84,7 +54,7 @@ public class TcpServer {
             }
         }.start();
 
-        new Thread(){
+        /*new Thread(){
             public void run(){
                 while(true){
                     try{
@@ -93,11 +63,11 @@ public class TcpServer {
                     catch(Exception ex){
                     }
                     for(TcpClient sock : clients){
-                        sock.send("");
+                        sock.send(Collections.singletonList(""));
                     }
                 }
             }
-        }.start();
+        }.start();*/
     }
 
     public TcpClient getClient(int id){
@@ -116,10 +86,9 @@ public class TcpServer {
         }
     }
 
-    public void addEventServerHandler(TcpServerEventHandler handler){
-        this.serverHandler = handler;
+    public void addEventHandler(TcpServerEventHandler sHandler, TcpClientEventHandler cHandler){
+        this.serverHandler = sHandler;
+        this.clientHandler = cHandler;
     }
-    public void addEventClientHandler(TcpClientEventHandler handler){
-        this.clientHandler = handler;
-    }
+
 }
