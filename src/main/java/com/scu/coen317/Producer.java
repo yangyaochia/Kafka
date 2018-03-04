@@ -30,8 +30,9 @@ public class Producer {
         List<Object> mylist = new ArrayList<>();
         mylist.add(t1);
         mylist.add(t2);
+        mylist.add("hi");
         //BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-        Socket clientSocket = new Socket("localhost", 6789);
+        Socket clientSocket = new Socket("localhost",this.port);
         ObjectOutputStream outToServer = new ObjectOutputStream(clientSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         //sentence = inFromUser.readLine();

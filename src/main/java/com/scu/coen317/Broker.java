@@ -35,9 +35,9 @@ public class Broker {
     public void receive_msg() throws IOException, ClassNotFoundException {
         String clientSentence;
         String capitalizedSentence;
-        ServerSocket welcomeSocket = new ServerSocket(6789);
+        //ServerSocket welcomeSocket = new ServerSocket(9000);
         while(true) {
-            Socket connectionSocket = welcomeSocket.accept();
+            Socket connectionSocket = receiveSocket.accept();
             //BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
             ObjectInputStream inFromClient = new ObjectInputStream(connectionSocket.getInputStream());
             DataOutputStream outToClient = new DataOutputStream (connectionSocket.getOutputStream());
@@ -57,7 +57,7 @@ public class Broker {
     }
 
     public static void main(String argv[]) throws Exception {
-        Broker b = new Broker("localhost", 6789);
+        Broker b = new Broker("localhost", 9000);
         b.receive_msg();
         System.out.println("Listening");
 
