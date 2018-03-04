@@ -55,8 +55,8 @@ public class TcpClient {
             while(!closer){
                 try{
                     Thread.sleep(readInterval);
-                    List<Object> request = (List<Object>) inFromClient.readObject();
-                    handler.onMessage(request);
+                    List<Object> message = (List<Object>) inFromClient.readObject();
+                    handler.onMessage(message);
                 }
                 catch(SocketException ex){
                     that.close();

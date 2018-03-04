@@ -42,7 +42,21 @@ public class Consumer {
 
         if (isLeader) {
             serverSocket = new TcpServer(port);
-            serverSocket.addEventHandler(new ConsumerServerEventHandler(this));
+
+            serverSocket.addEventServerHandler(new TcpServerEventHandler(){
+                public void onMessage(int client_id, String line){
+                    System.out.println("* <"+client_id+"> "+ line);
+                    serverSocket.getClient(client_id).send("echo : <"+client_id+"> "+line);
+                }
+                public void onAccept(int client_id){
+                    System.out.println("* <"+client_id+"> connection accepted");
+                }
+                public void onClose(int client_id){
+                    System.out.println("* <"+client_id+"> closed");
+                }
+            });
+
+            serverSocket.addEventClientHandler(new ConsumerClientEventHandler());
             serverSocket.listen();
         }
     }
@@ -55,8 +69,8 @@ public class Consumer {
         // send to coordinator and wait for patitions of this topic
         TcpClient consumerClient = new TcpClient(coordinator.ip, coordinator.port);
         consumerClient.addEventHandler(new ConsumerClientEventHandler());
-        List<Object> request = null;
-        consumerClient.send(request);
+        List<Object> message = null;
+        consumerClient.send(message);
 //        List<Pair<Integer, Broker>> partitions = findSubscribedPartition(coordinator);
         // update subscribedTopicPartitions
     }

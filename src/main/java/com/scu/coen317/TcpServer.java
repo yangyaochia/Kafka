@@ -7,7 +7,7 @@ import java.net.SocketException;
 import java.net.ConnectException;
 import java.util.ArrayList;
 
-public class TcpServer implements Runnable {
+public class TcpServer {
     private ServerSocket server;
     private TcpServerEventHandler serverHandler;
     private TcpClientEventHandler clientHandler;
@@ -34,30 +34,10 @@ public class TcpServer implements Runnable {
     }
 
     public void listen(){
-        BrokerClientEventHandler h = new BrokerClientEventHandler();
-        Runnable r = new MyRunnable(h) {
-            @Override
-            public void run() {
-                while(!closer){
-                    try{
-                        TcpClient sock = new TcpClient(server.accept());
-                        clients.add(sock);
-                        final int cid = clients.size()-1; // client id
-                        handler.onAccept(cid);
-                        if(handler != null){
-                            sock.addEventHandler(h);
-                        }
-                        sock.run();
-                    }
-                    catch(Exception ex){
-                    }
-                }
-            }
-        }
-
-        new Thread(r).start();
-//        new Thread(){
-//            public void run(){
+//        BrokerClientEventHandler h = new BrokerClientEventHandler();
+//        Runnable r = new MyRunnable(h) {
+//            @Override
+//            public void run() {
 //                while(!closer){
 //                    try{
 //                        TcpClient sock = new TcpClient(server.accept());
@@ -65,16 +45,7 @@ public class TcpServer implements Runnable {
 //                        final int cid = clients.size()-1; // client id
 //                        handler.onAccept(cid);
 //                        if(handler != null){
-//                            sock.addEventHandler(new TcpClientEventHandler(){
-//                                public void onMessage(String line){
-//                                    handler.onMessage(cid, line);
-//                                }
-//                                public void onOpen(){
-//                                }
-//                                public void onClose(){
-//                                    handler.onClose(cid);
-//                                }
-//                            });
+//                            sock.addEventHandler(h);
 //                        }
 //                        sock.run();
 //                    }
@@ -82,7 +53,36 @@ public class TcpServer implements Runnable {
 //                    }
 //                }
 //            }
-//        }.start();
+//        }
+
+//        new Thread(r).start();
+        new Thread(){
+            public void run(){
+                while(!closer){
+                    try{
+                        TcpClient sock = new TcpClient(server.accept());
+                        clients.add(sock);
+                        final int cid = clients.size()-1; // client id
+                        handler.onAccept(cid);
+                        if(handler != null){
+                            sock.addEventHandler(new TcpClientEventHandler(){
+                                public void onMessage(String line){
+                                    handler.onMessage(cid, line);
+                                }
+                                public void onOpen(){
+                                }
+                                public void onClose(){
+                                    handler.onClose(cid);
+                                }
+                            });
+                        }
+                        sock.run();
+                    }
+                    catch(Exception ex){
+                    }
+                }
+            }
+        }.start();
 
         new Thread(){
             public void run(){
