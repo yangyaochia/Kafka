@@ -44,7 +44,7 @@ public class Consumer {
             return;
         }
 
-        
+
 
 
         List<Pair<Integer, Broker>> partitions = findSubscribedPartition(coordinator);
