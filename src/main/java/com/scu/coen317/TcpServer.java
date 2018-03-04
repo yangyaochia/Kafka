@@ -11,7 +11,10 @@ import java.util.Collections;
 public class TcpServer {
     private ServerSocket server;
     private TcpServerEventHandler serverHandler;
+
+    // server会开一个client类型的socket给发送请求的client传送response
     private TcpClientEventHandler clientHandler;
+
     private ArrayList<TcpClient> clients;
     public ArrayList<TcpClient> getClients(){ return clients; }
     private boolean closer = false;
@@ -32,26 +35,22 @@ public class TcpServer {
         }
         catch(Exception ex){
         }
+        this.setServerHandler();
     }
 
     public void listen(){
         new Thread(){
             public void run(){
-                System.out.println("Listening");
                 while(!closer){
                     try{
-                        //System.out.println("Listening");
                         TcpClient sock = new TcpClient(server.accept());
-                        System.out.println(sock);
+                        System.out.println("Received socket");
                         clients.add(sock);
                         final int cid = clients.size()-1; // client id
-                        //serverHandler.onAccept(cid);
-                        System.out.println("Accpted!!!!");
+                        serverHandler.onAccept(cid);
                         if(serverHandler != null){
                             sock.addEventHandler(clientHandler);
                         }
-                        System.out.println("Accpted!!!!");
-                        //sock.connect();
                         sock.run();
                     }
                     catch(Exception ex){
@@ -92,34 +91,26 @@ public class TcpServer {
         }
     }
 
-    public void addEventHandler(TcpServerEventHandler sHandler, TcpClientEventHandler cHandler){
-        this.serverHandler = sHandler;
+    public void addEventHandler(TcpClientEventHandler cHandler){
         this.clientHandler = cHandler;
     }
-    public static void main(String argv[]) throws Exception {
 
-        //b.receive_msg();
-        TcpServer server = new TcpServer(9000);
+    public void setServerHandler() {
+        final TcpServer that_server = this;
+        this.serverHandler = new TcpServerEventHandler() {
+            public void onMessage(int client_id, String line) {
+                System.out.println("* <" + client_id + "> " + line);
+                that_server.getClient(client_id).send("echo : <" + client_id + "> " + line);
+            }
 
-// add event handler, response to client
-        final TcpServer that_server = server;
-//        server.addEventHandler(new TcpServerEventHandler(){
-//            public void onMessage(int client_id, String line){
-//                System.out.println("* <"+client_id+"> "+ line);
-//                that_server.getClient(client_id).send("echo : <"+client_id+"> "+line);
-//            }
-//            public void onAccept(int client_id){
-//                System.out.println("* <"+client_id+"> connection accepted");
-//            }
-//            public void onClose(int client_id){
-//                System.out.println("* <"+client_id+"> closed");
-//            }
-//        });
+            public void onAccept(int client_id) {
+                System.out.println("* <" + client_id + "> connection accepted");
+            }
 
-        server.listen();
-
-        //server.close();
-
+            public void onClose(int client_id) {
+                System.out.println("* <" + client_id + "> closed");
+            }
+        };
     }
 
 }
