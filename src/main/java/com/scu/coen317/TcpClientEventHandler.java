@@ -1,7 +1,7 @@
 package com.scu.coen317;
 
-public class TcpClientEventHandler {
-    public void onMessage(String line);
-    public void onOpen();
-    public void onClose();
+public interface TcpClientEventHandler {
+    void onMessage(String line);
+    void onOpen();
+    void onClose();
 }
