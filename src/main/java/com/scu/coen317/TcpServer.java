@@ -11,7 +11,10 @@ import java.util.Collections;
 public class TcpServer {
     private ServerSocket server;
     private TcpServerEventHandler serverHandler;
+
+    // server会开一个client类型的socket给发送请求的client传送response
     private TcpClientEventHandler clientHandler;
+
     private ArrayList<TcpClient> clients;
     public ArrayList<TcpClient> getClients(){ return clients; }
     private boolean closer = false;
@@ -32,6 +35,7 @@ public class TcpServer {
         }
         catch(Exception ex){
         }
+        this.setServerHandler();
     }
 
     public void listen(){
@@ -40,6 +44,7 @@ public class TcpServer {
                 while(!closer){
                     try{
                         TcpClient sock = new TcpClient(server.accept());
+                        System.out.println("Received socket");
                         clients.add(sock);
                         final int cid = clients.size()-1; // client id
                         serverHandler.onAccept(cid);
@@ -86,9 +91,26 @@ public class TcpServer {
         }
     }
 
-    public void addEventHandler(TcpServerEventHandler sHandler, TcpClientEventHandler cHandler){
-        this.serverHandler = sHandler;
+    public void addEventHandler(TcpClientEventHandler cHandler){
         this.clientHandler = cHandler;
+    }
+
+    public void setServerHandler() {
+        final TcpServer that_server = this;
+        this.serverHandler = new TcpServerEventHandler() {
+            public void onMessage(int client_id, String line) {
+                System.out.println("* <" + client_id + "> " + line);
+                that_server.getClient(client_id).send("echo : <" + client_id + "> " + line);
+            }
+
+            public void onAccept(int client_id) {
+                System.out.println("* <" + client_id + "> connection accepted");
+            }
+
+            public void onClose(int client_id) {
+                System.out.println("* <" + client_id + "> closed");
+            }
+        };
     }
 
 }
