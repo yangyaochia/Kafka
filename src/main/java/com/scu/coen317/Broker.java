@@ -10,7 +10,9 @@ public class Broker {
     String ip;
     int port;
     ServerSocket receiveSocket;
-
+    TcpServer server;
+    BrokerClientEventHandler brokerClientHandler;
+    BrokerServerEventHandler brokerServerHandler;
     // 某topic, partition 的其他組員是誰
     Map<String, List<Broker>> topicsMember;
 
@@ -23,6 +25,8 @@ public class Broker {
     // 记录consumer， offset
     Map<Consumer, Integer> consumerOffset;
 
+    // 暫時測驗
+    Map<String,String> temp;
     public Broker(String ip, int port) throws IOException {
         this.ip = ip;
         this.port = port;
@@ -31,6 +35,12 @@ public class Broker {
         topics_coordinator = new HashMap();
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
+
+        server = new TcpServer(port);
+        brokerClientHandler = new BrokerClientEventHandler(this);
+        brokerServerHandler = new BrokerServerEventHandler();
+        server.addEventHandler(brokerServerHandler, brokerClientHandler);
+        server.listen();
     }
     public void receive_msg() throws IOException, ClassNotFoundException {
         String clientSentence;
@@ -58,9 +68,16 @@ public class Broker {
 
     public static void main(String argv[]) throws Exception {
         Broker b = new Broker("localhost", 9000);
-        b.receive_msg();
-        System.out.println("Listening");
+        //b.receive_msg();
 
+
+    }
+    public void printTemp() {
+        for (Map.Entry<String, String> entry : temp.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            System.out.println("key = " + key + " value = " + value);
+        }
     }
 }
 

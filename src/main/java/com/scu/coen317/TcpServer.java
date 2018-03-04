@@ -37,15 +37,21 @@ public class TcpServer {
     public void listen(){
         new Thread(){
             public void run(){
+                System.out.println("Listening");
                 while(!closer){
                     try{
+                        //System.out.println("Listening");
                         TcpClient sock = new TcpClient(server.accept());
+                        System.out.println(sock);
                         clients.add(sock);
                         final int cid = clients.size()-1; // client id
-                        serverHandler.onAccept(cid);
+                        //serverHandler.onAccept(cid);
+                        System.out.println("Accpted!!!!");
                         if(serverHandler != null){
                             sock.addEventHandler(clientHandler);
                         }
+                        System.out.println("Accpted!!!!");
+                        //sock.connect();
                         sock.run();
                     }
                     catch(Exception ex){
@@ -89,6 +95,31 @@ public class TcpServer {
     public void addEventHandler(TcpServerEventHandler sHandler, TcpClientEventHandler cHandler){
         this.serverHandler = sHandler;
         this.clientHandler = cHandler;
+    }
+    public static void main(String argv[]) throws Exception {
+
+        //b.receive_msg();
+        TcpServer server = new TcpServer(9000);
+
+// add event handler, response to client
+        final TcpServer that_server = server;
+//        server.addEventHandler(new TcpServerEventHandler(){
+//            public void onMessage(int client_id, String line){
+//                System.out.println("* <"+client_id+"> "+ line);
+//                that_server.getClient(client_id).send("echo : <"+client_id+"> "+line);
+//            }
+//            public void onAccept(int client_id){
+//                System.out.println("* <"+client_id+"> connection accepted");
+//            }
+//            public void onClose(int client_id){
+//                System.out.println("* <"+client_id+"> closed");
+//            }
+//        });
+
+        server.listen();
+
+        //server.close();
+
     }
 
 }

@@ -15,21 +15,24 @@ import java.util.*;
 import java.io.*;
 
 public class Producer {
-    String ip;
+    String host;
     int port;
-    ServerSocket receiveSocket;
+    TcpClient client;
 
     List<Broker> brokersCache;
 
     // topic, <partition, 負責的broker>
     Map<String, List<Pair<Integer,Broker>> > topic_partition_leaders;
 
-    public Producer (String ip, int port) throws IOException {
-        this.ip = ip;
+    public Producer (String host, int port) throws IOException {
+        this.host = host;
         this.port = port;
-        receiveSocket = new ServerSocket(port);
+
+        //receiveSocket = new Socket(ip, port);
+
         brokersCache = new ArrayList<>();
         topic_partition_leaders = new HashMap<>();
+
     }
 
     private int hashCode(String msg) {
@@ -42,14 +45,29 @@ public class Producer {
     }
 
     public void sendMessage(String topic, String msg) throws IOException {
+        TcpClient sock = new TcpClient(this.host, this.port);
+        System.out.println("Hello?");
+
+        System.out.println("Hello?");
+        List<Object> request = new ArrayList<>();
+        request.add("Topic1");
+        request.add("Hello!");
+
+        sock.send(request);
         //String sentence;
-        List<Pair<Integer,Broker>> ls= topic_partition_leaders.get(topic);
-        if ( topic_partition_leaders.get(topic) == null ) {
-            // 先問default broker list
-        }
-        //int totalPartition = topic_partition_leaders.get(topic).size();
-        int partition = hashCode(msg) % 4;
-        
+//        List<Pair<Integer,Broker>> ls= topic_partition_leaders.get(topic);
+//        if ( topic_partition_leaders.get(topic) == null ) {
+//            // 先問default broker list
+//        }
+//        //int totalPartition = topic_partition_leaders.get(topic).size();
+//        int partition = hashCode(msg) % 4;
+//        //TcpClient sock = receiveSocket;
+//        ProducerClientEventHandler handler = new ProducerClientEventHandler();
+//        receiveSocket.addEventHandler(handler);
+//        List<Object> request = new ArrayList<Object>();
+//        request.add(topic);
+//        request.add(msg);
+//        receiveSocket.send(request);
         /*String modifiedSentence;
         Topic t1 = new Topic("Test1", 1,1);
         Topic t2 = new Topic("Test2", 1,1);
