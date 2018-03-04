@@ -1,7 +1,9 @@
 package com.scu.coen317;
 
-public interface TcpClientEventHandler {
-    void onMessage(String line);
+import java.util.List;
+
+public interface TcpClientEventHandler extends Handler{
+    void onMessage(List<Object> msg);
     void onOpen();
     void onClose();
 }

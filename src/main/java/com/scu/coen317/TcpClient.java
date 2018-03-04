@@ -105,11 +105,10 @@ public class TcpClient {
         }
     }
 
-    public boolean send(String line){
+    public boolean send(List<Object> message){
         if(sock == null) return false;
         try{
-            bWriter.write(Integer.parseInt(line+"\n"));
-            bWriter.flush();
+            outToServer.writeObject(message);
         }
         catch(Exception ex){
             this.close();

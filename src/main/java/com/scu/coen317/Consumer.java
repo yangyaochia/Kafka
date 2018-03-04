@@ -42,7 +42,7 @@ public class Consumer {
 
         if (isLeader) {
             serverSocket = new TcpServer(port);
-            serverSocket.addEventHandler(new ConsumerServerEventHandler(this));
+            serverSocket.addEventHandler(new ConsumerServerEventHandler(this), new ConsumerClientEventHandler());
             serverSocket.listen();
         }
     }
