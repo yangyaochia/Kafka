@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.ConnectException;
+import java.util.List;
 
 public class TcpClient {
     private String host;
@@ -12,17 +13,13 @@ public class TcpClient {
     private int readInterval;
     public int getReadInterval(){ return readInterval; }
     public void setReadInterval(int msec){ this.readInterval = msec; }
-    //private BufferedWriter bWriter;
-    //private BufferedReader bReader;
-    //private InputStreamReader iReader;
+    private BufferedInputStream bReader;
     private ObjectInputStream inFromClient;
+
+    private BufferedOutputStream bWriter;
     private ObjectOutputStream outToServer;
     private TcpClientEventHandler handler;
     private boolean closer = false;
-
-    ObjectInputStream inFromClient = new ObjectInputStream(connectionSocket.getInputStream());
-
-
 
     public TcpClient(String host, int port){
         this.host = host;
@@ -36,10 +33,13 @@ public class TcpClient {
     public boolean run(){
         this.closer = false;
         try{
-            this.bWriter = new BufferedWriter(new OutputStreamWriter(this.sock.getOutputStream()));
-            this.iReader = new InputStreamReader(this.sock.getInputStream());
-            this.bReader = new BufferedReader(this.iReader);
-            this.outToServer = new ObjectOutputStream(sock.getOutputStream());
+            this.bReader = (BufferedInputStream) this.sock.getInputStream();//new BufferedInputStream(inFromClient);
+            this.inFromClient = new ObjectInputStream(bReader);//(ObjectInputStream) this.sock.getInputStream();
+
+
+            this.outToServer = (ObjectOutputStream) this.sock.getOutputStream();
+            this.bWriter = new BufferedOutputStream(outToServer);
+
         }
         catch(ConnectException ex){
             if(handler != null) handler.onClose();
@@ -51,28 +51,24 @@ public class TcpClient {
             return false;
         }
         final TcpClient that = this;
-        new Thread(){
-            public void run(){
-                while(!closer){
-                    try{
-                        Thread.sleep(readInterval);
-                        String line = bReader.readLine();
-                        if(line != null && line.length() > 0){
-                            if(handler != null) handler.onMessage(line);
-                        }
-                    }
-                    catch(SocketException ex){
-                        that.close();
-                    }
-                    catch(IOException ex){
-                        that.close();
-                    }
-                    catch(Exception ex){
-                        that.close();
-                    }
+        new Thread(() -> {
+            while(!closer){
+                try{
+                    Thread.sleep(readInterval);
+                    List<Object> request = (List<Object>) inFromClient.readObject();
+                    handler.onMessage(request);
+                }
+                catch(SocketException ex){
+                    that.close();
+                }
+                catch(IOException ex){
+                    that.close();
+                }
+                catch(Exception ex){
+                    that.close();
                 }
             }
-        }.start();
+        }).start();
         if(handler != null) handler.onOpen();
         return true;
     }
@@ -99,7 +95,8 @@ public class TcpClient {
             closer = true;
             bReader.close();
             bWriter.close();
-            iReader.close();
+            inFromClient.close();
+            outToServer.close();
             sock.close();
             sock = null;
             if(handler != null) handler.onClose();
@@ -111,7 +108,7 @@ public class TcpClient {
     public boolean send(String line){
         if(sock == null) return false;
         try{
-            bWriter.write(line+"\n");
+            bWriter.write(Integer.parseInt(line+"\n"));
             bWriter.flush();
         }
         catch(Exception ex){
