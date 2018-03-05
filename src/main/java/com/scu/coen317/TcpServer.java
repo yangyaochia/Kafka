@@ -7,13 +7,11 @@ import java.net.SocketException;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class TcpServer {
     private ServerSocket server;
-    private TcpServerEventHandler serverHandler;
-
-    // server会开一个client类型的socket给发送请求的client传送response
-    private TcpClientEventHandler clientHandler;
+    private TcpServerEventHandler handler;
 
     private ArrayList<TcpClient> clients;
     public ArrayList<TcpClient> getClients(){ return clients; }
@@ -35,7 +33,6 @@ public class TcpServer {
         }
         catch(Exception ex){
         }
-        this.setServerHandler();
     }
 
     public void listen(){
@@ -44,12 +41,21 @@ public class TcpServer {
                 while(!closer){
                     try{
                         TcpClient sock = new TcpClient(server.accept());
-                        System.out.println("Received socket");
+
                         clients.add(sock);
                         final int cid = clients.size()-1; // client id
-                        serverHandler.onAccept(cid);
-                        if(serverHandler != null){
-                            sock.addEventHandler(clientHandler);
+                        handler.onAccept(cid);
+                        if(handler != null){
+                            sock.addEventHandler(new TcpClientEventHandler(){
+                                public void onMessage(List<Object> msg){
+                                    handler.onMessage(cid, msg);
+                                }
+                                public void onOpen(){
+                                }
+                                public void onClose(){
+                                    handler.onClose(cid);
+                                }
+                            });
                         }
                         sock.run();
                     }
@@ -59,20 +65,20 @@ public class TcpServer {
             }
         }.start();
 
-        /*new Thread(){
-            public void run(){
-                while(true){
-                    try{
-                        Thread.sleep(20000);
-                    }
-                    catch(Exception ex){
-                    }
-                    for(TcpClient sock : clients){
-                        sock.send(Collections.singletonList(""));
-                    }
-                }
-            }
-        }.start();*/
+//        new Thread(){
+//            public void run(){
+//                while(true){
+//                    try{
+//                        Thread.sleep(20000);
+//                    }
+//                    catch(Exception ex){
+//                    }
+//                    for(TcpClient sock : clients){
+//                        sock.send(Collections.singletonList(""));
+//                    }
+//                }
+//            }
+//        }.start();
     }
 
     public TcpClient getClient(int id){
@@ -91,26 +97,9 @@ public class TcpServer {
         }
     }
 
-    public void addEventHandler(TcpClientEventHandler cHandler){
-        this.clientHandler = cHandler;
+    public void addEventHandler(TcpServerEventHandler serverHandler){
+        this.handler = serverHandler;
     }
 
-    public void setServerHandler() {
-        final TcpServer that_server = this;
-        this.serverHandler = new TcpServerEventHandler() {
-            public void onMessage(int client_id, String line) {
-                System.out.println("* <" + client_id + "> " + line);
-                that_server.getClient(client_id).send("echo : <" + client_id + "> " + line);
-            }
-
-            public void onAccept(int client_id) {
-                System.out.println("* <" + client_id + "> connection accepted");
-            }
-
-            public void onClose(int client_id) {
-                System.out.println("* <" + client_id + "> closed");
-            }
-        };
-    }
 
 }

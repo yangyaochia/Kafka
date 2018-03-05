@@ -11,7 +11,7 @@ public class Consumer {
     String groupId;
     TcpServer serverSocket;
     Broker coordinator;
-    ConsumerClientEventHandler consumerClientEventHandler;
+    TcpClientEventHandler consumerClientEventHandler;
 
     // default brokers and broker cache
     Broker defaultBroker;
@@ -28,7 +28,7 @@ public class Consumer {
 
     public void setToLeader() {
         serverSocket = new TcpServer(port);
-        serverSocket.addEventHandler(new ConsumerServerEventHandler(this));
+        //serverSocket.addEventHandler( new TcpServerEventHandler());
         serverSocket.listen();
     }
 
@@ -46,7 +46,7 @@ public class Consumer {
     }
 
     public void setHandler() {
-        this.consumerClientEventHandler = new ConsumerClientEventHandler(this);
+        //this.consumerClientEventHandler = new TcpClientEventHandler(this);
     }
 
     public void subscribe(String topic) throws IOException {
@@ -55,7 +55,7 @@ public class Consumer {
         }
 
         // send to coordinator and wait for patitions of this topic
-        TcpClient consumerClient = new TcpClient(coordinator.ip, coordinator.port);
+        TcpClient consumerClient = new TcpClient(coordinator.host, coordinator.port);
         consumerClient.addEventHandler(consumerClientEventHandler);
         consumerClient.connect();
         consumerClient.send(Collections.singletonList("test"));
@@ -83,7 +83,7 @@ public class Consumer {
     public void findCoordinator(Broker defaultBroker) throws IOException {
 
         // send request to defaultBroker with the groupId
-        TcpClient sock = new TcpClient(defaultBroker.ip, defaultBroker.port);
+        TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
         sock.addEventHandler(consumerClientEventHandler);
         sock.connect();
         sock.send(Collections.singletonList("1"));

@@ -1,16 +1,18 @@
 package com.scu.coen317;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.*;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Broker {
-    String ip;
+    String host;
     int port;
-    ServerSocket receiveSocket;
-
+    TcpServer listenSocket;
+    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
     Map<String, List<Broker>> topicsMember;
 
@@ -23,43 +25,60 @@ public class Broker {
     // 记录consumer， offset
     Map<Consumer, Integer> consumerOffset;
 
-    public Broker(String ip, int port) throws IOException {
-        this.ip = ip;
+    public Broker(String host, int port) throws IOException {
+        this.host = host;
         this.port = port;
-        receiveSocket = new ServerSocket(port);
+        //receiveSocket = new ServerSocket(port);
+
+        this.listenSocket = new TcpServer(port);
+        setHandler();
+        listenSocket.addEventHandler(this.serverHandler);
+
         topicsMember = new HashMap();
         topics_coordinator = new HashMap();
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
     }
-    public void receive_msg() throws IOException, ClassNotFoundException {
-        String clientSentence;
-        String capitalizedSentence;
-        //ServerSocket welcomeSocket = new ServerSocket(9000);
-        while(true) {
-            Socket connectionSocket = receiveSocket.accept();
-            //BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-            ObjectInputStream inFromClient = new ObjectInputStream(connectionSocket.getInputStream());
-            DataOutputStream outToClient = new DataOutputStream (connectionSocket.getOutputStream());
-            List<Object> list = (List<Object>) inFromClient.readObject();
-            //capitalizedSentence = clientSentence.toUpperCase() + '\n';
-            for ( int i = 0 ; i < list.size() ; i++ ) {
-                Object obj = list.get(i);
-                if ( obj instanceof Topic ) {
-                    System.out.println( ((Topic)obj).getName() );
-                } else {
-                    System.out.println(obj);
-                }
+    private void setHandler() {
+        final TcpServer that_server = listenSocket;
+        this.serverHandler = new TcpServerEventHandler(){
+            public void onMessage(int client_id, List<Object> msg){
+                // Message message (String methodName, String topic)
+                String methodName = message.methodeName; // findBroker
+                String input = message.topic;
+
+                Class clazz = Broker.class;
+                Method method = clazz.getMethod(methodName, input);
+                Broker returnBroker = method.invoke();
+                that_server.getClient(client_id).send(Broker);
+
+                System.out.println("* <"+client_id+"> "+ (String)msg.get(0));
+                //msg.add(0, "echo : <"+client_id+"> ");
+                that_server.getClient(client_id).send(msg);
             }
-            //System.out.println(t.getName());
-            //outToClient.writeBytes (t.getName());
-        }
+            public void onAccept(int client_id){
+                System.out.println("* <"+client_id+"> connection accepted");
+                that_server.setReadInterval(100 + that_server.getClients().size()*10);
+            }
+            public void onClose(int client_id){
+                System.out.println("* <"+client_id+"> closed");
+            }
+        };
+    }
+
+    public Broker findBroker() {
+        return this;
+    }
+
+
+    public void listen() throws IOException, ClassNotFoundException {
+
+        listenSocket.listen();
     }
 
     public static void main(String argv[]) throws Exception {
         Broker b = new Broker("localhost", 9000);
-        b.receive_msg();
-        System.out.println("Listening");
+        b.listen();
 
     }
 }
