@@ -44,13 +44,13 @@ public class Broker {
         this.serverHandler = new TcpServerEventHandler(){
             public void onMessage(int client_id, List<Object> msg){
                 // Message message (String methodName, String topic)
-                String methodName = message.methodeName; // findBroker
-                String input = message.topic;
+                //String methodName = message.methodeName; // findBroker
+                //String input = message.topic;
 
-                Class clazz = Broker.class;
-                Method method = clazz.getMethod(methodName, input);
-                Broker returnBroker = method.invoke();
-                that_server.getClient(client_id).send(Broker);
+//                Class clazz = Broker.class;
+//                Method method = clazz.getMethod(methodName, input);
+//                Broker returnBroker = method.invoke();
+//                that_server.getClient(client_id).send(Broker);
 
                 System.out.println("* <"+client_id+"> "+ (String)msg.get(0));
                 //msg.add(0, "echo : <"+client_id+"> ");
