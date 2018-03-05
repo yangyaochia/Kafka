@@ -1,6 +1,7 @@
 package com.scu.coen317;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -47,7 +48,7 @@ public class TcpServer {
                         handler.onAccept(cid);
                         if(handler != null){
                             sock.addEventHandler(new TcpClientEventHandler(){
-                                public void onMessage(List<Object> msg){
+                                public void onMessage(List<Object> msg) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
                                     handler.onMessage(cid, msg);
                                 }
                                 public void onOpen(){

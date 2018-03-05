@@ -1,6 +1,7 @@
 package com.scu.coen317;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
@@ -38,8 +39,9 @@ public class Broker {
     }
     private void setHandler() {
         final TcpServer that_server = listenSocket;
+        final Broker this_broker = this;
         this.serverHandler = new TcpServerEventHandler(){
-            public void onMessage(int client_id, List<Object> msg){
+            public void onMessage(int client_id, List<Object> msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
                 // Message message (msg.methodName, String topic)
                 //String methodName = message.methodeName; // findBroker
                 //String input = message.topic;
@@ -49,24 +51,23 @@ public class Broker {
 //                Broker returnBroker = method.invoke();
 //                that_server.getClient(client_id).send(Broker);
 //                Class reflectionClass = Broker.class;
-//                Method method = reflectionClass.getMethod(msg.getMethodName(), msg.getParameterType());
-
-//                Message message = new Message();
-//                message.methodName = "find";
-//                message.arguments = new ArrayList<>();
-//                message.arguments.add("most useful");
-//                message.arguments.add(1);
-//                //message.find("test", 1);
+////                Method method = reflectionClass.getMethod(msg.getMethodName(), msg.getParameterType());
 //
-//                Class<?>[] inputTypes = message.toArray();
-//                System.out.println(message.getMethodName());
-//                Class clazz = this.getClass();
-//                Method method = clazz.getMethod(message.methodName, inputTypes);
-//                Object[] inputs = new Object[message.arguments.size()];
-//                for (int i = 0; i < inputs.length; i++) {
-//                    inputs[i] = message.getArguments().get(i);
-//                }
-//                method.invoke(message, inputs);
+                Message message = new Message();
+                message.methodName = "find";
+                message.arguments = new ArrayList<>();
+                message.arguments.add("most useful");
+                message.arguments.add(1);
+
+                Class<?>[] inputTypes = message.toArray();
+                System.out.println(message.getMethodName());
+                Class clazz = Broker.class;
+                Method method = clazz.getMethod(message.methodName, inputTypes);
+                Object[] inputs = new Object[message.arguments.size()];
+                for (int i = 0; i < inputs.length; i++) {
+                    inputs[i] = message.getArguments().get(i);
+                }
+                method.invoke(this_broker, inputs);
 
 
                 System.out.println("* <"+client_id+"> "+ (String)msg.get(0));
@@ -81,6 +82,9 @@ public class Broker {
                 System.out.println("* <"+client_id+"> closed");
             }
         };
+    }
+    public void find(String t, Integer i) {
+        System.out.println("This broker's port number :" + this.port);
     }
 
     public Broker findBroker() {
