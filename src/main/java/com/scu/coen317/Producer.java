@@ -14,24 +14,32 @@ import java.io.*;
 import java.util.*;
 import java.io.*;
 
+import static java.lang.Thread.sleep;
+
 public class Producer {
     String host;
     int port;
-    TcpClient client;
-
-    List<Broker> brokersCache;
+    //TcpClient sock;
+    //TcpClientEventHandler handler;
+    // default brokers and broker cache
+    Broker defaultBroker;
+    List<Broker> brokers;
 
     // topic, <partition, 負責的broker>
-    Map<String, List<Pair<Integer,Broker>> > topic_partition_leaders;
+    Map<String, List<Pair<Integer,Broker>> > topicPartitionLeaders;
 
-    public Producer (String host, int port) throws IOException {
+    public Producer (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
         this.host = host;
         this.port = port;
 
-        //receiveSocket = new Socket(ip, port);
+        //sock.setReadInterval(5000);
 
-        brokersCache = new ArrayList<>();
-        topic_partition_leaders = new HashMap<>();
+
+        defaultBroker = new Broker(defaultBrokerIp, defaultBrokerPort);
+        brokers = new ArrayList();
+        brokers.add(defaultBroker);
+
+        topicPartitionLeaders = new HashMap<>();
 
     }
 
@@ -44,80 +52,66 @@ public class Producer {
         return hash;
     }
 
-    public void sendMessage(String topic, String msg) throws IOException {
-        TcpClient sock = new TcpClient(this.host, this.port);
-        System.out.println("Hello?");
-
-        System.out.println("Hello?");
+    public void sendMessage(String topic, String msg) throws IOException, InterruptedException {
+        //sock.connect();
         List<Object> request = new ArrayList<>();
-        request.add("Topic1");
-        request.add("Hello!");
+        request.add(topic);
+        Topic t = new Topic(topic);
+        request.add(t);
+        request.add(msg);
 
-        sock.send(request);
-        //String sentence;
-//        List<Pair<Integer,Broker>> ls= topic_partition_leaders.get(topic);
-//        if ( topic_partition_leaders.get(topic) == null ) {
-//            // 先問default broker list
-//        }
-//        //int totalPartition = topic_partition_leaders.get(topic).size();
-//        int partition = hashCode(msg) % 4;
-//        //TcpClient sock = receiveSocket;
-//        ProducerClientEventHandler handler = new ProducerClientEventHandler();
-//        receiveSocket.addEventHandler(handler);
-//        List<Object> request = new ArrayList<Object>();
-//        request.add(topic);
-//        request.add(msg);
-//        receiveSocket.send(request);
-        /*String modifiedSentence;
-        Topic t1 = new Topic("Test1", 1,1);
-        Topic t2 = new Topic("Test2", 1,1);
-        List<Object> mylist = new ArrayList<>();
-        mylist.add(t1);
-        mylist.add(t2);
-        mylist.add("hi");
-        //BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-        Socket clientSocket = new Socket("localhost",this.port);
-        ObjectOutputStream outToServer = new ObjectOutputStream(clientSocket.getOutputStream());
-        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        //sentence = inFromUser.readLine();
-        //outToServer.writeBytes(sentence + '\n');
+        TcpClient sock = new TcpClient(host, port);
+        final TcpClient that_sock = sock;
+        sock.addEventHandler(new TcpClientEventHandler(){
+            public void onMessage(List<Object> msg){
+                //handler.onMessage(cid, msg);
+                System.out.println((String)msg.get(0));
+            }
+            public void onOpen(){
+                System.out.println("* socket connected");
 
-        outToServer.writeObject(mylist);
-        modifiedSentence = inFromServer.readLine();
-        System.out.println("FROM SERVER: " + modifiedSentence);
-        clientSocket.close();*/
+                // send
+                int count = 1;
+                while(true){
+                    that_sock.send(request);
+                    if(count < 1){
+                        that_sock.close();
+                        break;
+                    }
+                    count--;
+                    try{
+                        Thread.sleep(1000);
+                    }
+                    catch(Exception ex){
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            public void onClose(){
+                //handler.onClose(cid);
+            }
+        });
+        List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
+        if ( topicPartitionLeaders.get(topic) == null ) {
+            // 先問default broker list
+
+        }
+        //int totalPartition = topic_partition_leaders.get(topic).size();
+        int partition = hashCode(msg) % 4;
+
+        sock.run();
     }
-    /*public void sendMessage(Topic topic, String msg) throws IOException {
-        String metaData;
-        BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-        Socket clientSocket = new Socket("localhost", 6789);
-        DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        sentence = inFromUser.readLine();
-        outToServer.writeBytes(sentence + '\n');
-        modifiedSentence = inFromServer.readLine();
-        System.out.println("FROM SERVER: " + modifiedSentence);
-        clientSocket.close();
+    public void updateTopicPartitionLeader(String topic, List<Pair<Integer,Broker>> partitionLeaders) {
+        topicPartitionLeaders.put(topic, partitionLeaders);
     }
-    /*public void sendMessage(Topic topic, String msg) throws IOException {
-        String metaData;
-        BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-        Socket clientSocket = new Socket(ip, port);
 
-        ObjectOutputStream outToServer = new ObjectOutputStream(clientSocket.getOutputStream());
-        BufferedReader inFromServer =
-                new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-        //sentence = inFromUser.readLine();
-        outToServer.writeObject(topic);
-        outToServer.writeBytes(msg + '\n');
-        metaData = inFromServer.readLine();
-        System.out.println("FROM SERVER: " + metaData);
-
-        clientSocket.close();
-    }*/
     public static void main(String argv[]) throws Exception {
-        Producer p = new Producer("localhost", 9000);
-        p.sendMessage("topic", "haha");
+        Producer p = new Producer("localhost", 9000, "localhost", 9001);
+        p.sendMessage("topic1", "1");
+        //sleep(1000);
+        p.sendMessage("topic2", "2");
+        //sleep(1000);
+        p.sendMessage("topic3", "3");
+        //sleep(1000);
     }
 }
