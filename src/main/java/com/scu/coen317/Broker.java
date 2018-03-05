@@ -3,10 +3,7 @@ package com.scu.coen317;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.*;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Broker {
     String host;
@@ -43,7 +40,7 @@ public class Broker {
         final TcpServer that_server = listenSocket;
         this.serverHandler = new TcpServerEventHandler(){
             public void onMessage(int client_id, List<Object> msg){
-                // Message message (String methodName, String topic)
+                // Message message (msg.methodName, String topic)
                 //String methodName = message.methodeName; // findBroker
                 //String input = message.topic;
 
@@ -51,6 +48,26 @@ public class Broker {
 //                Method method = clazz.getMethod(methodName, input);
 //                Broker returnBroker = method.invoke();
 //                that_server.getClient(client_id).send(Broker);
+//                Class reflectionClass = Broker.class;
+//                Method method = reflectionClass.getMethod(msg.getMethodName(), msg.getParameterType());
+
+//                Message message = new Message();
+//                message.methodName = "find";
+//                message.arguments = new ArrayList<>();
+//                message.arguments.add("most useful");
+//                message.arguments.add(1);
+//                //message.find("test", 1);
+//
+//                Class<?>[] inputTypes = message.toArray();
+//                System.out.println(message.getMethodName());
+//                Class clazz = this.getClass();
+//                Method method = clazz.getMethod(message.methodName, inputTypes);
+//                Object[] inputs = new Object[message.arguments.size()];
+//                for (int i = 0; i < inputs.length; i++) {
+//                    inputs[i] = message.getArguments().get(i);
+//                }
+//                method.invoke(message, inputs);
+
 
                 System.out.println("* <"+client_id+"> "+ (String)msg.get(0));
                 //msg.add(0, "echo : <"+client_id+"> ");
