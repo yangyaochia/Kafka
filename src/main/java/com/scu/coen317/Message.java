@@ -8,11 +8,20 @@ import java.util.List;
 
 
 public class Message {
-    String name;
+    String methodName;
     List<Object> arguments;
 
+    public Message(String methodName) {
+        this.methodName = methodName;
+    }
+
+    public Message(String methodName, List<Object> arguments) {
+        this.methodName = methodName;
+        this.arguments = arguments;
+    }
+
     public String getMethodName() {
-        return name;
+        return methodName;
     }
 
     public List<Object> getArguments() {
@@ -40,9 +49,7 @@ public class Message {
     }
 
     public static void main(String[] args) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-        Message message = new Message();
-        message.name = "find";
-        message.arguments = new ArrayList<>();
+        Message message = new Message("find");
         message.arguments.add("most useful");
         message.arguments.add(1);
         //message.find("test", 1);
@@ -51,7 +58,7 @@ public class Message {
         System.out.println(message.getMethodName());
 //        System.out.println(message.getParameterTypes().toString());
         Class clazz = Message.class;
-        Method method = clazz.getMethod(message.name, inputTypes);
+        Method method = clazz.getMethod(message.methodName, inputTypes);
         Object[] inputs = new Object[message.arguments.size()];
         for (int i = 0; i < inputs.length; i++) {
             inputs[i] = message.getArguments().get(i);

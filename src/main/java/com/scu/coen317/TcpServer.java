@@ -48,8 +48,8 @@ public class TcpServer {
                         handler.onAccept(cid);
                         if(handler != null){
                             sock.addEventHandler(new TcpClientEventHandler(){
-                                public void onMessage(List<Object> msg) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
-                                    handler.onMessage(cid, msg);
+                                public void onMessage(Message message) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
+                                    handler.onMessage(cid, message);
                                 }
                                 public void onOpen(){
                                 }

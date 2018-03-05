@@ -6,6 +6,19 @@ import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
 
+enum MethodName {
+    FIND("find");
+
+    private final String name;
+    MethodName(String s) {
+        name = s;
+    }
+
+    String getName() {
+        return name;
+    }
+}
+
 public class Broker {
     String host;
     int port;
@@ -37,6 +50,8 @@ public class Broker {
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
     }
+
+
     private void setHandler() {
         final TcpServer that_server = listenSocket;
         final Broker this_broker = this;
