@@ -4,8 +4,6 @@ import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.ConnectException;
-import java.util.Collections;
-import java.util.List;
 
 public class TcpClient {
     private String host;
@@ -59,7 +57,7 @@ public class TcpClient {
             while(!closer){
                 try{
                     Thread.sleep(readInterval);
-                    List<Object> message = (List<Object>) inFromClient.readObject();
+                    Message message = (Message) inFromClient.readObject();
                     if(message != null ){
                         if(handler != null) handler.onMessage(message);
                     }
@@ -110,7 +108,7 @@ public class TcpClient {
         }
     }
 
-    public boolean send(List<Object> message){
+    public boolean send(Message message){
         if(sock == null) return false;
         try{
             outToServer.writeObject(message);

@@ -3,6 +3,8 @@ package com.scu.coen317;
 import javafx.util.Pair;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 
@@ -12,6 +14,7 @@ public class Consumer {
     String groupId;
     TcpServer serverSocket;
     Broker coordinator;
+    TcpServerEventHandler serverHandler;
     TcpClientEventHandler consumerClientEventHandler;
 
     // default brokers and broker cache
@@ -29,6 +32,7 @@ public class Consumer {
 
     public void setToLeader() {
         serverSocket = new TcpServer(port);
+        setHandler();
         //serverSocket.addEventHandler( new TcpServerEventHandler());
         serverSocket.listen();
     }
@@ -42,12 +46,39 @@ public class Consumer {
         defaultBroker = new Broker(defaultBrokerIp, defaultBrokerPort);
         brokers = new ArrayList();
         brokers.add(defaultBroker);
-        setHandler();
+
         findCoordinator(defaultBroker);
     }
 
     public void setHandler() {
-        //this.consumerClientEventHandler = new TcpClientEventHandler(this);
+        final TcpServer that_server = serverSocket;
+        final Consumer this_consumer = this;
+        this.serverHandler = new TcpServerEventHandler(){
+            public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+
+                Class<?>[] inputTypes = message.toArray();
+                System.out.println(message.methodName);
+                Class clazz = Broker.class;
+                Method method = clazz.getMethod(message.methodName, inputTypes);
+                Object[] inputs = new Object[message.arguments.size()];
+                for (int i = 0; i < inputs.length; i++) {
+                    inputs[i] = message.getArguments().get(i);
+                }
+                method.invoke(this_consumer, inputs);
+
+
+                System.out.println("* <"+client_id+"> ");
+                //msg.add(0, "echo : <"+client_id+"> ");
+                that_server.getClient(client_id).send(message);
+            }
+            public void onAccept(int client_id){
+                System.out.println("* <"+client_id+"> connection accepted");
+                that_server.setReadInterval(100 + that_server.getClients().size()*10);
+            }
+            public void onClose(int client_id){
+                System.out.println("* <"+client_id+"> closed");
+            }
+        };
     }
 
     public void subscribe(String topic) throws IOException {
@@ -59,7 +90,7 @@ public class Consumer {
         TcpClient consumerClient = new TcpClient(coordinator.host, coordinator.port);
         consumerClient.addEventHandler(consumerClientEventHandler);
         consumerClient.connect();
-        consumerClient.send(Collections.singletonList("test"));
+        consumerClient.send(new Message("findCoodinator"));
     }
 
     public List<ConsumerRecord> poll() {
@@ -87,7 +118,7 @@ public class Consumer {
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
         sock.addEventHandler(consumerClientEventHandler);
         sock.connect();
-        sock.send(Collections.singletonList("1"));
+        sock.send(new Message("updateCoordinator"));
     }
 
     // to coordinator
