@@ -8,10 +8,10 @@ import java.util.List;
 
 
 public class Message {
-    String name;
+    MessageType name;
     List<Object> arguments;
 
-    public String getMethodName() {
+    public MessageType getMethodName() {
         return name;
     }
 
@@ -27,7 +27,7 @@ public class Message {
 //        return types;
 //    }
 
-    public void find(String t, Integer i) {
+    public void createTopic(String t, Integer i) {
         System.out.println("Success");
     }
 
@@ -41,7 +41,7 @@ public class Message {
 
     public static void main(String[] args) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         Message message = new Message();
-        message.name = "find";
+        message.name = MessageType.CREATE_TOPIC;
         message.arguments = new ArrayList<>();
         message.arguments.add("most useful");
         message.arguments.add(1);
@@ -51,24 +51,24 @@ public class Message {
         System.out.println(message.getMethodName());
 //        System.out.println(message.getParameterTypes().toString());
         Class clazz = Message.class;
-        Method method = clazz.getMethod(message.name, inputTypes);
+        Method method = clazz.getMethod(message.name.toString(), inputTypes);
         Object[] inputs = new Object[message.arguments.size()];
         for (int i = 0; i < inputs.length; i++) {
             inputs[i] = message.getArguments().get(i);
         }
         method.invoke(message, inputs);
-        Method[] methods = clazz.getDeclaredMethods();
-        for (Method m : methods) {
-            System.out.println("m's name : " + m.getName());
-            Type[] pType = m.getGenericParameterTypes();
-//            if (m.getName().equals(message.getMethodName())) {
-//                Object[] inputs = new Object[message.arguments.size()];
-//                for (int i = 0; i < inputs.length; i++) {
-//                    inputs[i] = message.getArguments().get(i);
-//                }
-//                m.invoke(message, inputs);
-            break;
-        }
+//        Method[] methods = clazz.getDeclaredMethods();
+//        for (Method m : methods) {
+//            System.out.println("m's name : " + m.getName());
+//            Type[] pType = m.getGenericParameterTypes();
+////            if (m.getName().equals(message.getMethodName())) {
+////                Object[] inputs = new Object[message.arguments.size()];
+////                for (int i = 0; i < inputs.length; i++) {
+////                    inputs[i] = message.getArguments().get(i);
+////                }
+////                m.invoke(message, inputs);
+//            break;
+//        }
 
     }
 

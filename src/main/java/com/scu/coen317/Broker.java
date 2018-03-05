@@ -42,19 +42,9 @@ public class Broker {
         final Broker this_broker = this;
         this.serverHandler = new TcpServerEventHandler(){
             public void onMessage(int client_id, List<Object> msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-                // Message message (msg.methodName, String topic)
-                //String methodName = message.methodeName; // findBroker
-                //String input = message.topic;
 
-//                Class clazz = Broker.class;
-//                Method method = clazz.getMethod(methodName, input);
-//                Broker returnBroker = method.invoke();
-//                that_server.getClient(client_id).send(Broker);
-//                Class reflectionClass = Broker.class;
-////                Method method = reflectionClass.getMethod(msg.getMethodName(), msg.getParameterType());
-//
                 Message message = new Message();
-                message.name = "find";
+                message.name = MessageType.CREATE_TOPIC;
                 message.arguments = new ArrayList<>();
                 message.arguments.add("most useful");
                 message.arguments.add(1);
@@ -62,17 +52,20 @@ public class Broker {
                 Class<?>[] inputTypes = message.toArray();
                 System.out.println(message.getMethodName());
                 Class clazz = Broker.class;
-                Method method = clazz.getMethod(message.name, inputTypes);
+                Method method = clazz.getMethod(message.name.toString(), inputTypes);
                 Object[] inputs = new Object[message.arguments.size()];
                 for (int i = 0; i < inputs.length; i++) {
                     inputs[i] = message.getArguments().get(i);
                 }
                 method.invoke(this_broker, inputs);
+                //Message msg = method.invoke(this_broker, inputs);
+                //if ( msg != null ) {
+                    System.out.println("* <"+client_id+"> "+ (String)msg.get(0));
+                    //msg.add(0, "echo : <"+client_id+"> ");
+                    that_server.getClient(client_id).send(msg);
+                //}
 
 
-                System.out.println("* <"+client_id+"> "+ (String)msg.get(0));
-                //msg.add(0, "echo : <"+client_id+"> ");
-                that_server.getClient(client_id).send(msg);
             }
             public void onAccept(int client_id){
                 System.out.println("* <"+client_id+"> connection accepted");
@@ -84,8 +77,14 @@ public class Broker {
         };
     }
     public void find(String t, Integer i) {
-
-        System.out.println("This broker's port number :" + this.port);
+//        Message msg
+//        System.out.println("This broker's port number :" + this.port);
+//        if ( this broket 知道) {
+//            msg = ;
+//        } else {
+//            msg = createTopic() // 這個broker開一個client 去問zookeeper
+//        }
+//        return msg;
 //        Message message = new Message();
 //        message.name = "find";
 //        message.arguments = new ArrayList<>();

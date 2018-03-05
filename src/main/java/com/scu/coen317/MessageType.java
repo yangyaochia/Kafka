@@ -5,6 +5,14 @@ public enum MessageType {
     CREATE_TOPIC("createTopic"),
     SEND_MESSAGE("sendMessage");
 
-    MessageType(String createTopic) { }
 
+    private String messageMame;
+    private MessageType(String name) {
+        this.messageMame = name;
+    }
+
+    @Override
+    public String toString(){
+        return messageMame;
+    }
 }
