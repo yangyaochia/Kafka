@@ -6,12 +6,13 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Message {
-    String methodName;
+    String name;
     List<Object> arguments;
 
     public String getMethodName() {
-        return methodName;
+        return name;
     }
 
     public List<Object> getArguments() {
@@ -40,7 +41,7 @@ public class Message {
 
     public static void main(String[] args) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         Message message = new Message();
-        message.methodName = "find";
+        message.name = "find";
         message.arguments = new ArrayList<>();
         message.arguments.add("most useful");
         message.arguments.add(1);
@@ -50,7 +51,7 @@ public class Message {
         System.out.println(message.getMethodName());
 //        System.out.println(message.getParameterTypes().toString());
         Class clazz = Message.class;
-        Method method = clazz.getMethod(message.methodName, inputTypes);
+        Method method = clazz.getMethod(message.name, inputTypes);
         Object[] inputs = new Object[message.arguments.size()];
         for (int i = 0; i < inputs.length; i++) {
             inputs[i] = message.getArguments().get(i);

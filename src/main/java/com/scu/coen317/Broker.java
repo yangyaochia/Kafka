@@ -54,7 +54,7 @@ public class Broker {
 ////                Method method = reflectionClass.getMethod(msg.getMethodName(), msg.getParameterType());
 //
                 Message message = new Message();
-                message.methodName = "find";
+                message.name = "find";
                 message.arguments = new ArrayList<>();
                 message.arguments.add("most useful");
                 message.arguments.add(1);
@@ -62,7 +62,7 @@ public class Broker {
                 Class<?>[] inputTypes = message.toArray();
                 System.out.println(message.getMethodName());
                 Class clazz = Broker.class;
-                Method method = clazz.getMethod(message.methodName, inputTypes);
+                Method method = clazz.getMethod(message.name, inputTypes);
                 Object[] inputs = new Object[message.arguments.size()];
                 for (int i = 0; i < inputs.length; i++) {
                     inputs[i] = message.getArguments().get(i);
@@ -84,7 +84,15 @@ public class Broker {
         };
     }
     public void find(String t, Integer i) {
+
         System.out.println("This broker's port number :" + this.port);
+//        Message message = new Message();
+//        message.name = "find";
+//        message.arguments = new ArrayList<>();
+//        message.arguments.add("most useful");
+//        message.arguments.add(1);
+
+        return;
     }
 
     public Broker findBroker() {
