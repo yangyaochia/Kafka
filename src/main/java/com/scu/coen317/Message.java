@@ -13,6 +13,12 @@ public class Message implements Serializable {
     List<Object> arguments;
 
     Message(MessageType methodName, List<Object> arguments) {
+    public Message(String methodName) {
+        this.methodName = methodName;
+        arguments = new ArrayList();
+    }
+
+    public Message(String methodName, List<Object> arguments) {
         this.methodName = methodName;
         this.arguments = arguments;
     }
