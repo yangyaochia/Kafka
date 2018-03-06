@@ -63,23 +63,39 @@ public class Producer {
         Message message = new Message(MessageType.SEND_MESSAGE, argument);
 
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
-        sock.setReadInterval(3000);
+//        sock.setReadInterval(1000);
         final TcpClient that_sock = sock;
         sock.addEventHandler(new TcpClientEventHandler(){
             public void onMessage(Message msg){
                 //handler.onMessage(cid, msg);
+
                 if ( msg.getMethodName() == MessageType.SEND_MESSAGE_ACK ) {
                     System.out.println((String)msg.getMethodNameValue());
                     that_sock.close();
                 } else {
 
                 }
-                System.out.println(msg.getMethodNameValue());
+                //System.out.println(msg.getMethodNameValue());
             }
 
             public void onOpen() {
                 System.out.println("* socket connected");
-                that_sock.send(message);
+                int count = 1;  // Number of retry
+                while(true){
+                    that_sock.send(message);
+                    if(count < 1){
+                        that_sock.close();
+                        break;
+                    }
+                    count--;
+                    try{
+                        Thread.sleep(1000);
+                    }
+                    catch(Exception ex){
+                        ex.printStackTrace();
+                    }
+                }
+
             }
             public void onClose(){
                 //handler.onClose(cid);
