@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -52,52 +54,64 @@ public class Producer {
         return hash;
     }
 
-    public void sendMessage(String topic, String msg) throws IOException, InterruptedException {
+    public void sendMessage(String topic, String msg) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         //sock.connect();
-        List<Object> request = new ArrayList<>();
-        request.add(topic);
-        Topic t = new Topic(topic);
-        request.add(t);
-        request.add(msg);
+//        Message request = new Message("find");
+//
+//        request.arguments.add(topic);
+//        request.arguments.add(1);
+//        Topic t = new Topic(topic);
+//        request.add(t);
+//        request.add(msg);
 
-        TcpClient sock = new TcpClient(host, port);
+        TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
         final TcpClient that_sock = sock;
+        final Producer this_producer = this;
         sock.addEventHandler(new TcpClientEventHandler(){
-            public void onMessage(List<Object> msg){
+            public void onMessage(Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
                 //handler.onMessage(cid, msg);
-                System.out.println((String)msg.get(0));
+
+                Class<?>[] inputTypes = message.toArray();
+                System.out.println(message.getMethodName());
+                Class clazz = Producer.class;
+                System.out.println("find class : " + clazz.getName());
+                System.out.println("input types : " + inputTypes.toString());
+                Method method = clazz.getMethod(message.getMethodName(), inputTypes);
+                System.out.println("find method : " + method.getName());
+
+                Object[] inputs = new Object[message.arguments.size()];
+                for (int i = 0; i < inputs.length; i++) {
+                    inputs[i] = message.getArguments().get(i);
+                }
+                System.out.println(inputs.toString());
+                Message response = (Message) method.invoke(this_producer, inputs);
+
+                if (response == null) {
+                    that_sock.close();
+                }
+//                System.out.println("* <"+client_id+"> "+ message.getMethodName());
+                //msg.add(0, "echo : <"+client_id+"> ");
+//                that_server.getClient(client_id).send(message);
+                System.out.println(message.getMethodName());
             }
-            public void onOpen(){
+            public void onOpen() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
                 System.out.println("* socket connected");
 
-                // send
-                int count = 1;
-                while(true){
-                    that_sock.send(request);
-                    if(count < 1){
-                        that_sock.close();
-                        break;
-                    }
-                    count--;
-                    try{
-                        Thread.sleep(1000);
-                    }
-                    catch(Exception ex){
-                        ex.printStackTrace();
-                    }
-                }
+                Message message = new Message("find");
+
+                that_sock.send(message);
             }
             public void onClose(){
                 //handler.onClose(cid);
             }
         });
-        List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
-        if ( topicPartitionLeaders.get(topic) == null ) {
-            // 先問default broker list
-
-        }
-        //int totalPartition = topic_partition_leaders.get(topic).size();
-        int partition = hashCode(msg) % 4;
+//        List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
+//        if ( topicPartitionLeaders.get(topic) == null ) {
+//            // 先問default broker list
+//
+//        }
+//        //int totalPartition = topic_partition_leaders.get(topic).size();
+//        int partition = hashCode(msg) % 4;
 
         sock.run();
     }
@@ -105,8 +119,13 @@ public class Producer {
         topicPartitionLeaders.put(topic, partitionLeaders);
     }
 
+    public void update(String s) {
+        System.out.println("received response from broker");
+        return;
+    }
+
     public static void main(String argv[]) throws Exception {
-        Producer p = new Producer("localhost", 9000, "localhost", 9001);
+        Producer p = new Producer("localhost", 9001, "localhost", 9000);
         p.sendMessage("topic1", "1");
         //sleep(1000);
         p.sendMessage("topic2", "2");

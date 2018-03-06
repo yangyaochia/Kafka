@@ -31,10 +31,10 @@ public class Broker {
     Map<String, Broker> topics_coordinator;
 
     // each topic's consumer group leader
-    Map<String, Consumer> consumerLeader;
+//    Map<String, Consumer> consumerLeader;
 
     // 记录consumer， offset
-    Map<Consumer, Integer> consumerOffset;
+//    Map<Consumer, Integer> consumerOffset;
 
     public Broker(String host, int port) throws IOException {
         this.host = host;
@@ -47,8 +47,8 @@ public class Broker {
 
         topicsMember = new HashMap();
         topics_coordinator = new HashMap();
-        consumerLeader = new HashMap();
-        consumerOffset = new HashMap();
+//        consumerLeader = new HashMap();
+//        consumerOffset = new HashMap();
     }
 
 
@@ -56,9 +56,9 @@ public class Broker {
         final TcpServer that_server = listenSocket;
         final Broker this_broker = this;
         this.serverHandler = new TcpServerEventHandler(){
-            public void onMessage(int client_id, List<Object> msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+            public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
                 // Message message (msg.methodName, String topic)
-                //String methodName = message.methodeName; // findBroker
+//                String methodName = message.getMethodName(); // findBroker
                 //String input = message.topic;
 
 //                Class clazz = Broker.class;
@@ -68,26 +68,20 @@ public class Broker {
 //                Class reflectionClass = Broker.class;
 ////                Method method = reflectionClass.getMethod(msg.getMethodName(), msg.getParameterType());
 //
-                Message message = new Message();
-                message.name = "find";
-                message.arguments = new ArrayList<>();
-                message.arguments.add("most useful");
-                message.arguments.add(1);
 
                 Class<?>[] inputTypes = message.toArray();
                 System.out.println(message.getMethodName());
                 Class clazz = Broker.class;
-                Method method = clazz.getMethod(message.name, inputTypes);
+                Method method = clazz.getMethod(message.getMethodName(), inputTypes);
                 Object[] inputs = new Object[message.arguments.size()];
                 for (int i = 0; i < inputs.length; i++) {
                     inputs[i] = message.getArguments().get(i);
                 }
-                method.invoke(this_broker, inputs);
+                Message response = (Message) method.invoke(this_broker, inputs);
 
-
-                System.out.println("* <"+client_id+"> "+ (String)msg.get(0));
+                System.out.println("* <"+client_id+"> "+ message.getMethodName());
                 //msg.add(0, "echo : <"+client_id+"> ");
-                that_server.getClient(client_id).send(msg);
+                that_server.getClient(client_id).send(response);
             }
             public void onAccept(int client_id){
                 System.out.println("* <"+client_id+"> connection accepted");
@@ -98,21 +92,15 @@ public class Broker {
             }
         };
     }
-    public void find(String t, Integer i) {
+    public Message find() {
 
         System.out.println("This broker's port number :" + this.port);
-//        Message message = new Message();
-//        message.name = "find";
-//        message.arguments = new ArrayList<>();
-//        message.arguments.add("most useful");
-//        message.arguments.add(1);
-
-        return;
+        Message response = new Message("update");
+        response.arguments.add(1+ "");
+        System.out.println("generate the response from find function");
+        return response;
     }
 
-    public Broker findBroker() {
-        return this;
-    }
 
 
     public void listen() throws IOException, ClassNotFoundException {
