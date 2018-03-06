@@ -24,21 +24,21 @@ public enum MessageType {
 //    SEND_MESSAGE_ACK("receivedMessageAck");
 
     // Producer
-    CREATE_TOPIC("getTopic"),                   // P -> B   Y
-    PUBLISH_MESSAGE("publishMessage"),              // P -> B   Y
+    CREATE_TOPIC("getTopic"),                   // P -> B   Yaochia
+    PUBLISH_MESSAGE("publishMessage"),              // P -> B   Yaochia
 
     // Broker
-    GET_TOPIC("topicAssignment"),               // B -> Z   Y
-    TOPIC_ASSIGNMENT_TO_PRODUCER("publish_Message"),        // B -> P   Y
-    PUBLISH_MESSAGE_ACK("publishMessageAck"),       // B->P Y
+    GET_TOPIC("topicAssignment"),               // B -> Z   Yaochia
+    TOPIC_ASSIGNMENT_TO_PRODUCER("publish_Message"),        // B -> P   Yaochia
+    PUBLISH_MESSAGE_ACK("publishMessageAck"),       // B->P Yaochia
     GET_REPLICATION_UPDATE("replicationResponse"),    // B -> B
     REPLICATION_RESPONSE("replicationUpdate"),
     SEND_HEARTBEAT("monitorCluster"),           // B -> Z
-    NEW_BROKER_REGISTER("newBrokerRegister"),   // B -> Z
-    GET_COORDINATOR("coordinatorAssignment"),
-    CONSUMER_JOIN_GROUP_REGISTRATION_ACK("receiveConsumerJoinGroupRegistrationAck"),
-    REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance
-    REBALANCE_RESULT("pullMessage"), // Coordinator send rebalance result, and send it <></>o each group member
+    NEW_BROKER_REGISTER("newBrokerRegister"),   // B -> Z Xinzhu
+    GET_COORDINATOR("coordinatorAssignment"),   //        Xinzhu
+    CONSUMER_JOIN_GROUP_REGISTRATION_ACK("receiveConsumerJoinGroupRegistrationAck"),   // Xinzhu
+    REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance Xinzhu
+    REBALANCE_RESULT("updateTopicPartition"), // Coordinator send rebalance result, and send it <></>o each group member
     GIVE_MESSAGE("showMessageOut"), //B->C
 
     //ZooKeeper
