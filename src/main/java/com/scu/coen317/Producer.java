@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -52,39 +54,38 @@ public class Producer {
         return hash;
     }
 
-    public void sendMessage(String topic, String msg) throws IOException, InterruptedException {
+    public void sendMessage(String topic, String msg) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         //sock.connect();
-        List<Object> arguments = new ArrayList<>();
-        arguments.add(topic);
-        arguments.add(msg);
-        Message request = new Message(MessageType.SEND_MESSAGE, arguments);
+        List<Object> request = new ArrayList<>();
+        request.add(topic);
+        Topic t = new Topic(topic);
+        request.add(t);
+        request.add(msg);
 
-        TcpClient sock = new TcpClient(host, port);
+        TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
         final TcpClient that_sock = sock;
         sock.addEventHandler(new TcpClientEventHandler(){
-            public void onMessage(Message msg){
+            public void onMessage(List<Object> msg){
                 //handler.onMessage(cid, msg);
-                System.out.println(msg.getMethodName());
+                System.out.println((String)msg.get(0));
             }
             public void onOpen(){
                 System.out.println("* socket connected");
 
-                // send
-                int count = 1;
-                while(true){
-                    that_sock.send(request);
-                    if(count < 1){
-                        that_sock.close();
-                        break;
-                    }
-                    count--;
-                    try{
-                        Thread.sleep(1000);
-                    }
-                    catch(Exception ex){
-                        ex.printStackTrace();
-                    }
+                if (response == null) {
+                    that_sock.close();
                 }
+//                System.out.println("* <"+client_id+"> "+ message.getMethodName());
+                //msg.add(0, "echo : <"+client_id+"> ");
+//                that_server.getClient(client_id).send(message);
+                System.out.println(message.getMethodName());
+            }
+            public void onOpen() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+                System.out.println("* socket connected");
+
+                Message message = new Message("find");
+
+                that_sock.send(message);
             }
             public void onClose(){
                 //handler.onClose(cid);
@@ -111,8 +112,13 @@ public class Producer {
         topicPartitionLeaders.put(topic, partitionLeaders);
     }
 
+    public void update(String s) {
+        System.out.println("received response from broker");
+        return;
+    }
+
     public static void main(String argv[]) throws Exception {
-        Producer p = new Producer("localhost", 9000, "localhost", 9001);
+        Producer p = new Producer("localhost", 9001, "localhost", 9000);
         p.sendMessage("topic1", "1");
         //sleep(1000);
         p.sendMessage("topic2", "2");

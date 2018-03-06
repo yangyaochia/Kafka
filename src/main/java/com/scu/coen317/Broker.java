@@ -59,11 +59,17 @@ public class Broker {
         final Broker this_broker = this;
         this.serverHandler = new TcpServerEventHandler(){
             public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+                // Message message (msg.methodName, String topic)
+//                String methodName = message.getMethodName(); // findBroker
+                //String input = message.topic;
 
-//                List<Object> arguments = new ArrayList<>();
-//                arguments.add("most useful");
-//                arguments.add(1);
-//                Message message = new Message(MessageType.CREATE_TOPIC, arguments);
+//                Class clazz = Broker.class;
+//                Method method = clazz.getMethod(methodName, input);
+//                Broker returnBroker = method.invoke();
+//                that_server.getClient(client_id).send(Broker);
+//                Class reflectionClass = Broker.class;
+////                Method method = reflectionClass.getMethod(msg.getMethodName(), msg.getParameterType());
+//
 
                 Class<?>[] inputTypes = message.toArray();
                 System.out.println(message.getMethodName());
@@ -74,14 +80,10 @@ public class Broker {
                     inputs[i] = message.getArguments().get(i);
                 }
                 Message response = (Message) method.invoke(this_broker, inputs);
-                //Message msg = method.invoke(this_broker, inputs);
-                //if ( msg != null ) {
-                    System.out.println("* <"+client_id+"> "+ response.getMethodName());
-                    //msg.add(0, "echo : <"+client_id+"> ");
-                    that_server.getClient(client_id).send(response);
-                //}
 
-
+                System.out.println("* <"+client_id+"> "+ message.getMethodName());
+                //msg.add(0, "echo : <"+client_id+"> ");
+                that_server.getClient(client_id).send(response);
             }
             public void onAccept(int client_id){
                 System.out.println("* <"+client_id+"> connection accepted");
@@ -92,10 +94,16 @@ public class Broker {
             }
         };
     }
+    public Message find() {
 
     public Message receivedMessage(String topic, String message) {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
 
+        System.out.println("This broker's port number :" + this.port);
+        Message response = new Message("update");
+        response.arguments.add(1+ "");
+        System.out.println("generate the response from find function");
+        return response;
         List<String> list = topicMessage.getOrDefault(topic, new ArrayList<>());
         list.add(message);
         topicMessage.put(topic, list);
@@ -110,9 +118,6 @@ public class Broker {
         return response;
     }
 
-    public Broker findBroker() {
-        return this;
-    }
 
 
     public void listen() throws IOException, ClassNotFoundException {
