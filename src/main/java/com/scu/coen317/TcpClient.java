@@ -2,6 +2,7 @@ package com.scu.coen317;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.ConnectException;
@@ -119,6 +120,48 @@ public class TcpClient {
         }
         return true;
     }
+
+    public void setHandler(Class clazz, Object object, Message request) {
+        final TcpClient that_sock = this;
+        final Object this_object = object;
+        this.handler = new TcpClientEventHandler(){
+            public void onMessage(Message msg){
+                //handler.onMessage(cid, msg);
+
+                if ( msg.getMethodName() == MessageType.SEND_MESSAGE_ACK ) {
+                    System.out.println((String)msg.getMethodNameValue());
+                    that_sock.close();
+                } else {
+
+                }
+                //System.out.println(msg.getMethodNameValue());
+            }
+
+            public void onOpen() {
+                System.out.println("* socket connected");
+                int count = 1;  // Number of retry
+                while(true){
+                    that_sock.send(request);
+                    if(count < 1){
+                        that_sock.close();
+                        break;
+                    }
+                    count--;
+                    try{
+                        Thread.sleep(1000);
+                    }
+                    catch(Exception ex){
+                        ex.printStackTrace();
+                    }
+                }
+
+            }
+            public void onClose(){
+                //handler.onClose(cid);
+            }
+        };
+    }
+
 
     public void addEventHandler(TcpClientEventHandler handler){
         this.handler = handler;
