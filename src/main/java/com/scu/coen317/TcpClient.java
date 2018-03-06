@@ -128,7 +128,7 @@ public class TcpClient {
             public void onMessage(Message msg){
                 //handler.onMessage(cid, msg);
 
-                if ( msg.getMethodName() == MessageType.SEND_MESSAGE_ACK ) {
+                if ( msg.getMethodName() == MessageType.PUBLISH_MESSAGE_ACK ) {
                     System.out.println((String)msg.getMethodNameValue());
                     that_sock.close();
                 } else {

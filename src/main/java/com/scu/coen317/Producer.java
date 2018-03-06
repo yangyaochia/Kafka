@@ -60,7 +60,7 @@ public class Producer {
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
         argument.add(msg);
-        Message message = new Message(MessageType.SEND_MESSAGE, argument);
+        Message message = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
 //        sock.setReadInterval(1000);
@@ -76,7 +76,7 @@ public class Producer {
         sock.run();
     }
 
-    public void receivedMessageAck(String message) {
+    public void publishMessageAck(String message) {
         System.out.println(message);
 
 
