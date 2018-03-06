@@ -74,7 +74,7 @@ public class Producer {
                 } else {
 
                 }
-                System.out.println((String)msg.getMethodNameValue());
+                System.out.println(msg.getMethodNameValue());
             }
 
             public void onOpen() {

@@ -23,7 +23,7 @@ public class Broker {
     String host;
     int port;
     TcpServer listenSocket;
-    TcpServerEventHandler serverHandler;
+//    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
     Map<String, List<String>> topicMessage;
     Map<String, List<Broker>> topicsMember;
@@ -43,8 +43,8 @@ public class Broker {
         //receiveSocket = new ServerSocket(port);
 
         this.listenSocket = new TcpServer(port);
-        setHandler();
-        listenSocket.addEventHandler(this.serverHandler);
+        listenSocket.setHandler(this.getClass(), this);
+//        listenSocket.addEventHandler(this.serverHandler);
 
         topicsMember = new HashMap();
         topics_coordinator = new HashMap();
@@ -54,31 +54,31 @@ public class Broker {
     }
 
 
-    private void setHandler() {
-        final TcpServer that_server = listenSocket;
-        final Broker this_broker = this;
-        this.serverHandler = new TcpServerEventHandler(){
-            public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-
-                Class<?>[] inputTypes = message.getInputParameterType();
-                Class clazz = Broker.class;
-                Method method = clazz.getMethod(message.getMethodNameValue(), inputTypes);
-                Object[] inputs = message.getInputValue();
-                Message response = (Message) method.invoke(this_broker, inputs);
-
-                System.out.println("* <"+client_id+"> "+ message.getMethodName());
-                //msg.add(0, "echo : <"+client_id+"> ");
-                that_server.getClient(client_id).send(response);
-            }
-            public void onAccept(int client_id){
-                System.out.println("* <"+client_id+"> connection accepted");
-                that_server.setReadInterval(100 + that_server.getClients().size()*10);
-            }
-            public void onClose(int client_id){
-                System.out.println("* <"+client_id+"> closed");
-            }
-        };
-    }
+//    private void setHandler() {
+//        final TcpServer that_server = listenSocket;
+//        final Broker this_broker = this;
+//        this.serverHandler = new TcpServerEventHandler(){
+//            public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+//
+//                Class<?>[] inputTypes = message.getInputParameterType();
+//                Class clazz = Broker.class;
+//                Method method = clazz.getMethod(message.getMethodNameValue(), inputTypes);
+//                Object[] inputs = message.getInputValue();
+//                Message response = (Message) method.invoke(this_broker, inputs);
+//
+//                System.out.println("* <"+client_id+"> "+ message.getMethodName());
+//                //msg.add(0, "echo : <"+client_id+"> ");
+//                that_server.getClient(client_id).send(response);
+//            }
+//            public void onAccept(int client_id){
+//                System.out.println("* <"+client_id+"> connection accepted");
+//                that_server.setReadInterval(100 + that_server.getClients().size()*10);
+//            }
+//            public void onClose(int client_id){
+//                System.out.println("* <"+client_id+"> closed");
+//            }
+//        };
+//    }
     //public Message find() {
     //}
     public Message receivedMessage(String topic, String message) {
