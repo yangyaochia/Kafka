@@ -63,43 +63,8 @@ public class Producer {
         Message message = new Message(MessageType.SEND_MESSAGE, argument);
 
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
-        sock.setReadInterval(3000);
-        final TcpClient that_sock = sock;
-        sock.addEventHandler(new TcpClientEventHandler(){
-            public void onMessage(Message msg){
-                //handler.onMessage(cid, msg);
-                if ( msg.getMethodName() == MessageType.SEND_MESSAGE_ACK ) {
-                    System.out.println((String)msg.getMethodNameValue());
-                    that_sock.close();
-                } else {
-
-                }
-                System.out.println((String)msg.getMethodNameValue());
-            }
-
-            public void onOpen() {
-                System.out.println("* socket connected");
-                int count = 1;  // Number of retry
-                while(true){
-                    that_sock.send(message);
-                    if(count < 1){
-                        that_sock.close();
-                        break;
-                    }
-                    count--;
-                    try{
-                        Thread.sleep(1000);
-                    }
-                    catch(Exception ex){
-                        ex.printStackTrace();
-                    }
-                }
-
-            }
-            public void onClose(){
-                //handler.onClose(cid);
-            }
-        });
+//        sock.setReadInterval(1000);
+        sock.setHandler(this.getClass(), this, message);
         List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
         if ( topicPartitionLeaders.get(topic) == null ) {
             // 先問default broker list
