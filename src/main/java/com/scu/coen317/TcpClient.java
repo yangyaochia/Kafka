@@ -13,11 +13,9 @@ public class TcpClient {
     private int readInterval;
     public int getReadInterval(){ return readInterval; }
     public void setReadInterval(int msec){ this.readInterval = msec; }
-//    private BufferedInputStream bReader;
     private ObjectInputStream inFromClient;
 //    private BufferedReader bReader;
 
-//    private BufferedOutputStream bWriter;
 //    private BufferedWriter bWriter;
     private ObjectOutputStream outToServer;
     private TcpClientEventHandler handler;

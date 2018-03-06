@@ -2,6 +2,7 @@ package com.scu.coen317;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -81,6 +82,33 @@ public class TcpServer {
 //            }
 //        }.start();
     }
+
+
+    public void setHandler(Class clazz, Object object) {
+        final TcpServer that_server = this;
+        final Object this_object = object;
+        this.handler = new TcpServerEventHandler(){
+            public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+
+                Class<?>[] inputTypes = message.getInputParameterType();
+                Method method = clazz.getMethod(message.getMethodNameValue(), inputTypes);
+                Object[] inputs = message.getInputValue();
+                Message response = (Message) method.invoke(this_object, inputs);
+
+                System.out.println("* <"+client_id+"> "+ message.getMethodName());
+                //msg.add(0, "echo : <"+client_id+"> ");
+                that_server.getClient(client_id).send(response);
+            }
+            public void onAccept(int client_id){
+                System.out.println("* <"+client_id+"> connection accepted");
+                that_server.setReadInterval(100 + that_server.getClients().size()*10);
+            }
+            public void onClose(int client_id){
+                System.out.println("* <"+client_id+"> closed");
+            }
+        };
+    }
+
 
     public TcpClient getClient(int id){
         return clients.get(id);

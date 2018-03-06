@@ -57,7 +57,6 @@ public class Consumer {
             public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
 
                 Class<?>[] inputTypes = message.getInputParameterType();
-                System.out.println(message.methodName);
                 Class clazz = Broker.class;
                 Method method = clazz.getMethod(message.methodName.toString(), inputTypes);
                 Object[] inputs = message.getInputValue();
