@@ -81,7 +81,7 @@ public class Broker {
     }
     //public Message find() {
     //}
-    public Message receivedMessage(String topic, String message) {
+    public Message publishMessage(String topic, String message) {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
 
         System.out.println("This broker's port number :" + this.port);
@@ -90,13 +90,13 @@ public class Broker {
         list.add(message);
         topicMessage.put(topic, list);
 
-        return sendMessageAck();
+        return publishMessageAck();
     }
 
-    public Message sendMessageAck() {
+    public Message publishMessageAck() {
         List<Object> arguments = new ArrayList<>();
         arguments.add("Successful");
-        Message response = new Message(MessageType.SEND_MESSAGE_ACK, arguments);
+        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
         return response;
     }
 

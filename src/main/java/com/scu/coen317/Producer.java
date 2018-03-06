@@ -55,26 +55,36 @@ public class Producer {
     }
 
     public void sendMessage(String topic, String msg) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        //sock.connect();
 
+
+
+        List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
+        int partition = hashCode(msg) % 4;
+        // Check if this producer knows where to send
+//        if ( topicPartitionLeaders.get(topic) == null ) {
+//
+//
+//        } else { //
+//
+//        }
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
         argument.add(msg);
-        Message message = new Message(MessageType.SEND_MESSAGE, argument);
+        Message message = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
-        sock.setReadInterval(3000);
+        sock.setReadInterval(1000);
         final TcpClient that_sock = sock;
         sock.addEventHandler(new TcpClientEventHandler(){
             public void onMessage(Message msg){
                 //handler.onMessage(cid, msg);
-                if ( msg.getMethodName() == MessageType.SEND_MESSAGE_ACK ) {
+                if ( msg.getMethodName() == MessageType.PUBLISH_MESSAGE_ACK ) {
                     System.out.println((String)msg.getMethodNameValue());
                     that_sock.close();
                 } else {
 
                 }
-                System.out.println((String)msg.getMethodNameValue());
+                //System.out.println((String)msg.getMethodNameValue());
             }
 
             public void onOpen() {
@@ -85,18 +95,10 @@ public class Producer {
                 //handler.onClose(cid);
             }
         });
-        List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
-        if ( topicPartitionLeaders.get(topic) == null ) {
-            // 先問default broker list
-
-        }
-        //int totalPartition = topic_partition_leaders.get(topic).size();
-        int partition = hashCode(msg) % 4;
-
         sock.run();
     }
 
-    public void receivedMessageAck(String message) {
+    public void publishMessageAck(String message) {
         System.out.println(message);
 
 
@@ -114,10 +116,7 @@ public class Producer {
     public static void main(String argv[]) throws Exception {
         Producer p = new Producer("localhost", 9001, "localhost", 9000);
         p.sendMessage("topic1", "1");
-        //sleep(1000);
         p.sendMessage("topic2", "2");
-        //sleep(1000);
         p.sendMessage("topic3", "3");
-        //sleep(1000);
     }
 }
