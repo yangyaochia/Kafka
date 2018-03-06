@@ -89,7 +89,7 @@ public class Consumer {
         // send to coordinator and wait for patitions of this topic
         TcpClient consumerClient = new TcpClient(coordinator.host, coordinator.port);
         consumerClient.addEventHandler(consumerClientEventHandler);
-        consumerClient.connect();
+        //consumerClient.connect();
         //consumerClient.send(new Message("findCoodinator"));
     }
 
@@ -117,7 +117,7 @@ public class Consumer {
         // send request to defaultBroker with the groupId
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
         sock.addEventHandler(consumerClientEventHandler);
-        sock.connect();
+        //sock.connect();
         //sock.send(new Message("updateCoordinator"));
     }
 

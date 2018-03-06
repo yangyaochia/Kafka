@@ -56,34 +56,24 @@ public class Producer {
 
     public void sendMessage(String topic, String msg) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         //sock.connect();
-        List<Object> request = new ArrayList<>();
-        request.add(topic);
-        Topic t = new Topic(topic);
-        request.add(t);
-        request.add(msg);
+
 
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
         final TcpClient that_sock = sock;
         sock.addEventHandler(new TcpClientEventHandler(){
-            public void onMessage(List<Object> msg){
+            public void onMessage(Message msg){
                 //handler.onMessage(cid, msg);
-                System.out.println((String)msg.get(0));
+                System.out.println((String)msg.getMethodName());
+                that_sock.close();
             }
-            public void onOpen(){
+
+            public void onOpen() {
                 System.out.println("* socket connected");
 
-                if (response == null) {
-                    that_sock.close();
-                }
-//                System.out.println("* <"+client_id+"> "+ message.getMethodName());
-                //msg.add(0, "echo : <"+client_id+"> ");
-//                that_server.getClient(client_id).send(message);
-                System.out.println(message.getMethodName());
-            }
-            public void onOpen() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-                System.out.println("* socket connected");
-
-                Message message = new Message("find");
+                List<Object> argument = new ArrayList<>();
+                argument.add(topic);
+                argument.add(msg);
+                Message message = new Message(MessageType.SEND_MESSAGE, argument);
 
                 that_sock.send(message);
             }

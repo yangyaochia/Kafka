@@ -1,6 +1,7 @@
 package com.scu.coen317;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.ConnectException;
@@ -34,7 +35,7 @@ public class TcpClient {
         this.sock = connected_socket;
     }
 
-    public boolean run(){
+    public boolean run() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         this.closer = false;
         try{
             if ( inFromClient == null )
@@ -78,7 +79,7 @@ public class TcpClient {
         return true;
     }
 
-    public boolean connect(){
+    public boolean connect() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if(this.sock != null) return false;
         try{
             this.sock = new Socket(host, port);

@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface TcpClientEventHandler {
     void onMessage(Message massage) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException;
-    void onOpen();
+    void onOpen() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException;
     void onClose();
 
 }

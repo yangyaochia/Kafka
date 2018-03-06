@@ -94,16 +94,13 @@ public class Broker {
             }
         };
     }
-    public Message find() {
-
+    //public Message find() {
+    //}
     public Message receivedMessage(String topic, String message) {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
 
         System.out.println("This broker's port number :" + this.port);
-        Message response = new Message("update");
-        response.arguments.add(1+ "");
-        System.out.println("generate the response from find function");
-        return response;
+
         List<String> list = topicMessage.getOrDefault(topic, new ArrayList<>());
         list.add(message);
         topicMessage.put(topic, list);
