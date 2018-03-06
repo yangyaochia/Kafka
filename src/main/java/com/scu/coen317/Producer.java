@@ -65,7 +65,7 @@ public class Producer {
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
         final TcpClient that_sock = sock;
         sock.addEventHandler(new TcpClientEventHandler(){
-            public void onMessage(List<Object> msg){
+            public void onMessage(Mewwage message){
                 //handler.onMessage(cid, msg);
                 System.out.println((String)msg.get(0));
             }
