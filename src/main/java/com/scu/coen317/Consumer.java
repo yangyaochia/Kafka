@@ -59,7 +59,7 @@ public class Consumer {
                 Class<?>[] inputTypes = message.toArray();
                 System.out.println(message.methodName);
                 Class clazz = Broker.class;
-                Method method = clazz.getMethod(message.methodName, inputTypes);
+                Method method = clazz.getMethod(message.methodName.toString(), inputTypes);
                 Object[] inputs = new Object[message.arguments.size()];
                 for (int i = 0; i < inputs.length; i++) {
                     inputs[i] = message.getArguments().get(i);
@@ -90,7 +90,7 @@ public class Consumer {
         TcpClient consumerClient = new TcpClient(coordinator.host, coordinator.port);
         consumerClient.addEventHandler(consumerClientEventHandler);
         consumerClient.connect();
-        consumerClient.send(new Message("findCoodinator"));
+        //consumerClient.send(new Message("findCoodinator"));
     }
 
     public List<ConsumerRecord> poll() {
@@ -118,7 +118,7 @@ public class Consumer {
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
         sock.addEventHandler(consumerClientEventHandler);
         sock.connect();
-        sock.send(new Message("updateCoordinator"));
+        //sock.send(new Message("updateCoordinator"));
     }
 
     // to coordinator

@@ -54,18 +54,17 @@ public class Producer {
 
     public void sendMessage(String topic, String msg) throws IOException, InterruptedException {
         //sock.connect();
-        List<Object> request = new ArrayList<>();
-        request.add(topic);
-        Topic t = new Topic(topic);
-        request.add(t);
-        request.add(msg);
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(topic);
+        arguments.add(msg);
+        Message request = new Message(MessageType.SEND_MESSAGE, arguments);
 
         TcpClient sock = new TcpClient(host, port);
         final TcpClient that_sock = sock;
         sock.addEventHandler(new TcpClientEventHandler(){
-            public void onMessage(List<Object> msg){
+            public void onMessage(Message msg){
                 //handler.onMessage(cid, msg);
-                System.out.println((String)msg.get(0));
+                System.out.println(msg.getMethodName());
             }
             public void onOpen(){
                 System.out.println("* socket connected");
@@ -100,6 +99,13 @@ public class Producer {
         int partition = hashCode(msg) % 4;
 
         sock.run();
+    }
+
+    public void receivedMessageAck(String message) {
+        System.out.println(message);
+
+
+        return;
     }
     public void updateTopicPartitionLeader(String topic, List<Pair<Integer,Broker>> partitionLeaders) {
         topicPartitionLeaders.put(topic, partitionLeaders);

@@ -25,6 +25,7 @@ public class Broker {
     TcpServer listenSocket;
     TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
+    Map<String, List<String>> topicMessage;
     Map<String, List<Broker>> topicsMember;
 
     // 作为coordinator要用到的讯息
@@ -49,6 +50,7 @@ public class Broker {
         topics_coordinator = new HashMap();
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
+        topicMessage = new HashMap<>();
     }
 
 
@@ -56,28 +58,27 @@ public class Broker {
         final TcpServer that_server = listenSocket;
         final Broker this_broker = this;
         this.serverHandler = new TcpServerEventHandler(){
-            public void onMessage(int client_id, List<Object> msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+            public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
 
-                Message message = new Message();
-                message.name = MessageType.CREATE_TOPIC;
-                message.arguments = new ArrayList<>();
-                message.arguments.add("most useful");
-                message.arguments.add(1);
+//                List<Object> arguments = new ArrayList<>();
+//                arguments.add("most useful");
+//                arguments.add(1);
+//                Message message = new Message(MessageType.CREATE_TOPIC, arguments);
 
                 Class<?>[] inputTypes = message.toArray();
                 System.out.println(message.getMethodName());
                 Class clazz = Broker.class;
-                Method method = clazz.getMethod(message.name.toString(), inputTypes);
+                Method method = clazz.getMethod(message.getMethodName(), inputTypes);
                 Object[] inputs = new Object[message.arguments.size()];
                 for (int i = 0; i < inputs.length; i++) {
                     inputs[i] = message.getArguments().get(i);
                 }
-                method.invoke(this_broker, inputs);
+                Message response = (Message) method.invoke(this_broker, inputs);
                 //Message msg = method.invoke(this_broker, inputs);
                 //if ( msg != null ) {
-                    System.out.println("* <"+client_id+"> "+ (String)msg.get(0));
+                    System.out.println("* <"+client_id+"> "+ response.getMethodName());
                     //msg.add(0, "echo : <"+client_id+"> ");
-                    that_server.getClient(client_id).send(msg);
+                    that_server.getClient(client_id).send(response);
                 //}
 
 
@@ -91,22 +92,22 @@ public class Broker {
             }
         };
     }
-    public void find(String t, Integer i) {
-//        Message msg
-//        System.out.println("This broker's port number :" + this.port);
-//        if ( this broket 知道) {
-//            msg = ;
-//        } else {
-//            msg = createTopic() // 這個broker開一個client 去問zookeeper
-//        }
-//        return msg;
-//        Message message = new Message();
-//        message.name = "find";
-//        message.arguments = new ArrayList<>();
-//        message.arguments.add("most useful");
-//        message.arguments.add(1);
 
-        return;
+    public Message receivedMessage(String topic, String message) {
+        System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
+
+        List<String> list = topicMessage.getOrDefault(topic, new ArrayList<>());
+        list.add(message);
+        topicMessage.put(topic, list);
+
+        return sendMessageAck();
+    }
+
+    public Message sendMessageAck() {
+        List<Object> arguments = new ArrayList<>();
+        arguments.add("Successful");
+        Message response = new Message(MessageType.SEND_MESSAGE_ACK, arguments);
+        return response;
     }
 
     public Broker findBroker() {

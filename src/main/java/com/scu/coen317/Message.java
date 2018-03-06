@@ -1,5 +1,6 @@
 package com.scu.coen317;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -7,12 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class Message {
-    MessageType name;
+public class Message implements Serializable {
+    MessageType methodName;
     List<Object> arguments;
 
-    public MessageType getMethodName() {
-        return name;
+    Message(MessageType methodName, List<Object> arguments) {
+        this.methodName = methodName;
+        this.arguments = arguments;
+    }
+
+    public String getMethodName() {
+        return methodName.toString();
     }
 
     public List<Object> getArguments() {
@@ -40,18 +46,20 @@ public class Message {
     }
 
     public static void main(String[] args) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-        Message message = new Message();
-        message.name = MessageType.CREATE_TOPIC;
-        message.arguments = new ArrayList<>();
-        message.arguments.add("most useful");
-        message.arguments.add(1);
+
+        List<Object> arguments = new ArrayList<>();
+        arguments.add("most useful");
+        arguments.add(1);
+        Message message = new Message(MessageType.CREATE_TOPIC, arguments);
+
+
         //message.find("test", 1);
 
         Class<?>[] inputTypes = message.toArray();
         System.out.println(message.getMethodName());
 //        System.out.println(message.getParameterTypes().toString());
         Class clazz = Message.class;
-        Method method = clazz.getMethod(message.name.toString(), inputTypes);
+        Method method = clazz.getMethod(message.methodName.toString(), inputTypes);
         Object[] inputs = new Object[message.arguments.size()];
         for (int i = 0; i < inputs.length; i++) {
             inputs[i] = message.getArguments().get(i);
