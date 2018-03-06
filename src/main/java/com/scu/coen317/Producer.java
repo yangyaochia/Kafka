@@ -57,24 +57,28 @@ public class Producer {
     public void sendMessage(String topic, String msg) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         //sock.connect();
 
+        List<Object> argument = new ArrayList<>();
+        argument.add(topic);
+        argument.add(msg);
+        Message message = new Message(MessageType.SEND_MESSAGE, argument);
 
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
+        sock.setReadInterval(3000);
         final TcpClient that_sock = sock;
         sock.addEventHandler(new TcpClientEventHandler(){
             public void onMessage(Message msg){
                 //handler.onMessage(cid, msg);
-                System.out.println((String)msg.getMethodName());
-                that_sock.close();
+                if ( msg.getMethodName() == MessageType.SEND_MESSAGE_ACK ) {
+                    System.out.println((String)msg.getMethodNameValue());
+                    that_sock.close();
+                } else {
+
+                }
+                System.out.println((String)msg.getMethodNameValue());
             }
 
             public void onOpen() {
                 System.out.println("* socket connected");
-
-                List<Object> argument = new ArrayList<>();
-                argument.add(topic);
-                argument.add(msg);
-                Message message = new Message(MessageType.SEND_MESSAGE, argument);
-
                 that_sock.send(message);
             }
             public void onClose(){

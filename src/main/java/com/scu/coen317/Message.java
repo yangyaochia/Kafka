@@ -21,15 +21,16 @@ public class Message implements Serializable {
         this.methodName = methodName;
         this.arguments = arguments;
     }
-
-    public String getMethodName() {
+    public MessageType getMethodName() {
+        return methodName;
+    }
+    public String getMethodNameValue() {
         return methodName.toString();
     }
 
     public List<Object> getArguments() {
         return arguments;
     }
-
 
     public Class<?>[] getInputParameterType() {
         Class<?>[] inputs = new Class<?>[this.arguments.size()];

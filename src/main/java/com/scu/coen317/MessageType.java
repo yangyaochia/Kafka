@@ -1,7 +1,7 @@
 package com.scu.coen317;
 
 public enum MessageType {
-
+    // SENDER_ACTION("RECEIVER_ACTION")
     CREATE_TOPIC("createTopic"),
     SEND_MESSAGE("receivedMessage"),
     SEND_MESSAGE_ACK("receivedMessageAck");

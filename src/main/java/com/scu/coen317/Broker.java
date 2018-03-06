@@ -59,26 +59,11 @@ public class Broker {
         final Broker this_broker = this;
         this.serverHandler = new TcpServerEventHandler(){
             public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-                // Message message (msg.methodName, String topic)
-//                String methodName = message.getMethodName(); // findBroker
-                //String input = message.topic;
 
-//                Class clazz = Broker.class;
-//                Method method = clazz.getMethod(methodName, input);
-//                Broker returnBroker = method.invoke();
-//                that_server.getClient(client_id).send(Broker);
-//                Class reflectionClass = Broker.class;
-////                Method method = reflectionClass.getMethod(msg.getMethodName(), msg.getParameterType());
-//
-
-                Class<?>[] inputTypes = message.toArray();
-                System.out.println(message.getMethodName());
+                Class<?>[] inputTypes = message.getInputParameterType();
                 Class clazz = Broker.class;
-                Method method = clazz.getMethod(message.getMethodName(), inputTypes);
-                Object[] inputs = new Object[message.arguments.size()];
-                for (int i = 0; i < inputs.length; i++) {
-                    inputs[i] = message.getArguments().get(i);
-                }
+                Method method = clazz.getMethod(message.getMethodNameValue(), inputTypes);
+                Object[] inputs = message.getInputValue();
                 Message response = (Message) method.invoke(this_broker, inputs);
 
                 System.out.println("* <"+client_id+"> "+ message.getMethodName());

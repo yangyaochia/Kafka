@@ -56,14 +56,11 @@ public class Consumer {
         this.serverHandler = new TcpServerEventHandler(){
             public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
 
-                Class<?>[] inputTypes = message.toArray();
+                Class<?>[] inputTypes = message.getInputParameterType();
                 System.out.println(message.methodName);
                 Class clazz = Broker.class;
                 Method method = clazz.getMethod(message.methodName.toString(), inputTypes);
-                Object[] inputs = new Object[message.arguments.size()];
-                for (int i = 0; i < inputs.length; i++) {
-                    inputs[i] = message.getArguments().get(i);
-                }
+                Object[] inputs = message.getInputValue();
                 method.invoke(this_consumer, inputs);
 
 
