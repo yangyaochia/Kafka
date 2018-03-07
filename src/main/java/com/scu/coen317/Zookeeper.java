@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 public class Zookeeper {
-    String ip;
+    String host;
     int port;
     ServerSocket receiveSocket;
 
@@ -23,8 +23,8 @@ public class Zookeeper {
 
     // 接收來自producer的create_topic
     // 回傳這個topic, partition的負責人給傳的那個人
-    public Zookeeper(String ip, int port) throws IOException {
-        this.ip = ip;
+    public Zookeeper(String host, int port) throws IOException {
+        this.host = host;
         this.port = port;
         receiveSocket = new ServerSocket(port);
         clusters = new PriorityQueue<>((p1, p2) -> p1.getKey().compareTo(p2.getKey()));

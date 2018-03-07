@@ -29,8 +29,9 @@ public enum MessageType {
 
     // Broker
     GET_TOPIC("topicAssignment"),               // B -> Z   Y
-    TOPIC_ASSIGNMENT_TO_PRODUCER("publish_Message"),        // B -> P   Y
+    TOPIC_ASSIGNMENT_TO_PRODUCER("updateTopicPartitionLeader"),        // B -> P   Y
     PUBLISH_MESSAGE_ACK("publishMessageAck"),       // B->P Y
+
     GET_REPLICATION_UPDATE("replicationResponse"),    // B -> B
     REPLICATION_RESPONSE("replicationUpdate"),
     SEND_HEARTBEAT("monitorCluster"),           // B -> Z
