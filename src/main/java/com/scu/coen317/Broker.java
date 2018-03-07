@@ -28,19 +28,7 @@ public class Broker {
 
     // 记录consumer，each topic offset
     Map<Consumer, Map<String,Integer>> consumerOffset;
-
-    public Broker(String host, int port) throws IOException {
-        this.host = host;
-        this.port = port;
-
-        this.listenSocket = new TcpServer(port);
-        listenSocket.setHandler(this.getClass(), this);
-        topicsMember = new HashMap();
-        topics_coordinator = new HashMap();
-        consumerLeader = new HashMap();
-        consumerOffset = new HashMap();
-        topicMessage = new HashMap<>();
-    }
+    
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException {
         this.host = host;
