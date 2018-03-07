@@ -125,16 +125,19 @@ public class TcpClient {
         final TcpClient that_sock = this;
         final Object this_object = object;
         this.handler = new TcpClientEventHandler(){
-            public void onMessage(Message msg){
+            public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
                 //handler.onMessage(cid, msg);
-
                 if ( msg.getMethodName() == MessageType.PUBLISH_MESSAGE_ACK ) {
-                    System.out.println((String)msg.getMethodNameValue());
+                    System.out.println(msg.getMethodNameValue());
                     that_sock.close();
                 } else {
+                    Class<?>[] inputTypes = msg.getInputParameterType();
+                    Method method = clazz.getMethod(msg.getMethodNameValue(), inputTypes);
+                    Object[] inputs = msg.getInputValue();
+                    method.invoke(this_object, inputs);
 
+                    System.out.println(msg.getMethodName());
                 }
-                //System.out.println(msg.getMethodNameValue());
             }
 
             public void onOpen() {
@@ -157,7 +160,7 @@ public class TcpClient {
 
             }
             public void onClose(){
-                //handler.onClose(cid);
+                System.out.println("* socket closed");
             }
         };
     }

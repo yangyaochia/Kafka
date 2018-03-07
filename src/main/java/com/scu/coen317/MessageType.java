@@ -51,10 +51,11 @@ public enum MessageType {
     COORDINATOR_ASSIGNMENT("coordinatorAssignmentToConsumer"), //Z->B
 
     //Consumer
-    FIND_COORDINATOR("getCoordinator"), //C->B
+    FIND_COORDINATOR("getCoordinator"), //C->B  Xinzhu
+    UPDATE_COORDINATOR("updateCoordinator"), // Xinzhu
     JOIN_GROUP("addConsumerToGroup"), //C->Bg
     SUBSCRIBE_TOPIC("storeInfoAndGetTopic"), //C->Bg //store who subscribe what topics and give to consumer leader later
-    REBALANCEPLAN("assignByRebalancePlan"), //C1->Bg
+    REBALANCEPLAN("assignByRebalancePlan"), //C1->Bg Xinzhu
     PULLMESSAGE("giveMassage"); //C->B
 
 

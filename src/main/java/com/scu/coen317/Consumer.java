@@ -9,19 +9,20 @@ import java.util.*;
 
 
 public class Consumer {
-    String ip;
+    String host;
     int port;
     String groupId;
     TcpServer serverSocket;
-    Broker coordinator;
+    Pair<String, Integer> coordinator;
     TcpServerEventHandler serverHandler;
     TcpClientEventHandler consumerClientEventHandler;
 
     // default brokers and broker cache
-    Broker defaultBroker;
-    List<Broker> brokers;
+    String defaultBrokerHost;
+    int defaultBrokerPort;
+    List<Pair<String, Integer>> brokers;
 
-    Map<String, Pair<Integer, Broker>> subscribedTopicPartitions;
+    Map<String, List<Pair<Integer, Broker>>> subscribedTopicPartitions;
 
 
     // for leader of group
@@ -37,17 +38,18 @@ public class Consumer {
         serverSocket.listen();
     }
 
-    public Consumer (String ip, int port, String groupId, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
-        this.ip = ip;
+    public Consumer (String host, int port, String groupId, String defaultBrokerIp, int defaultBrokerPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        this.host = host;
         this.port = port;
         this.groupId = groupId;
 
         // ask default broker this group's coordinator (broker)
-        defaultBroker = new Broker(defaultBrokerIp, defaultBrokerPort);
+        this.defaultBrokerHost = defaultBrokerIp;
+        this.defaultBrokerPort = defaultBrokerPort;
         brokers = new ArrayList();
-        brokers.add(defaultBroker);
+        brokers.add(new Pair<>(defaultBrokerHost, defaultBrokerPort));
 
-        findCoordinator(defaultBroker);
+        findCoordinator(this.defaultBrokerHost, this.defaultBrokerPort);
     }
 
     public void setHandler() {
@@ -81,12 +83,18 @@ public class Consumer {
         if (subscribedTopicPartitions.containsKey(topic)) {
             return;
         }
+        List<Object> arguments = new ArrayList();
+        arguments.add(topic);
+        arguments.add(this.groupId);
 
-        // send to coordinator and wait for patitions of this topic
-        TcpClient consumerClient = new TcpClient(coordinator.host, coordinator.port);
-        consumerClient.addEventHandler(consumerClientEventHandler);
-        //consumerClient.connect();
-        //consumerClient.send(new Message("findCoodinator"));
+        Message request = new Message(MessageType.SUBSCRIBE_TOPIC, arguments);
+        // send to coordinator and wait for partitions of this topic
+        TcpClient consumerClient = new TcpClient(coordinator.getKey(), coordinator.getValue());
+        consumerClient.setHandler(this.getClass(), this, request);
+    }
+
+    public void assignByRebalancePlan(Map<String, List<Pair<Integer, Broker>>> topicPartitions) {
+        subscribedTopicPartitions = topicPartitions;
     }
 
     public List<ConsumerRecord> poll() {
@@ -98,23 +106,31 @@ public class Consumer {
     }
 
 
-    Broker pickBroker() throws IOException {
-        Broker broker = null;
+    Pair<String, Integer> pickBroker() throws IOException {
+        Pair<String, Integer> broker = null;
         if (brokers.size() != 0) {
-            broker = brokers.get(0);
+            defaultBrokerHost = brokers.get(0).getKey();
+            defaultBrokerPort = brokers.get(0).getValue();
         } else {
 
         }
         return broker;
     }
 
-    public void findCoordinator(Broker defaultBroker) throws IOException {
-
+    public void findCoordinator(String defaultBrokerHost, int defaultBrokerPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
         // send request to defaultBroker with the groupId
-        TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
-        sock.addEventHandler(consumerClientEventHandler);
-        //sock.connect();
-        //sock.send(new Message("updateCoordinator"));
+        TcpClient sock = new TcpClient(defaultBrokerHost, defaultBrokerPort);
+        sock.setHandler(this.getClass(), this, request);
+        sock.run();
+    }
+
+    public void updateCoordinator(String host, Integer port) {
+        coordinator = new Pair(host, port);
+        System.out.println(("coordinator's host" + host));
+        System.out.println(("coordinator's port" + host));
+//        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK);
+//        return response;
     }
 
     // to coordinator
