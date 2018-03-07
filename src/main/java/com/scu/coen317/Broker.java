@@ -19,7 +19,7 @@ public class Broker {
     // 某topic, partition 的其他組員是誰
     Map<String, Map<Integer,List<String>> > topicMessage;
     Map<String, Map<Integer,Broker>> topicsMember;
-    Map<String, Broker> topics_coordinator;
+    Map<String, HostRecord> topics_coordinator;
     // 作为coordinator要用到的讯息
     Map<String, List<Consumer>> topic_consumer;
     Map<Consumer, Map<String, List<Pair<Integer, Broker>>>> balance;
@@ -95,13 +95,13 @@ public class Broker {
 
 
     public Message getCoordinator(String groupId) {
-        while (!topics_coordinator.containsKey(groupId)) {
-
-        }
-        Broker broker = topics_coordinator.get(groupId);
+//        while (!topics_coordinator.containsKey(groupId)) {
+//
+//        }
+//        HostRecord coordinator = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
-        arguments.add(this.host);
-        arguments.add(this.port);
+//        arguments.add(coordinator);
+        arguments.add(new HostRecord("localhost", this.port));
         Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
         return response;
     }
@@ -141,7 +141,6 @@ public class Broker {
     public static void main(String argv[]) throws Exception {
         Broker b = new Broker("localhost", 9000, "localhost", 2181);
         b.listen();
-
     }
 }
 

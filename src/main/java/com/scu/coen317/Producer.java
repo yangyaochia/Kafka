@@ -24,8 +24,8 @@ public class Producer {
     //TcpClient sock;
     //TcpClientEventHandler handler;
     // default brokers and broker cache
-    Broker defaultBroker;
-    List<Broker> brokers;
+    HostRecord defaultBroker;
+    List<HostRecord> brokers;
     Map<String, Map<Integer,Broker>> topicsMember;
     Map<String,Topic> publishTopicSet;
 
@@ -37,7 +37,7 @@ public class Producer {
         //sock.setReadInterval(5000);
 
 
-        defaultBroker = new Broker(defaultBrokerIp, defaultBrokerPort);
+        defaultBroker = new HostRecord(defaultBrokerIp, defaultBrokerPort);
         brokers = new ArrayList();
         brokers.add(defaultBroker);
 

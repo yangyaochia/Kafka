@@ -127,6 +127,7 @@ public class TcpClient {
         this.handler = new TcpClientEventHandler(){
             public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
                 //handler.onMessage(cid, msg);
+                System.out.println("进入client的handler");
                 if ( msg.getMethodName() == MessageType.PUBLISH_MESSAGE_ACK ) {
                     System.out.println(msg.getMethodNameValue());
                     that_sock.close();
