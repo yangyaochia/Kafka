@@ -1,23 +1,12 @@
 package com.scu.coen317;
 
+import javafx.util.Pair;
+
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
-
-enum MethodName {
-    FIND("find");
-
-    private final String name;
-    MethodName(String s) {
-        name = s;
-    }
-
-    String getName() {
-        return name;
-    }
-}
 
 public class Broker {
     String host;
@@ -28,14 +17,19 @@ public class Broker {
     Map<String, List<String>> topicMessage;
     Map<String, List<Broker>> topicsMember;
 
-    // 作为coordinator要用到的讯息
+    // Consumer ask its coordinator
+    // first check in this cache
+
     Map<String, Broker> topics_coordinator;
 
-    // each topic's consumer group leader
+    // 作为coordinator要用到的讯息
+    Map<String, List<Consumer>> topic_consumer;
+    Map<Consumer, Map<String, List<Pair<Integer, Broker>>>> balance;
+    // each group's leader
     Map<String, Consumer> consumerLeader;
 
-    // 记录consumer， offset
-    Map<Consumer, Integer> consumerOffset;
+    // 记录consumer，each topic offset
+    Map<Consumer, Map<String,Integer>> consumerOffset;
 
     public Broker(String host, int port) throws IOException {
         this.host = host;
@@ -44,43 +38,14 @@ public class Broker {
 
         this.listenSocket = new TcpServer(port);
         listenSocket.setHandler(this.getClass(), this);
-//        listenSocket.addEventHandler(this.serverHandler);
-
+        listenSocket.listen();
         topicsMember = new HashMap();
         topics_coordinator = new HashMap();
-        consumerLeader = new HashMap();
+        topics_coordinator.put("group1", this);
         consumerOffset = new HashMap();
         topicMessage = new HashMap<>();
     }
 
-
-//    private void setHandler() {
-//        final TcpServer that_server = listenSocket;
-//        final Broker this_broker = this;
-//        this.serverHandler = new TcpServerEventHandler(){
-//            public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-//
-//                Class<?>[] inputTypes = message.getInputParameterType();
-//                Class clazz = Broker.class;
-//                Method method = clazz.getMethod(message.getMethodNameValue(), inputTypes);
-//                Object[] inputs = message.getInputValue();
-//                Message response = (Message) method.invoke(this_broker, inputs);
-//
-//                System.out.println("* <"+client_id+"> "+ message.getMethodName());
-//                //msg.add(0, "echo : <"+client_id+"> ");
-//                that_server.getClient(client_id).send(response);
-//            }
-//            public void onAccept(int client_id){
-//                System.out.println("* <"+client_id+"> connection accepted");
-//                that_server.setReadInterval(100 + that_server.getClients().size()*10);
-//            }
-//            public void onClose(int client_id){
-//                System.out.println("* <"+client_id+"> closed");
-//            }
-//        };
-//    }
-    //public Message find() {
-    //}
     public Message publishMessage(String topic, String message) {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
 
@@ -93,6 +58,19 @@ public class Broker {
         return publishMessageAck();
     }
 
+
+    public Message getCoordinator(String groupId) {
+        while (!topics_coordinator.containsKey(groupId)) {
+
+        }
+        Broker broker = topics_coordinator.get(groupId);
+        List<Object> arguments = new ArrayList();
+        arguments.add(this.host);
+        arguments.add(this.port);
+        Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
+        return response;
+    }
+
     public Message publishMessageAck() {
         List<Object> arguments = new ArrayList<>();
         arguments.add("Successful");
@@ -100,6 +78,24 @@ public class Broker {
         return response;
     }
 
+
+    public Message storeInfoAndGetTopic(String topic, String groupId) throws IOException {
+        /*balance = null;
+        while (balance == null) {
+            Consumer leader = consumerLeader.get(consumerLeader.get(groupId));
+            Message request = new Message(MessageType.REBALANCE);
+            TcpClient socket = new TcpClient(leader.host, leader.port);
+            socket.setHandler(this.getClass(), this, request);
+        }
+        */
+
+        List<Object> arguments = new ArrayList<>();
+        Map<String, Pair<Integer, Broker>> map = new HashMap<>();
+        map.put("topic1", new Pair(1, new Broker("localhost", 9000)));
+        arguments.add(map);
+        Message response = new Message(MessageType.REBALANCEPLAN, arguments);
+        return response;
+    }
 
 
     public void listen() throws IOException, ClassNotFoundException {
