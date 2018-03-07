@@ -95,9 +95,10 @@ public class TcpServer {
                 Object[] inputs = message.getInputValue();
                 Message response = (Message) method.invoke(this_object, inputs);
 
-                System.out.println("* <"+client_id+"> "+ message.getMethodName());
+                System.out.println("* <"+client_id+"> invoke "+ message.getMethodName());
                 //msg.add(0, "echo : <"+client_id+"> ");
                 that_server.getClient(client_id).send(response);
+                System.out.println("* < send to "+client_id+"> "+ "successful");
             }
             public void onAccept(int client_id){
                 System.out.println("* <"+client_id+"> connection accepted");
