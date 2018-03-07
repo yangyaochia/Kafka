@@ -92,8 +92,8 @@ public class Consumer {
 
     public void updateCoordinator(HostRecord coordinator) {
         this.coordinator = coordinator;
-        System.out.println("coordinator's host" + coordinator.getHost());
-        System.out.println("coordinator's port" + coordinator.getPort());
+        System.out.println("coordinator's host ： " + coordinator.getHost());
+        System.out.println("coordinator's port ： " + coordinator.getPort());
 //        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK);
 //        return response;
     }
@@ -106,7 +106,7 @@ public class Consumer {
     public static void main(String[] args) {
         Consumer consumerSend = null;
         try {
-            consumerSend = new Consumer("localhost", 9001, "group1", "localhost", 9000);
+            consumerSend = new Consumer("localhost", 10001, "group1", "localhost", 9000);
             consumerSend.findCoordinator(consumerSend.defaultBroker);
         } catch (IOException e) {
             e.printStackTrace();
