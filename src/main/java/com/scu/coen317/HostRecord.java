@@ -1,12 +1,14 @@
 package com.scu.coen317;
 
-public class HostRecord {
+import java.io.Serializable;
+
+public class HostRecord implements Serializable {
     String host;
-    String port;
-    HostRecord(String host,String port) {
+    Integer port;
+    HostRecord(String host, Integer port) {
         this.host = host;
         this.port = port;
     }
     String getHost() { return host;}
-    String getPort() { return port;}
+    Integer getPort() { return port;}
 }

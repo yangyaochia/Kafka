@@ -81,17 +81,17 @@ public class Broker {
         return;
     }
 
-    public Message publishMessage(String topic, String message) {
-        System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
-
-//        System.out.println("This broker's port number :" + this.port);
-
-        List<String> list = topicMessage.getOrDefault(topic, new ArrayList<>());
-        list.add(message);
-        topicMessage.put(topic, list);
-
-        return publishMessageAck();
-    }
+//    public Message publishMessage(String topic, String message) {
+//        System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
+//
+////        System.out.println("This broker's port number :" + this.port);
+//
+//        List<String> list = topicMessage.getOrDefault(topic, new ArrayList<>());
+//        list.add(message);
+//        topicMessage.put(topic, list);
+//
+//        return publishMessageAck();
+//    }
 
 
     public Message getCoordinator(String groupId) {
@@ -125,8 +125,8 @@ public class Broker {
         */
 
         List<Object> arguments = new ArrayList<>();
-        Map<String, Pair<Integer, Broker>> map = new HashMap<>();
-        map.put("topic1", new Pair(1, new Broker("localhost", 9000)));
+        Map<String, HostRecord> map = new HashMap<>();
+        map.put("topic1", new HostRecord("localhost", 9000));
         arguments.add(map);
         Message response = new Message(MessageType.REBALANCEPLAN, arguments);
         return response;
