@@ -18,7 +18,7 @@ import java.io.*;
 
 import static java.lang.Thread.sleep;
 
-public class Producer {
+public class brokerTest{
     String host;
     int port;
     //TcpClient sock;
@@ -29,8 +29,9 @@ public class Producer {
 
     // topic, <partition, 負責的broker>
     Map<String, List<Pair<Integer,Broker>> > topicPartitionLeaders;
+    private int partition;
 
-    public Producer (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
+    public brokerTest (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
         this.host = host;
         this.port = port;
 
@@ -60,7 +61,7 @@ public class Producer {
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
         argument.add(msg);
-        Message message = new Message(MessageType.PUBLISH_MESSAGE, argument);
+        Message message = new Message(MessageType.GET_TOPIC,argument);
 
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
 //        sock.setReadInterval(1000);
@@ -72,16 +73,18 @@ public class Producer {
         }
         //int totalPartition = topic_partition_leaders.get(topic).size();
         int partition = hashCode(msg) % 4;
-
         sock.run();
     }
 
-    public void publishMessageAck(String message) {
+
+
+    public void topicAssignmentToProduer(String message) {
         System.out.println(message);
 
 
         return;
     }
+
     public void updateTopicPartitionLeader(String topic, List<Pair<Integer,Broker>> partitionLeaders) {
         topicPartitionLeaders.put(topic, partitionLeaders);
     }
@@ -92,12 +95,13 @@ public class Producer {
     }
 
     public static void main(String argv[]) throws Exception {
-        Producer p = new Producer("localhost", 9003, "localhost", 9000);
+        brokerTest p = new brokerTest("localhost", 9003, "localhost", 9000);
         p.sendMessage("topic1", "1");
         //sleep(1000);
         p.sendMessage("topic2", "2");
         //sleep(1000);
         p.sendMessage("topic3", "3");
         //sleep(1000);
+
     }
 }

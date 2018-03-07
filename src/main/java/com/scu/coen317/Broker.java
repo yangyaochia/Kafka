@@ -83,7 +83,7 @@ public class Broker {
     //}
     public Message publishMessage(String topic, String message) {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
-
+        System.out.println("hahahaah");
         System.out.println("This broker's port number :" + this.port);
 
         List<String> list = topicMessage.getOrDefault(topic, new ArrayList<>());

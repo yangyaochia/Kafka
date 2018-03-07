@@ -131,7 +131,11 @@ public class TcpClient {
                 if ( msg.getMethodName() == MessageType.PUBLISH_MESSAGE_ACK ) {
                     System.out.println((String)msg.getMethodNameValue());
                     that_sock.close();
-                } else {
+                } else if( msg.getMethodName() == MessageType.TOPIC_ASSIGNMENT_TO_BROKER){
+                    System.out.println((String)msg.getMethodNameValue());
+                    that_sock.close();
+                }
+                else{
 
                 }
                 //System.out.println(msg.getMethodNameValue());
