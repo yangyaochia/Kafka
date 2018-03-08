@@ -106,10 +106,9 @@ public class Broker {
 
     public Message publishMessage(String topic, Integer partition, String message) {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
+
         topicMessage.get(topic).get(partition).add(message);
-
-
-
+        
         List<Object> arguments = new ArrayList<>();
         arguments.add(topic);
         arguments.add("Published Successful");
