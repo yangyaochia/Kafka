@@ -21,7 +21,7 @@ public class Broker {
     Map<String, Map<Integer,HostRecord>> topicsPartitionLeader;
 
     // Map<topic,Map<partition,List<replicationHolders>>
-    Map<String,Map<String,List<HostRecord>>> topicPartitionReplicationBrokers;
+    Map<String,Map<Integer,Set<HostRecord>>> topicPartitionReplicationBrokers;
     Map<String, HostRecord> topics_coordinator;
 
     // 作为coordinator要用到的讯息
@@ -58,11 +58,12 @@ public class Broker {
         balanceMap = new HashMap<>();
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
-
+/*
         Set<HostRecord> replicationHolders = new HashSet<>();
         replicationHolders.add(new HostRecord("localhost", 9001));
         replicationHolders.add(new HostRecord("localhost", 9002));
         setTopicPartitionLeader("topic1", 2, thisHost, (HashSet<HostRecord>) replicationHolders);
+        */
     }
     ////////////////// Yao-Chia
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
@@ -178,7 +179,7 @@ public class Broker {
     public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
         List<Object> arguments = new ArrayList<>();
-        arguments.add(new HostRecord(this.host, this.port));
+        arguments.add(this.thisHost);
         Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
         client.setHandler(this,request);
         client.run();
