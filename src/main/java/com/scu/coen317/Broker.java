@@ -9,20 +9,20 @@ import java.net.*;
 import java.util.*;
 
 public class Broker {
-    String host;
-    int port;
+    HostRecord thisHost;
     TcpServer listenSocket;
 
     HostRecord defaultZookeeper;
 
 //    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
+    // Map<topic, Map<partition, message>>
     Map<String, Map<Integer,List<String>>> topicMessage;
     Map<String, Map<Integer,HostRecord>> topicsPartitionLeader;
 
     // Map<topic,Map<partition,List<replicationHolders>>
     Map<String,Map<String,List<HostRecord>>> topicPartitionReplicationBrokers;
-    Map<String, HostRecord> topics_coordinator; // group coordinator
+    Map<String, HostRecord> topics_coordinator;
 
     // 作为coordinator要用到的讯息
 
@@ -40,15 +40,17 @@ public class Broker {
     Map<Consumer, Map<String,Integer>> consumerOffset;
     
 
-    public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException {
-        this.host = host;
-        this.port = port;
+    public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        this.thisHost = new HostRecord(host, port);
         this.defaultZookeeper = new HostRecord(zookeeperHost, zookeeperPort);
 
         this.listenSocket = new TcpServer(port);
         listenSocket.setHandler(this);
 
+        topicMessage = new HashMap<>();
         topicsPartitionLeader = new HashMap();
+        topicPartitionReplicationBrokers = new HashMap<>();
+
         topics_coordinator = new HashMap();
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
@@ -56,6 +58,11 @@ public class Broker {
         balanceMap = new HashMap<>();
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
+
+        Set<HostRecord> replicationHolders = new HashSet<>();
+        replicationHolders.add(new HostRecord("localhost", 9001));
+        replicationHolders.add(new HostRecord("localhost", 9002));
+        setTopicPartitionLeader("topic1", 2, thisHost, (HashSet<HostRecord>) replicationHolders);
     }
     ////////////////// Yao-Chia
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
@@ -77,7 +84,7 @@ public class Broker {
             sock.run();
         }
         // This broker already stored the topic info
-//        synchronized (this) {
+        synchronized (this) {
             while (!topicsPartitionLeader.containsKey(topicName) ) {
                 wait();
             }
@@ -85,7 +92,7 @@ public class Broker {
             argument.add(topicsPartitionLeader.get(topicName) );
             response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
             return response;
-//        }
+        }
 
     }
     public void topicAssignmentToProduer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
@@ -96,27 +103,66 @@ public class Broker {
         return;
     }
 
-    public void setTopicPartitionLeader(String topic, Integer partition ) {
+    public void setTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> replicationHolders) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
         // Structure for topicMessage
         // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
-        Map<Integer, List<String>> partitionMap = new HashMap<>();
-        partitionMap.put(partition, new ArrayList());
-        topicMessage.put(topic, partitionMap);
+
+        if ( topicMessage.get(topic) == null ) {
+            // Case 1 : This broker has not known this topic partition ever
+            Map<Integer, List<String>> partitionMap = new HashMap<>();
+            partitionMap.put(partition, new ArrayList());
+            topicMessage.put(topic, partitionMap);
+        } else if ( topicMessage.get(topic).get(partition) == null ) {
+            // Case 2: This broker has not known this partition ever
+            topicMessage.get(topic).put(partition, new ArrayList<>());
+        }
+
+        if ( topicPartitionReplicationBrokers.get(topic) == null ) {
+            Map<Integer, Set<HostRecord>> partitionHolderMap = new HashMap<>();
+            partitionHolderMap.put(partition, replicationHolders);
+            topicPartitionReplicationBrokers.put(topic, partitionHolderMap);
+        } else if ( topicPartitionReplicationBrokers.get(topic).get(partition) == null ) {
+            topicPartitionReplicationBrokers.get(topic).put(partition, replicationHolders);
+        }
+
+        if ( thisHost.equals(leader) ) {
+            List<Object> argument = new ArrayList<>();
+            argument.add(topic);
+            argument.add(partition);
+            argument.add(leader);
+            argument.add(replicationHolders);
+            Message request = new Message(MessageType.SET_TOPIC_PARTITION_LEADER, argument);
+            informReplicationHolders(request, replicationHolders);
+        }
     }
-    public void setTopicPartitionReplicationHolder(String topic, Integer partition ) {
-        // Structure for topicMessage
-        // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
-//        Map<Integer, List<String>> partitionMap = new HashMap<>();
-//        partitionMap.put(partition, new ArrayList());
-//        topicMessage.put(topic, partitionMap);
+    public void informReplicationHolders(Message request, HashSet<HostRecord> replicationHolders) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        for ( HostRecord h : replicationHolders ) {
+            TcpClient sock = new TcpClient(h.getHost(), h.getPort());
+            sock.setHandler( this, request);
+            sock.run();
+        }
     }
 
-    public Message publishMessage(String topic, Integer partition, String message) {
-        setTopicPartitionLeader(topic,partition);
+    public Message publishMessage(String topic, Integer partition, String message) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
+
 
         System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
         topicMessage.get(topic).get(partition).add(message);
         System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
+
+        // Send publishMessage to the corresponding topic partition replication holders
+        Set<HostRecord> replicationHolders = topicPartitionReplicationBrokers.get(topic).get(partition);
+        if ( !replicationHolders.contains(thisHost)) {
+            System.out.println("Hello!!!");
+            List<Object> argument = new ArrayList<>();
+            argument.add(topic);
+            argument.add(partition);
+            argument.add(message);
+            Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
+            informReplicationHolders(request, (HashSet<HostRecord>) replicationHolders);
+        }
+//        sock.setReadInterval(1000);
+
 
         List<Object> arguments = new ArrayList<>();
         arguments.add(message);

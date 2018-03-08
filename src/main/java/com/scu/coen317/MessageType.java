@@ -24,6 +24,7 @@ public enum MessageType {
     //ZooKeeper
     TOPIC_ASSIGNMENT_TO_BROKER("topicAssignmentToProduer"), //Z->B
     SET_TOPIC_PARTITION_LEADER("setTopicPartitionLeader"),  //Z->B follower
+    SET_TOPIC_PARTITION_REPLICATION_HOLDER("setTopicPartitionReplicationHolder"),
     //send broker and tell it its new leader
     //if leader die, set a follower to be leader
     //if follower die, tell a new broker who is its leader
