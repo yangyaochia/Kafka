@@ -82,6 +82,11 @@ public class Consumer {
         }
     }
 
+    public void receiveConsumerJoinGroupRegistrationAck(String ack) {
+        System.out.println(ack);
+    }
+
+
     public void findCoordinator(HostRecord broker) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
         // send request to defaultBroker with the groupId

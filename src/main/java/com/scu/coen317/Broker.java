@@ -127,8 +127,18 @@ public class Broker {
         List<Object> arguments = new ArrayList<>();
         arguments.add("Successful");
         Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
+        response.setIsAck(true);
         return response;
     }
+
+    public Message consumerJoinGroupRegistrationAck() {
+        List<Object> arguments = new ArrayList<>();
+        arguments.add("Successful");
+        Message response = new Message(MessageType.CONSUMER_JOIN_GROUP_REGISTRATION_ACK, arguments);
+        response.setIsAck(true);
+        return response;
+    }
+
 
 
     public Message storeInfoAndGetTopic(String topic, String groupId) throws IOException {
