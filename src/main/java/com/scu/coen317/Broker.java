@@ -88,10 +88,10 @@ public class Broker {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
 
 //        System.out.println("This broker's port number :" + this.port);
-
-        List<String> list = topicMessage.get(topic).get(partition).;
-        list.add(message);
-        topicMessage.put(topic, list);
+// Map<String, Map<Integer,List<String>> >
+        //List<String> list = topicMessage.get(topic).getOrDefault(partition, new ArrayList<>());
+        //list.add(message);
+        topicMessage.get(topic).get(partition).add(message);
 
         return publishMessageAck();
     }
