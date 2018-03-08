@@ -24,24 +24,18 @@ public class brokerTest{
     //TcpClient sock;
     //TcpClientEventHandler handler;
     // default brokers and broker cache
-    Broker defaultBroker;
-    List<Broker> brokers;
+    HostRecord defaultZookeeper ;
+//    List<Zookeeper> brokers;
 
     // topic, <partition, 負責的broker>
     Map<String, List<Pair<Integer,Broker>> > topicPartitionLeaders;
     private int partition;
 
-    public brokerTest (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
+    public brokerTest (String host, int port, String defaultZookeeperIp, int defaultZookeeperPort) throws IOException {
         this.host = host;
         this.port = port;
-
         //sock.setReadInterval(5000);
-
-
-        defaultBroker = new Broker(defaultBrokerIp, defaultBrokerPort);
-        brokers = new ArrayList();
-        brokers.add(defaultBroker);
-
+        defaultZookeeper = new HostRecord(defaultZookeeperIp, defaultZookeeperPort);
         topicPartitionLeaders = new HashMap<>();
 
     }
@@ -63,19 +57,33 @@ public class brokerTest{
         argument.add(msg);
         Message message = new Message(MessageType.GET_TOPIC,argument);
 
-        TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
+        TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
 //        sock.setReadInterval(1000);
-        sock.setHandler(this.getClass(), this, message);
-        List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
-        if ( topicPartitionLeaders.get(topic) == null ) {
-            // 先問default broker list
-
-        }
-        //int totalPartition = topic_partition_leaders.get(topic).size();
-        int partition = hashCode(msg) % 4;
+//        sock.setHandler(this.getClass(), this, message);
+//        List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
+//        if ( topicPartitionLeaders.get(topic) == null ) {
+//            // 先問default broker list
+//
+//        }
+//        //int totalPartition = topic_partition_leaders.get(topic).size();
+//        int partition = hashCode(msg) % 4;
         sock.run();
     }
 
+    public void registerToZookeeper() throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        //sock.connect();
+
+        List<Object> argument = new ArrayList<>();
+        HostRecord temp = new HostRecord(this.host, this.port);
+        argument.add(temp);
+        Message request = new Message(MessageType.NEW_BROKER_REGISTER,argument);
+
+        TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+//        sock.setReadInterval(1000);
+        sock.setHandler( this, request);
+        sock.run();
+
+    }
 
 
     public void topicAssignmentToProduer(String message) {
@@ -84,6 +92,12 @@ public class brokerTest{
 
         return;
     }
+    public void receiveNewBrokerRegistrationAck(String message) {
+        System.out.println(message);
+
+        return;
+    }
+
 
     public void updateTopicPartitionLeader(String topic, List<Pair<Integer,Broker>> partitionLeaders) {
         topicPartitionLeaders.put(topic, partitionLeaders);
@@ -95,13 +109,15 @@ public class brokerTest{
     }
 
     public static void main(String argv[]) throws Exception {
-        brokerTest p = new brokerTest("localhost", 9003, "localhost", 9000);
-        p.sendMessage("topic1", "1");
-        //sleep(1000);
-        p.sendMessage("topic2", "2");
-        //sleep(1000);
-        p.sendMessage("topic3", "3");
-        //sleep(1000);
+        brokerTest p = new brokerTest("localhost", 9009, "localhost", 2181);
+        p.registerToZookeeper();
+//        p.sendMessage("topic1", "1");
+//        //sleep(1000);
+//        p.sendMessage("topic2", "2");
+//        //sleep(1000);
+//        p.sendMessage("topic3", "3");
+//        //sleep(1000);
+
 
     }
 }

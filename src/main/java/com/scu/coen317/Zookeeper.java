@@ -29,6 +29,9 @@ public class Zookeeper {
     Map<String, Consumer> consumerLeader;
     Map<Consumer, Integer> consumerOffset;
 
+    List<HostRecord> brokerList;
+
+
     // 记录consumer， offset
     Map<String, Pair<Integer,Broker>> topic_map;
 
@@ -38,17 +41,17 @@ public class Zookeeper {
         this.host = host;
         this.port = port;
         this.listenSocket = new TcpServer(port);
-        listenSocket.setHandler(this.getClass(), this);
+        listenSocket.setHandler(this);
 //        clusters = new PriorityQueue<>((p1, p2) -> p1.getKey().compareTo(p2.getKey()));
-
-
-
-
         topicsMember = new HashMap();
         topics_coordinator = new HashMap();
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
         topicMessage = new HashMap<>();
+
+        brokerList = new ArrayList();
+
+
     }
 
     public Message topicAssignment(String topic, String message) {
@@ -68,8 +71,42 @@ public class Zookeeper {
         return response;
     }
 
-    public void addBroker() {
+    public Message newBrokerRegister(HostRecord oneBroker) {
+        List<Object> arguments = new ArrayList();
+        if (!containsBroker(oneBroker)) {
+            brokerList.add(oneBroker);
+            System.out.println("Broker register completed");
 
+
+//        arguments.add(coordinator);
+            String temp = "Register Completed ACK ";
+            arguments.add(temp);
+            displayBrokerList();
+            Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
+            return response;
+        }
+        arguments.add("Register failed ");
+        return new Message(MessageType.REGISTER_SUCCESS,arguments );
+    }
+
+    public void displayBrokerList(){
+        for(HostRecord aBroker: brokerList)
+        {
+            System.out.println(aBroker.getHost()+" "+aBroker.getPort());
+        }
+    }
+
+
+
+    public boolean containsBroker(HostRecord oneBroker)
+    {
+        for(HostRecord aBroker : brokerList)
+        {
+            if(aBroker.getHost().equalsIgnoreCase(oneBroker.getHost()) && aBroker.getPort().equals(oneBroker.getPort())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void updateCluster() {
@@ -99,7 +136,7 @@ public class Zookeeper {
     }
 
     public static void main(String argv[]) throws Exception {
-        Zookeeper z = new Zookeeper("localhost", 9000);
+        Zookeeper z = new Zookeeper("localhost", 2181);
         z.listen();
     }
 }
