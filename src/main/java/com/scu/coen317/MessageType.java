@@ -35,7 +35,7 @@ public enum MessageType {
     UPDATE_COORDINATOR("updateCoordinator"), // Xinzhu updateCoordinator(HostRecord coordinator)
     JOIN_GROUP("addConsumerToGroup"), //C->Bg
     SUBSCRIBE_TOPIC("storeInfoAndGetTopic"), //C->Bg //store who subscribe what topics and give to consumer leader later
-    REBALANCEPLAN("assignByRebalancePlan"), //C1->Bg Xinzhu
+    REBALANCEPLAN("assignByRebalancePlan"), //C1->Bg assignByRebalancePlan(Map<String, List<Pair<Integer, HostRecord>>> topicPartitions) Xinzhu
     PULLMESSAGE("giveMassage"); //C->B
 
 

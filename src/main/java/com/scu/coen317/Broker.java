@@ -13,7 +13,7 @@ public class Broker {
     int port;
     TcpServer listenSocket;
 
-    Zookeeper defaultZookeeper;
+    HostRecord defaultZookeeper;
 
 //    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
@@ -22,10 +22,11 @@ public class Broker {
     Map<String, HostRecord> topics_coordinator;
     // 作为coordinator要用到的讯息
     Map<String, List<HostRecord>> topic_consumer;
-    Map<Consumer, Map<String, List<Pair<Integer, HostRecord>>>> balance;
+    Map<HostRecord, Map<String, List<Pair<Integer, HostRecord>>>> balance;
     // each group's leader
-    Map<String, Consumer> consumerLeader;
+    Map<String, HostRecord> consumerLeader;
 
+    // balance Map for each group
     // 记录consumer，each topic offset
     Map<Consumer, Map<String,Integer>> consumerOffset;
     
@@ -33,7 +34,7 @@ public class Broker {
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException {
         this.host = host;
         this.port = port;
-        this.defaultZookeeper = new Zookeeper(zookeeperHost, zookeeperPort);
+        this.defaultZookeeper = new HostRecord(zookeeperHost, zookeeperPort);
 
         this.listenSocket = new TcpServer(port);
         listenSocket.setHandler(this);
@@ -139,6 +140,18 @@ public class Broker {
         return response;
     }
 
+    public Message rebalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        // coordinator invole rebalance of leader
+
+        HostRecord leader = consumerLeader.get(groupId);
+        TcpClient client = new TcpClient(leader.getHost(),leader.getPort());
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(groupId);
+        Message response = new Message(MessageType.REBALANCE, arguments);
+        client.setHandler(this,response);
+        client.run();
+        Message response = new Message(MessageType.REBALANCEPLAN,)
+    }
 
 
     public Message storeInfoAndGetTopic(String topic, String groupId) throws IOException {
@@ -161,7 +174,6 @@ public class Broker {
 
 
     public void listen() throws IOException, ClassNotFoundException {
-
         listenSocket.listen();
     }
 

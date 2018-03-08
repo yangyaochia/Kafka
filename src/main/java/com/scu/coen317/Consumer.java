@@ -65,6 +65,15 @@ public class Consumer {
         subscribedTopicPartitions = topicPartitions;
     }
 
+    public void rebalance() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        TcpClient client = new TcpClient(coordinator.getHost(), coordinator.getPort());
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(this.groupId);
+        Message request = new Message(MessageType.REBALANCE, arguments);
+        client.setHandler(this,request);
+        client.run();
+    }
+
     public List<ConsumerRecord> poll() {
 
         // multicast of each partition in subscribedPartitions;
