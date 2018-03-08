@@ -1,14 +1,13 @@
 package com.scu.coen317;
 
 import java.io.Serializable;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class Message implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     MessageType methodName;
     List<Object> arguments;
 

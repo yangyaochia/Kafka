@@ -5,7 +5,7 @@ import java.io.IOException;
 public class TestReceive {
     public static void main(String[] args) {
         try {
-            Consumer consumerReceive = new Consumer("localhost", 9001, "group1", "localhost", 9000);
+            Broker broker = new Broker( "localhost", 9001);
 //            System.out.println("Before send : " + consumerReceive.helloWord);
 //            System.out.println("After send : " + consumerReceive.helloWord);
         } catch (IOException e) {

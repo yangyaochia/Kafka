@@ -26,9 +26,9 @@ public class Producer {
     // default brokers and broker cache
     Broker defaultBroker;
     List<Broker> brokers;
+    Map<String, Map<Integer,Broker>> topicsMember;
+    Map<String,Topic> publishTopicSet;
 
-    // topic, <partition, 負責的broker>
-    Map<String, List<Pair<Integer,Broker>> > topicPartitionLeaders;
 
     public Producer (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
         this.host = host;
@@ -41,7 +41,7 @@ public class Producer {
         brokers = new ArrayList();
         brokers.add(defaultBroker);
 
-        topicPartitionLeaders = new HashMap<>();
+        topicsMember = new HashMap<>();
 
     }
 
@@ -53,26 +53,43 @@ public class Producer {
         }
         return hash;
     }
-
-    public void sendMessage(String topic, String msg) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        //sock.connect();
-
+    public void createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         List<Object> argument = new ArrayList<>();
-        argument.add(topic);
-        argument.add(msg);
-        Message message = new Message(MessageType.PUBLISH_MESSAGE, argument);
+        Topic t = new Topic(topic, partition, replication);
+        argument.add(t);
+        publishTopicSet.put(topic,t);
+        Message message = new Message(MessageType.CREATE_TOPIC, argument);
 
         TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
-//        sock.setReadInterval(1000);
         sock.setHandler(this.getClass(), this, message);
-        List<Pair<Integer,Broker>> ls= topicPartitionLeaders.get(topic);
-        if ( topicPartitionLeaders.get(topic) == null ) {
-            // 先問default broker list
+        sock.run();
 
+    }
+    public void updateTopicPartitionLeader(Topic topic, Map<Integer,Broker> partitionLeaders) {
+        topicsMember.put(topic.getName(), partitionLeaders);
+        publishTopicSet.put(topic.getName(), topic);
+        return;
+    }
+
+    public void publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        //sock.connect();
+
+        if ( !topicsMember.containsKey(topic) ) {
+            // Reuse the createTopic function to get corresponding topic partition leaders
+            createTopic(topic,1,1);
         }
-        //int totalPartition = topic_partition_leaders.get(topic).size();
-        int partition = hashCode(msg) % 4;
+        int partition = hashCode(message) % topicsMember.get(topic).size();
+        Broker partitionLeader = topicsMember.get(topic).get(partition);
+        List<Object> argument = new ArrayList<>();
+        Topic t = publishTopicSet.get(topic);
+        argument.add(t);
+        argument.add(partition);
+        argument.add(message);
+        Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
+        TcpClient sock = new TcpClient(partitionLeader.host, partitionLeader.port);
+//        sock.setReadInterval(1000);
+        sock.setHandler(this.getClass(), this, request);
         sock.run();
     }
 
@@ -82,9 +99,6 @@ public class Producer {
 
         return;
     }
-    public void updateTopicPartitionLeader(String topic, List<Pair<Integer,Broker>> partitionLeaders) {
-        topicPartitionLeaders.put(topic, partitionLeaders);
-    }
 
     public void update(String s) {
         System.out.println("received response from broker");
@@ -92,12 +106,13 @@ public class Producer {
     }
 
     public static void main(String argv[]) throws Exception {
-        Producer p = new Producer("localhost", 9003, "localhost", 9000);
-        p.sendMessage("topic1", "1");
+        Producer p = new Producer("localhost", 8000, "localhost", 9000);
+        p.createTopic("topic1", 2,2);
+        p.publishMessage("topic1", "1");
         //sleep(1000);
-        p.sendMessage("topic2", "2");
+        p.publishMessage("topic2", "2");
         //sleep(1000);
-        p.sendMessage("topic3", "3");
+        p.publishMessage("topic3", "3");
         //sleep(1000);
     }
 }

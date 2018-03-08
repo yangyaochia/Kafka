@@ -11,7 +11,6 @@ import java.util.*;
 
 
 public class Zookeeper {
-
     String host;
     int port;
     TcpServer listenSocket;
@@ -33,9 +32,8 @@ public class Zookeeper {
     // 记录consumer， offset
     Map<String, Pair<Integer,Broker>> topic_map;
 
-
-
-
+    // 接收來自producer的create_topic
+    // 回傳這個topic, partition的負責人給傳的那個人
     public Zookeeper(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
