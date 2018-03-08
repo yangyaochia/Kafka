@@ -52,16 +52,7 @@ public class Broker {
         consumerOffset = new HashMap();
         topicMessage = new HashMap<>();
     }
-
-    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
-        List<Object> arguments = new ArrayList<>();
-        arguments.add(new HostRecord(this.host, this.port));
-        Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
-        client.setHandler(this,request);
-        client.run();
-    }
-
+    ////////////////// Yao-Chia
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
         String topicName = topic.getName();
@@ -76,7 +67,7 @@ public class Broker {
             argument.add(topic);
             Message request = new Message(MessageType.GET_TOPIC, argument);
 
-            TcpClient sock = new TcpClient(defaultZookeeper.host, defaultZookeeper.port);
+            TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler( this, request);
             sock.run();
 
@@ -113,13 +104,26 @@ public class Broker {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
 
         topicMessage.get(topic).get(partition).add(message);
-        
+
         List<Object> arguments = new ArrayList<>();
         arguments.add(topic);
         arguments.add("Published Successful");
         Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
         return response;
     }
+
+    ////////////////// Yao-Chia
+    ////////////////// Xin-Zhu
+    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(new HostRecord(this.host, this.port));
+        Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
+        client.setHandler(this,request);
+        client.run();
+    }
+
+
 
 
     public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -200,7 +204,10 @@ public class Broker {
         Message response = new Message(MessageType.REBALANCEPLAN, arguments);
         return response;
     }
+////////////////// Xin-Zhu
+// //////////////// Hsuan-Chih
 
+// //////////////// Hsuan-Chih
 
     public void listen() throws IOException, ClassNotFoundException {
         listenSocket.listen();
