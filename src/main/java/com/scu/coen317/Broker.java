@@ -50,7 +50,10 @@ public class Broker {
         String topicName = topic.getName();
         List<Object> argument = new ArrayList<>();
         Message response;
-
+        Map<Integer,HostRecord> leaders = new HashMap<>();
+        leaders.put(0, new HostRecord("localhost", 9000));
+        leaders.put(1, new HostRecord("localhost", 9000));
+        topicsMember.put(topicName, leaders);
         // This broker does now know the topic, then ask the zookeeper
         if ( !topicsMember.containsKey(topicName) ) {
             argument.add(topic);
@@ -66,14 +69,14 @@ public class Broker {
             while (!topicsMember.containsKey(topicName) ) {
                 wait();
             }
-            argument.add(topic);
+            argument.add(topicName);
             argument.add(topicsMember.get(topicName) );
             response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
             return response;
         }
 
     }
-    public void topicAssignmentToProduer(Topic topic, Map<Integer,HostRecord> partitionLeaders) {
+    public void topicAssignmentToProduer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
         synchronized (this) {
             topicsMember.put(topic.getName(), partitionLeaders);
             notify();
@@ -81,17 +84,17 @@ public class Broker {
         return;
     }
 
-//    public Message publishMessage(String topic, String message) {
-//        System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
-//
-////        System.out.println("This broker's port number :" + this.port);
-//
-//        List<String> list = topicMessage.getOrDefault(topic, new ArrayList<>());
-//        list.add(message);
-//        topicMessage.put(topic, list);
-//
-//        return publishMessageAck();
-//    }
+    public Message publishMessage(String topic, Integer partition, String message) {
+        System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
+
+//        System.out.println("This broker's port number :" + this.port);
+
+        List<String> list = topicMessage.get(topic).get(partition).;
+        list.add(message);
+        topicMessage.put(topic, list);
+
+        return publishMessageAck();
+    }
 
 
     public Message getCoordinator(String groupId) {
@@ -138,10 +141,6 @@ public class Broker {
         listenSocket.listen();
     }
 
-    public static void main(String argv[]) throws Exception {
-        Broker b = new Broker("localhost", 9000, "localhost", 2181);
-        b.listen();
 
-    }
 }
 

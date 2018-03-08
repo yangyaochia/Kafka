@@ -108,11 +108,12 @@ public class TcpServer {
 
 
                 //msg.add(0, "echo : <"+client_id+"> ");
-                that_server.getClient(client_id).send(response);
+                    that_server.getClient(client_id).send(response);
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
                     System.out.println("no such method");
                 }
+
                 System.out.println("* < send to " + client_id + "> " + "successful");
             }
 

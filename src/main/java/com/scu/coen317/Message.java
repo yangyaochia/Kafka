@@ -10,10 +10,12 @@ public class Message implements Serializable {
 
     MessageType methodName;
     List<Object> arguments;
+    boolean isAck;
 
     public Message(MessageType methodName) {
         this.methodName = methodName;
         arguments = new ArrayList();
+        this.isAck = false;
     }
 
     public Message(MessageType methodName, List<Object> arguments) {
@@ -46,4 +48,6 @@ public class Message implements Serializable {
         }
         return inputs;
     }
+
+    public boolean isAck() { return this.isAck; }
 }

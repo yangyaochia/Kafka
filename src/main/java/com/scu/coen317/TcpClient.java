@@ -128,10 +128,11 @@ public class TcpClient {
             public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
                 //handler.onMessage(cid, msg);
                 System.out.println("进入client的handler");
-                if ( msg.getMethodName() == MessageType.PUBLISH_MESSAGE_ACK ) {
+                if ( msg.isAck() ) {
                     System.out.println(msg.getMethodNameValue());
                     that_sock.close();
                 } else {
+
                     Class<?>[] inputTypes = msg.getInputParameterType();
                     Method method = clazz.getMethod(msg.getMethodNameValue(), inputTypes);
                     Object[] inputs = msg.getInputValue();
