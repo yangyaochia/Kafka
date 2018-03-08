@@ -15,7 +15,7 @@ public enum MessageType {
     REPLICATION_RESPONSE("replicationUpdate"),
     SEND_HEARTBEAT("monitorCluster"),           // B -> Z
     NEW_BROKER_REGISTER("newBrokerRegister"),   // B -> Z Xinzhu
-    GET_COORDINATOR("coordinatorAssignment"),   //        Xinzhu
+    GET_COORDINATOR("coordinatorAssignment"),   // B -> C      Xinzhu
     CONSUMER_JOIN_GROUP_REGISTRATION_ACK("receiveConsumerJoinGroupRegistrationAck"),   // Xinzhu
     REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance Xinzhu
     REBALANCE_RESULT("updateTopicPartition"), // Coordinator send rebalance result, and send it <></>o each group member
@@ -35,7 +35,7 @@ public enum MessageType {
     UPDATE_COORDINATOR("updateCoordinator"), // Xinzhu updateCoordinator(HostRecord coordinator)
     JOIN_GROUP("addConsumerToGroup"), //C->Bg
     SUBSCRIBE_TOPIC("storeInfoAndGetTopic"), //C->Bg //store who subscribe what topics and give to consumer leader later
-    REBALANCEPLAN("assignByRebalancePlan"), //C1->Bg assignByRebalancePlan(Map<String, List<Pair<Integer, HostRecord>>> topicPartitions) Xinzhu
+    REBALANCEPLAN("updateBalanceMap"), //C1->Bg Xinzhu
     PULLMESSAGE("giveMassage"); //C->B
 
 
