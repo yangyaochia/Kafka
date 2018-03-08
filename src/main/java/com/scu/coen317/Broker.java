@@ -18,11 +18,11 @@ public class Broker {
 //    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
     Map<String, Map<Integer,List<String>> > topicMessage;
-    Map<String, Map<Integer,Broker>> topicsMember;
-    Map<String, Broker> topics_coordinator;
+    Map<String, Map<Integer,HostRecord>> topicsMember;
+    Map<String, HostRecord> topics_coordinator;
     // 作为coordinator要用到的讯息
-    Map<String, List<Consumer>> topic_consumer;
-    Map<Consumer, Map<String, List<Pair<Integer, Broker>>>> balance;
+    Map<String, List<HostRecord>> topic_consumer;
+    Map<Consumer, Map<String, List<Pair<Integer, HostRecord>>>> balance;
     // each group's leader
     Map<String, Consumer> consumerLeader;
 
@@ -51,6 +51,11 @@ public class Broker {
         List<Object> argument = new ArrayList<>();
         Message response;
 
+        // Test 用途
+        Map<Integer, HostRecord> m = new HashMap<>();
+        m.put(0, new HostRecord(this.host, this.port));
+        m.put(1, new HostRecord(this.host, this.port));
+        topicsMember.put(topic.getName(), m);
         // This broker does now know the topic, then ask the zookeeper
         if ( !topicsMember.containsKey(topicName) ) {
             argument.add(topic);
@@ -73,7 +78,7 @@ public class Broker {
         }
 
     }
-    public void topicAssignmentToProduer(Topic topic, Map<Integer,Broker> partitionLeaders) {
+    public void topicAssignmentToProduer(Topic topic, Map<Integer,HostRecord> partitionLeaders) {
         synchronized (this) {
             topicsMember.put(topic.getName(), partitionLeaders);
             notify();
@@ -98,7 +103,7 @@ public class Broker {
         while (!topics_coordinator.containsKey(groupId)) {
 
         }
-        Broker broker = topics_coordinator.get(groupId);
+        //Broker broker = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
         arguments.add(this.host);
         arguments.add(this.port);

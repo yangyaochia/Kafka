@@ -24,25 +24,23 @@ public class Producer {
     //TcpClient sock;
     //TcpClientEventHandler handler;
     // default brokers and broker cache
-    Broker defaultBroker;
-    List<Broker> brokers;
-    Map<String, Map<Integer,Broker>> topicsMember;
-    Map<String,Topic> publishTopicSet;
+    //Broker defaultBroker;
+    HostRecord defaultBroker;
+    List<HostRecord> brokers;
+    Map<String, Map<Integer,HostRecord>> topicsMember;
+    Set<Topic> publishTopicSet;
 
 
     public Producer (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
         this.host = host;
         this.port = port;
 
-        //sock.setReadInterval(5000);
-
-
-        defaultBroker = new Broker(defaultBrokerIp, defaultBrokerPort);
+        defaultBroker = new HostRecord(defaultBrokerIp, defaultBrokerPort);
         brokers = new ArrayList();
         brokers.add(defaultBroker);
 
         topicsMember = new HashMap<>();
-
+        publishTopicSet = new HashSet<>();
     }
 
     private int hashCode(String msg) {
@@ -57,17 +55,19 @@ public class Producer {
         List<Object> argument = new ArrayList<>();
         Topic t = new Topic(topic, partition, replication);
         argument.add(t);
-        publishTopicSet.put(topic,t);
+        publishTopicSet.add(t);
         Message message = new Message(MessageType.CREATE_TOPIC, argument);
 
-        TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
+        TcpClient sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
         sock.setHandler(this.getClass(), this, message);
         sock.run();
 
     }
-    public void updateTopicPartitionLeader(Topic topic, Map<Integer,Broker> partitionLeaders) {
+    public void updateTopicPartitionLeader(Topic topic, Map<Integer,HostRecord> partitionLeaders) {
+        System.out.println("Hello!!!");
         topicsMember.put(topic.getName(), partitionLeaders);
-        publishTopicSet.put(topic.getName(), topic);
+        publishTopicSet.add(topic);
+
         return;
     }
 
@@ -79,15 +79,14 @@ public class Producer {
             createTopic(topic,1,1);
         }
         int partition = hashCode(message) % topicsMember.get(topic).size();
-        Broker partitionLeader = topicsMember.get(topic).get(partition);
+        HostRecord partitionLeader = topicsMember.get(topic).get(partition);
         List<Object> argument = new ArrayList<>();
-        Topic t = publishTopicSet.get(topic);
-        argument.add(t);
+        argument.add(topic);
         argument.add(partition);
         argument.add(message);
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
-        TcpClient sock = new TcpClient(partitionLeader.host, partitionLeader.port);
+        TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
 //        sock.setReadInterval(1000);
         sock.setHandler(this.getClass(), this, request);
         sock.run();
@@ -108,11 +107,11 @@ public class Producer {
     public static void main(String argv[]) throws Exception {
         Producer p = new Producer("localhost", 8000, "localhost", 9000);
         p.createTopic("topic1", 2,2);
-        p.publishMessage("topic1", "1");
-        //sleep(1000);
-        p.publishMessage("topic2", "2");
-        //sleep(1000);
-        p.publishMessage("topic3", "3");
+//        p.publishMessage("topic1", "1");
+//        //sleep(1000);
+//        p.publishMessage("topic2", "2");
+//        //sleep(1000);
+//        p.publishMessage("topic3", "3");
         //sleep(1000);
     }
 }
