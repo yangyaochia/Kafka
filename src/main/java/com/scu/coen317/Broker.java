@@ -50,6 +50,7 @@ public class Broker {
         List<Object> arguments = new ArrayList<>();
         arguments.add(new HostRecord(this.host, this.port));
         Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
+        client.setHandler(this,request);
         client.run();
     }
 
