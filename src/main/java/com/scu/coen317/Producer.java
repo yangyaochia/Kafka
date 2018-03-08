@@ -82,6 +82,7 @@ public class Producer {
             createTopic(topic,1,1);
         }
         int partition = hashCode(message) % topicsMember.get(topic).size();
+        System.out.println(partition);
         HostRecord partitionLeader = topicsMember.get(topic).get(partition);
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
