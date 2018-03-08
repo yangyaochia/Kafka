@@ -51,11 +51,6 @@ public class Broker {
         List<Object> argument = new ArrayList<>();
         Message response;
 
-        // Test 用途
-        Map<Integer, HostRecord> m = new HashMap<>();
-        m.put(0, new HostRecord(this.host, this.port));
-        m.put(1, new HostRecord(this.host, this.port));
-        topicsMember.put(topic.getName(), m);
         // This broker does now know the topic, then ask the zookeeper
         if ( !topicsMember.containsKey(topicName) ) {
             argument.add(topic);
@@ -100,13 +95,13 @@ public class Broker {
 
 
     public Message getCoordinator(String groupId) {
-        while (!topics_coordinator.containsKey(groupId)) {
-
-        }
-        //Broker broker = topics_coordinator.get(groupId);
+//        while (!topics_coordinator.containsKey(groupId)) {
+//
+//        }
+//        HostRecord coordinator = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
-        arguments.add(this.host);
-        arguments.add(this.port);
+//        arguments.add(coordinator);
+        arguments.add(new HostRecord("localhost", this.port));
         Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
         return response;
     }
