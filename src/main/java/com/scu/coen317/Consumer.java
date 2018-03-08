@@ -58,7 +58,7 @@ public class Consumer {
         Message request = new Message(MessageType.SUBSCRIBE_TOPIC, arguments);
         // send to coordinator and wait for partitions of this topic
         TcpClient consumerClient = new TcpClient(coordinator.getHost(), coordinator.getPort());
-        consumerClient.setHandler(this.getClass(), this, request);
+        consumerClient.setHandler(this, request);
     }
 
     public void assignByRebalancePlan(Map<String, List<Pair<Integer, HostRecord>>> topicPartitions) {
@@ -86,16 +86,12 @@ public class Consumer {
         Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
         // send request to defaultBroker with the groupId
         TcpClient sock = new TcpClient(broker.getHost(), broker.getPort());
-        sock.setHandler(this.getClass(), this, request);
+        sock.setHandler(this, request);
         sock.run();
     }
 
     public void updateCoordinator(HostRecord coordinator) {
         this.coordinator = coordinator;
-        System.out.println("coordinator's host ： " + coordinator.getHost());
-        System.out.println("coordinator's port ： " + coordinator.getPort());
-//        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK);
-//        return response;
     }
 
     // to coordinator

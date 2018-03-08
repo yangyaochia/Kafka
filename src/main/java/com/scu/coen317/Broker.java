@@ -45,6 +45,14 @@ public class Broker {
         topicMessage = new HashMap<>();
     }
 
+    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(new HostRecord(this.host, this.port));
+        Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
+        client.run();
+    }
+
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
         String topicName = topic.getName();
@@ -97,14 +105,19 @@ public class Broker {
     }
 
 
-    public Message getCoordinator(String groupId) {
-//        while (!topics_coordinator.containsKey(groupId)) {
-//
-//        }
-//        HostRecord coordinator = topics_coordinator.get(groupId);
+    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        while (!topics_coordinator.containsKey(groupId)) {
+            TcpClient client = new TcpClient(defaultZookeeper.host,defaultZookeeper.port);
+            List<Object> arguments = new ArrayList<>();
+            arguments.add(groupId);
+            Message request = new Message(MessageType.GET_COORDINATOR, arguments);
+            client.setHandler(this, request);
+            client.run();
+        }
+        HostRecord coordinator = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
-//        arguments.add(coordinator);
-        arguments.add(new HostRecord("localhost", this.port));
+        arguments.add(coordinator);
+//        arguments.add(new HostRecord("localhost", this.port));
         Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
         return response;
     }
