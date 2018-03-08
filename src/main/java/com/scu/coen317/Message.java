@@ -29,6 +29,9 @@ public class Message implements Serializable {
         return methodName.toString();
     }
 
+    public void setIsAck(boolean isAck) {
+        this.isAck = isAck;
+    }
     public List<Object> getArguments() {
         return arguments;
     }
