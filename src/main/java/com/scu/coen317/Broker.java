@@ -96,21 +96,16 @@ public class Broker {
     }
 
     public Message publishMessage(String topic, Integer partition, String message) {
-        System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
+        setTopicLeader(topic,partition);
 
+        System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
         topicMessage.get(topic).get(partition).add(message);
+        System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
 
         List<Object> arguments = new ArrayList<>();
-        arguments.add(topic);
+        arguments.add(message);
         arguments.add("Published Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
-        return response;
-    }
-    public Message publishMessageAck() {
-        List<Object> arguments = new ArrayList<>();
-        arguments.add("Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
-        response.setIsAck(true);
+        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, true);
         return response;
     }
 
@@ -155,18 +150,18 @@ public class Broker {
         return response;
     }
 
-    public Message rebalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        // coordinator invole rebalance of leader
-
-        HostRecord leader = consumerLeader.get(groupId);
-        TcpClient client = new TcpClient(leader.getHost(),leader.getPort());
-        List<Object> arguments = new ArrayList<>();
-        arguments.add(groupId);
-        Message response = new Message(MessageType.REBALANCE, arguments);
-        client.setHandler(this,response);
-        client.run();
-//        Message response = new Message(MessageType.REBALANCEPLAN,)
-    }
+//    public Message rebalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+//        // coordinator invole rebalance of leader
+//
+//        HostRecord leader = consumerLeader.get(groupId);
+//        TcpClient client = new TcpClient(leader.getHost(),leader.getPort());
+//        List<Object> arguments = new ArrayList<>();
+//        arguments.add(groupId);
+//        Message response = new Message(MessageType.REBALANCE, arguments);
+//        client.setHandler(this,response);
+//        client.run();
+////        Message response = new Message(MessageType.REBALANCEPLAN,)
+//    }
 
 
     public Message storeInfoAndGetTopic(String topic, String groupId) throws IOException {

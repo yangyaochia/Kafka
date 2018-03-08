@@ -17,6 +17,11 @@ public class Message implements Serializable {
         arguments = new ArrayList();
         this.isAck = false;
     }
+    public Message(MessageType methodName, List<Object> arguments, boolean isAck) {
+        this.methodName = methodName;
+        this.arguments = arguments;
+        this.isAck = isAck;
+    }
 
     public Message(MessageType methodName, List<Object> arguments) {
         this.methodName = methodName;
