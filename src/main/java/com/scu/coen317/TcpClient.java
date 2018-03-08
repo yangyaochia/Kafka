@@ -121,7 +121,7 @@ public class TcpClient {
         return true;
     }
 
-    public void setHandler(Class clazz, Object object, Message request) {
+    public void setHandler(Object object, Message request) {
         final TcpClient that_sock = this;
         final Object this_object = object;
         this.handler = new TcpClientEventHandler(){
@@ -134,7 +134,7 @@ public class TcpClient {
                 } else {
 
                     Class<?>[] inputTypes = msg.getInputParameterType();
-                    Method method = clazz.getMethod(msg.getMethodNameValue(), inputTypes);
+                    Method method = object.getClass().getMethod(msg.getMethodNameValue(), inputTypes);
                     Object[] inputs = msg.getInputValue();
                     method.invoke(this_object, inputs);
 

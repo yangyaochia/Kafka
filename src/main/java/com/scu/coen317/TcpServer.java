@@ -92,7 +92,7 @@ public class TcpServer {
     }
 
 
-    public void setHandler(Class clazz, Object object) {
+    public void setHandler(Object object) {
         final TcpServer that_server = this;
         final Object this_object = object;
         this.handler = new TcpServerEventHandler() {
@@ -100,7 +100,7 @@ public class TcpServer {
                 System.out.println("进入server onMessage");
                 Class<?>[] inputTypes = message.getInputParameterType();
                 try {
-                    Method method = clazz.getMethod(message.getMethodNameValue(), inputTypes);
+                    Method method = object.getClass().getMethod(message.getMethodNameValue(), inputTypes);
 
                     Object[] inputs = message.getInputValue();
                     System.out.println("* <" + client_id + "> will invoke " + message.getMethodName());

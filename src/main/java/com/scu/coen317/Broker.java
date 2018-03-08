@@ -36,7 +36,7 @@ public class Broker {
         this.defaultZookeeper = new Zookeeper(zookeeperHost, zookeeperPort);
 
         this.listenSocket = new TcpServer(port);
-        listenSocket.setHandler(this.getClass(), this);
+        listenSocket.setHandler(this);
 
         topicsMember = new HashMap();
         topics_coordinator = new HashMap();
@@ -60,7 +60,7 @@ public class Broker {
             Message request = new Message(MessageType.GET_TOPIC, argument);
 
             TcpClient sock = new TcpClient(defaultZookeeper.host, defaultZookeeper.port);
-            sock.setHandler(this.getClass(), this, request);
+            sock.setHandler( this, request);
             sock.run();
 
         }

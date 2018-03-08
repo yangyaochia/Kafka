@@ -57,7 +57,7 @@ public class Producer {
         Message request = new Message(MessageType.CREATE_TOPIC, argument);
         HostRecord defaultBroker = defaultBrokers.iterator().next();
         TcpClient sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
-        sock.setHandler(this.getClass(), this, request);
+        sock.setHandler( this, request);
         //sock.setReadInterval(2000);
 //        System.out.println(sock.getReadInterval());
         sock.run();
@@ -89,7 +89,7 @@ public class Producer {
 
         TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
 //        sock.setReadInterval(1000);
-        sock.setHandler(this.getClass(), this, request);
+        sock.setHandler( this, request);
         sock.run();
     }
 
