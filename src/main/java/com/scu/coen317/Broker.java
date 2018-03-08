@@ -13,7 +13,7 @@ public class Broker {
     int port;
     TcpServer listenSocket;
 
-    Zookeeper defaultZookeeper;
+    HostRecord defaultZookeeper;
 
 //    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
@@ -36,7 +36,7 @@ public class Broker {
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException {
         this.host = host;
         this.port = port;
-        this.defaultZookeeper = new Zookeeper(zookeeperHost, zookeeperPort);
+        this.defaultZookeeper = new HostRecord(zookeeperHost, zookeeperPort);
 
         this.listenSocket = new TcpServer(port);
         listenSocket.setHandler(this);
@@ -71,7 +71,7 @@ public class Broker {
             argument.add(topic);
             Message request = new Message(MessageType.GET_TOPIC, argument);
 
-            TcpClient sock = new TcpClient(defaultZookeeper.host, defaultZookeeper.port);
+            TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler( this, request);
             sock.run();
 
@@ -108,7 +108,7 @@ public class Broker {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
 
         topicMessage.get(topic).get(partition).add(message);
-        
+
         List<Object> arguments = new ArrayList<>();
         arguments.add(topic);
         arguments.add("Published Successful");
