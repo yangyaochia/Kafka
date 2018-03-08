@@ -125,7 +125,7 @@ public class TcpClient {
         final TcpClient that_sock = this;
         final Object this_object = object;
         this.handler = new TcpClientEventHandler(){
-            public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+            public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InterruptedException {
                 //handler.onMessage(cid, msg);
                 System.out.println("进入client的handler");
                 if ( msg.isAck() ) {

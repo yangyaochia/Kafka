@@ -95,8 +95,8 @@ public class Producer {
         sock.run();
     }
 
-    public void publishMessageAck(String message) {
-        System.out.println(message);
+    public void publishMessageAck(String message, String ackMessage) {
+        System.out.println(message + ackMessage);
     }
 
     public void update(String s) {
