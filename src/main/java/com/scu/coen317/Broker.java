@@ -66,7 +66,6 @@ public class Broker {
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler( this, request);
             sock.run();
-
         }
         // This broker already stored the topic info
         synchronized (this) {
@@ -189,7 +188,7 @@ public class Broker {
     }
 ////////////////// Xin-Zhu
 // //////////////// Hsuan-Chih
-    
+
 // //////////////// Hsuan-Chih
 
     public void listen() throws IOException, ClassNotFoundException {
