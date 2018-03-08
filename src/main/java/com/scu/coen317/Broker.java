@@ -166,6 +166,7 @@ public class Broker {
         client.setHandler(this,response);
         client.run();
 //        Message response = new Message(MessageType.REBALANCEPLAN,)
+        return response;
     }
 
 

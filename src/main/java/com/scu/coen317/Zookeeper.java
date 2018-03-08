@@ -20,14 +20,14 @@ public class Zookeeper {
     // assign brokers when new producer apply a new topic
 //    PriorityQueue<Pair<Timestamp,Broker>> clusters;
 
-    Map<String, List<Broker>> topicsMember;
-
-    // 作为coordinator要用到的讯息
-    Map<String, Broker> topics_coordinator;
-
-    // each topic's consumer group leader
-    Map<String, Consumer> consumerLeader;
-    Map<Consumer, Integer> consumerOffset;
+//    Map<String, List<Broker>> topicsMember;
+//
+//    // 作为coordinator要用到的讯息
+//    Map<String, Broker> topics_coordinator;
+//
+//    // each topic's consumer group leader
+//    Map<String, Consumer> consumerLeader;
+//    Map<Consumer, Integer> consumerOffset;
 
     List<HostRecord> brokerList;
 
@@ -43,10 +43,10 @@ public class Zookeeper {
         this.listenSocket = new TcpServer(port);
         listenSocket.setHandler(this);
 //        clusters = new PriorityQueue<>((p1, p2) -> p1.getKey().compareTo(p2.getKey()));
-        topicsMember = new HashMap();
-        topics_coordinator = new HashMap();
-        consumerLeader = new HashMap();
-        consumerOffset = new HashMap();
+//        topicsMember = new HashMap();
+//        topics_coordinator = new HashMap();
+//        consumerLeader = new HashMap();
+//        consumerOffset = new HashMap();
         topicMessage = new HashMap<>();
 
         brokerList = new ArrayList();
@@ -83,10 +83,13 @@ public class Zookeeper {
             arguments.add(temp);
             displayBrokerList();
             Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
+            response.setIsAck(true);
             return response;
         }
         arguments.add("Register failed ");
-        return new Message(MessageType.REGISTER_SUCCESS,arguments );
+        Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
+        response.setIsAck(true);
+        return new Message(MessageType.REGISTER_SUCCESS,arguments);
     }
 
     public void displayBrokerList(){

@@ -58,7 +58,7 @@ public class Consumer {
         Message request = new Message(MessageType.SUBSCRIBE_TOPIC, arguments);
         // send to coordinator and wait for partitions of this topic
         TcpClient consumerClient = new TcpClient(coordinator.getHost(), coordinator.getPort());
-        consumerClient.setHandler(this, request);
+//        consumerClient.setHandler(this, request);
     }
 
     public void assignByRebalancePlan(Map<String, List<Pair<Integer, HostRecord>>> topicPartitions) {
@@ -84,11 +84,11 @@ public class Consumer {
 
 
     void pickBroker() throws IOException {
-        if (brokers.size() != 0) {
-            defaultBroker = brokers.get(0);
-        } else {
-
-        }
+//        if (brokers.size() != 0) {
+//            defaultBroker = brokers.get(0);
+//        } else {
+//
+//        }
     }
 
     public void receiveConsumerJoinGroupRegistrationAck(String ack) {
