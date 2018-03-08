@@ -1,6 +1,8 @@
 package com.scu.coen317;
 
-public class Topic implements java.io.Serializable {
+import java.io.Serializable;
+
+public class Topic implements Serializable {
     String name;
     int key;
     int partition = 1;

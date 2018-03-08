@@ -21,28 +21,24 @@ import static java.lang.Thread.sleep;
 public class Producer {
     String host;
     int port;
-    //TcpClient sock;
-    //TcpClientEventHandler handler;
-    // default brokers and broker cache
-    Broker defaultBroker;
-    List<Broker> brokers;
-    Map<String, Map<Integer,Broker>> topicsMember;
-    Map<String,Topic> publishTopicSet;
+    // Set of default brokers
+    // If the producer does not know whom to contact
+    //
+    Set<HostRecord> defaultBrokers;
 
+    Map<String, Map<Integer,HostRecord>> topicsMember;
+    Set<String> publishTopicSet;
 
     public Producer (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
         this.host = host;
         this.port = port;
 
-        //sock.setReadInterval(5000);
-
-
-        defaultBroker = new Broker(defaultBrokerIp, defaultBrokerPort);
-        brokers = new ArrayList();
-        brokers.add(defaultBroker);
+        HostRecord h = new HostRecord(defaultBrokerIp, defaultBrokerPort);
+        defaultBrokers = new HashSet<>();
+        defaultBrokers.add(h);
 
         topicsMember = new HashMap<>();
-
+        publishTopicSet = new HashSet<>();
     }
 
     private int hashCode(String msg) {
@@ -57,17 +53,22 @@ public class Producer {
         List<Object> argument = new ArrayList<>();
         Topic t = new Topic(topic, partition, replication);
         argument.add(t);
-        publishTopicSet.put(topic,t);
-        Message message = new Message(MessageType.CREATE_TOPIC, argument);
-
-        TcpClient sock = new TcpClient(defaultBroker.host, defaultBroker.port);
-        sock.setHandler(this.getClass(), this, message);
+        publishTopicSet.add(topic);
+        Message request = new Message(MessageType.CREATE_TOPIC, argument);
+        HostRecord defaultBroker = defaultBrokers.iterator().next();
+        TcpClient sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
+        sock.setHandler( this, request);
+        //sock.setReadInterval(2000);
+//        System.out.println(sock.getReadInterval());
         sock.run();
 
     }
-    public void updateTopicPartitionLeader(Topic topic, Map<Integer,Broker> partitionLeaders) {
-        topicsMember.put(topic.getName(), partitionLeaders);
-        publishTopicSet.put(topic.getName(), topic);
+
+    public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
+        System.out.println(topic);
+        topicsMember.put(topic, partitionLeaders);
+        publishTopicSet.add(topic);
+
         return;
     }
 
@@ -79,17 +80,16 @@ public class Producer {
             createTopic(topic,1,1);
         }
         int partition = hashCode(message) % topicsMember.get(topic).size();
-        Broker partitionLeader = topicsMember.get(topic).get(partition);
+        HostRecord partitionLeader = topicsMember.get(topic).get(partition);
         List<Object> argument = new ArrayList<>();
-        Topic t = publishTopicSet.get(topic);
-        argument.add(t);
+        argument.add(topic);
         argument.add(partition);
         argument.add(message);
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
-        TcpClient sock = new TcpClient(partitionLeader.host, partitionLeader.port);
+        TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
 //        sock.setReadInterval(1000);
-        sock.setHandler(this.getClass(), this, request);
+        sock.setHandler( this, request);
         sock.run();
     }
 
@@ -105,14 +105,14 @@ public class Producer {
         return;
     }
 
-    public static void main(String argv[]) throws Exception {
-        Producer p = new Producer("localhost", 8000, "localhost", 9000);
-        p.createTopic("topic1", 2,2);
-        p.publishMessage("topic1", "1");
-        //sleep(1000);
-        p.publishMessage("topic2", "2");
-        //sleep(1000);
-        p.publishMessage("topic3", "3");
-        //sleep(1000);
+    public void addDefaultBroker(String host, Integer port) {
+        HostRecord h = new HostRecord(host, port);
+        defaultBrokers.add(h);
     }
+
+    public void removeDefaultBroker(String host, Integer port) {
+        HostRecord h = new HostRecord(host, port);
+        defaultBrokers.remove(h);
+    }
+
 }

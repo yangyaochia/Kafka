@@ -121,26 +121,23 @@ public class TcpClient {
         return true;
     }
 
-    public void setHandler(Class clazz, Object object, Message request) {
+    public void setHandler(Object object, Message request) {
         final TcpClient that_sock = this;
         final Object this_object = object;
         this.handler = new TcpClientEventHandler(){
             public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
                 //handler.onMessage(cid, msg);
-                if ( msg.getMethodName() == MessageType.PUBLISH_MESSAGE_ACK ) {
+                System.out.println("进入client的handler");
+                if ( msg.isAck() ) {
                     System.out.println(msg.getMethodNameValue());
                     that_sock.close();
                 } else {
 
-                } else if( msg.getMethodName() == MessageType.TOPIC_ASSIGNMENT_TO_BROKER){
-                    System.out.println((String)msg.getMethodNameValue());
-                    that_sock.close();
-                }
-                else{
                     Class<?>[] inputTypes = msg.getInputParameterType();
-                    Method method = clazz.getMethod(msg.getMethodNameValue(), inputTypes);
+                    Method method = object.getClass().getMethod(msg.getMethodNameValue(), inputTypes);
                     Object[] inputs = msg.getInputValue();
-                    method.invoke(this_object, inputs)
+                    method.invoke(this_object, inputs);
+
                     System.out.println(msg.getMethodName());
                 }
             }

@@ -16,52 +16,60 @@ public class TcpServer {
     private TcpServerEventHandler handler;
 
     private ArrayList<TcpClient> clients;
-    public ArrayList<TcpClient> getClients(){ return clients; }
+
+    public ArrayList<TcpClient> getClients() {
+        return clients;
+    }
+
     private boolean closer = false;
     private int readInterval;
-    public int getReadInterval(){ return readInterval; }
-    public void setReadInterval(int msec){
+
+    public int getReadInterval() {
+        return readInterval;
+    }
+
+    public void setReadInterval(int msec) {
         this.readInterval = msec;
-        for(TcpClient sock : clients){
+        for (TcpClient sock : clients) {
             sock.setReadInterval(msec);
         }
     }
 
-    public TcpServer(int port){
-        if(server != null && !server.isClosed()) return;
-        if(clients == null) clients = new ArrayList<TcpClient>();
-        try{
+    public TcpServer(int port) {
+        if (server != null && !server.isClosed()) return;
+        if (clients == null) clients = new ArrayList<TcpClient>();
+        try {
             server = new ServerSocket(port);
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
         }
     }
 
-    public void listen(){
-        new Thread(){
-            public void run(){
-                while(!closer){
-                    try{
+    public void listen() {
+        new Thread() {
+            public void run() {
+                while (!closer) {
+                    try {
                         TcpClient sock = new TcpClient(server.accept());
 
                         clients.add(sock);
-                        final int cid = clients.size()-1; // client id
+                        final int cid = clients.size() - 1; // client id
                         handler.onAccept(cid);
-                        if(handler != null){
-                            sock.addEventHandler(new TcpClientEventHandler(){
+                        if (handler != null) {
+                            sock.addEventHandler(new TcpClientEventHandler() {
                                 public void onMessage(Message message) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
                                     handler.onMessage(cid, message);
                                 }
-                                public void onOpen(){
+
+                                public void onOpen() {
                                 }
-                                public void onClose(){
+
+                                public void onClose() {
                                     handler.onClose(cid);
                                 }
                             });
                         }
                         sock.run();
-                    }
-                    catch(Exception ex){
+                    } catch (Exception ex) {
                     }
                 }
             }
@@ -84,50 +92,59 @@ public class TcpServer {
     }
 
 
-    public void setHandler(Class clazz, Object object) {
+    public void setHandler(Object object) {
         final TcpServer that_server = this;
         final Object this_object = object;
-        this.handler = new TcpServerEventHandler(){
-            public void onMessage(int client_id, Message message) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-
+        this.handler = new TcpServerEventHandler() {
+            public void onMessage(int client_id, Message message) throws InvocationTargetException, IllegalAccessException, IOException {
+                System.out.println("进入server onMessage");
                 Class<?>[] inputTypes = message.getInputParameterType();
-                Method method = clazz.getMethod(message.getMethodNameValue(), inputTypes);
-                Object[] inputs = message.getInputValue();
-                Message response = (Message) method.invoke(this_object, inputs);
+                try {
+                    Method method = object.getClass().getMethod(message.getMethodNameValue(), inputTypes);
 
-                System.out.println("* <"+client_id+"> invoke "+ message.getMethodName());
+                    Object[] inputs = message.getInputValue();
+                    System.out.println("* <" + client_id + "> will invoke " + message.getMethodName());
+                    Message response = (Message) method.invoke(this_object, inputs);
+
+
                 //msg.add(0, "echo : <"+client_id+"> ");
-                that_server.getClient(client_id).send(response);
-                System.out.println("* < send to "+client_id+"> "+ "successful");
+                    that_server.getClient(client_id).send(response);
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                    System.out.println("no such method");
+                }
+
+                System.out.println("* < send to " + client_id + "> " + "successful");
             }
-            public void onAccept(int client_id){
-                System.out.println("* <"+client_id+"> connection accepted");
-                that_server.setReadInterval(100 + that_server.getClients().size()*10);
+
+            public void onAccept(int client_id) {
+                System.out.println("* <" + client_id + "> connection accepted");
+                that_server.setReadInterval(100 + that_server.getClients().size() * 10);
             }
-            public void onClose(int client_id){
-                System.out.println("* <"+client_id+"> closed");
+
+            public void onClose(int client_id) {
+                System.out.println("* <" + client_id + "> closed");
             }
         };
     }
 
 
-    public TcpClient getClient(int id){
+    public TcpClient getClient(int id) {
         return clients.get(id);
     }
 
-    public void close(){
+    public void close() {
         closer = true;
-        try{
+        try {
             server.close();
-            for(TcpClient sock : clients){
+            for (TcpClient sock : clients) {
                 sock.close();
             }
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
         }
     }
 
-    public void addEventHandler(TcpServerEventHandler serverHandler){
+    public void addEventHandler(TcpServerEventHandler serverHandler) {
         this.handler = serverHandler;
     }
 
