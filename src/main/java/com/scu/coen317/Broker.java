@@ -15,9 +15,11 @@ public class Broker {
 
     HostRecord defaultZookeeper;
 
-//    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
+    // Map<topic, Map<partition, message>>
     Map<String, Map<Integer,List<String>>> topicMessage;
+    // Map<topic, Map<partition, replication_message>>
+    Map<String, Map<Integer,List<String>>> topicReplicationMessage;
     Map<String, Map<Integer,HostRecord>> topicsPartitionLeader;
 
     // Map<topic,Map<partition,List<replicationHolders>>
@@ -46,11 +48,14 @@ public class Broker {
         this.listenSocket = new TcpServer(port);
         listenSocket.setHandler(this);
 
+        topicMessage = new HashMap<>();
+        topicReplicationMessage = new HashMap<>();
         topicsPartitionLeader = new HashMap();
+        topicPartitionReplicationBrokers = new HashMap<>();
+
         topics_coordinator = new HashMap();
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
-        topicMessage = new HashMap<>();
     }
     ////////////////// Yao-Chia
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
@@ -100,10 +105,10 @@ public class Broker {
     }
     public void setTopicPartitionReplicationHolder(String topic, Integer partition ) {
         // Structure for topicMessage
-        // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
-//        Map<Integer, List<String>> partitionMap = new HashMap<>();
-//        partitionMap.put(partition, new ArrayList());
-//        topicMessage.put(topic, partitionMap);
+        // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<replication_message>>
+        Map<Integer, List<String>> partitionMap = new HashMap<>();
+        partitionMap.put(partition, new ArrayList());
+        topicReplicationMessage.put(topic, partitionMap);
     }
 
     public Message publishMessage(String topic, Integer partition, String message) {
@@ -112,6 +117,8 @@ public class Broker {
         System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
         topicMessage.get(topic).get(partition).add(message);
         System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
+
+        for ( )
 
         List<Object> arguments = new ArrayList<>();
         arguments.add(message);
