@@ -17,8 +17,11 @@ public class Broker {
 
 //    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
-    Map<String, Map<Integer,List<String>> > topicMessage;
-    Map<String, Map<Integer,HostRecord>> topicsMember;
+    Map<String, Map<Integer,List<String>>> topicMessage;
+    Map<String, Map<Integer,HostRecord>> topicsPartitionLeader;
+
+    // Map<topic,Map<partition,List<replicationHolders>>
+    Map<String,Map<String,List<HostRecord>>> topicPartitionReplicationBrokers;
     Map<String, HostRecord> topics_coordinator;
     // 作为coordinator要用到的讯息
     Map<String, List<HostRecord>> topic_consumer;
@@ -39,7 +42,7 @@ public class Broker {
         this.listenSocket = new TcpServer(port);
         listenSocket.setHandler(this);
 
-        topicsMember = new HashMap();
+        topicsPartitionLeader = new HashMap();
         topics_coordinator = new HashMap();
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
@@ -63,9 +66,9 @@ public class Broker {
         Map<Integer,HostRecord> leaders = new HashMap<>();
         leaders.put(0, new HostRecord("localhost", 9000));
         leaders.put(1, new HostRecord("localhost", 9000));
-        topicsMember.put(topicName, leaders);
+        topicsPartitionLeader.put(topicName, leaders);
         // This broker does now know the topic, then ask the zookeeper
-        if ( !topicsMember.containsKey(topicName) ) {
+        if ( !topicsPartitionLeader.containsKey(topicName) ) {
             argument.add(topic);
             Message request = new Message(MessageType.GET_TOPIC, argument);
 
@@ -76,11 +79,11 @@ public class Broker {
         }
         // This broker already stored the topic info
         synchronized (this) {
-            while (!topicsMember.containsKey(topicName) ) {
+            while (!topicsPartitionLeader.containsKey(topicName) ) {
                 wait();
             }
             argument.add(topicName);
-            argument.add(topicsMember.get(topicName) );
+            argument.add(topicsPartitionLeader.get(topicName) );
             response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
             return response;
         }
@@ -88,22 +91,30 @@ public class Broker {
     }
     public void topicAssignmentToProduer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
         synchronized (this) {
-            topicsMember.put(topic.getName(), partitionLeaders);
+            topicsPartitionLeader.put(topic.getName(), partitionLeaders);
             notify();
         }
         return;
     }
 
+    public void setTopicLeader(String topic, Integer partition ) {
+        // Structure for topicMessage
+        // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
+        Map<Integer, List<String>> partitionMap = new HashMap<>();
+        partitionMap.put(partition, new ArrayList());
+        topicMessage.put(topic, partitionMap);
+    }
+
     public Message publishMessage(String topic, Integer partition, String message) {
         System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
 
-//        System.out.println("This broker's port number :" + this.port);
-// Map<String, Map<Integer,List<String>> >
-        //List<String> list = topicMessage.get(topic).getOrDefault(partition, new ArrayList<>());
-        //list.add(message);
         topicMessage.get(topic).get(partition).add(message);
-
-        return publishMessageAck();
+        
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(topic);
+        arguments.add("Published Successful");
+        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
+        return response;
     }
 
 

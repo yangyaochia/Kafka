@@ -72,6 +72,8 @@ public class Producer {
         return;
     }
 
+
+
     public void publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         //sock.connect();
 
