@@ -23,9 +23,13 @@ public class Broker {
     // Map<topic,Map<partition,List<replicationHolders>>
     Map<String,Map<String,List<HostRecord>>> topicPartitionReplicationBrokers;
     Map<String, HostRecord> topics_coordinator;
+
     // 作为coordinator要用到的讯息
-    Map<String, List<HostRecord>> topic_consumer;
-    Map<HostRecord, Map<String, List<Pair<Integer, HostRecord>>>> balance;
+
+    // 记录每个topic都是哪些consumer订阅，每个consumer订阅了几个partition
+    Map<String, Map<HostRecord, Integer>> topic_consumer;
+    // 记录每个group中，每一个consumer订阅的每一个topic都有哪些partition
+    Map<String, Map<HostRecord, Map<String, List<Pair<Integer, HostRecord>>>>> balanceMap;
     // each group's leader
     Map<String, HostRecord> consumerLeader;
 
@@ -66,6 +70,7 @@ public class Broker {
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler( this, request);
             sock.run();
+
         }
         // This broker already stored the topic info
         synchronized (this) {
@@ -140,7 +145,13 @@ public class Broker {
         return response;
     }
 
-
+    public Message publishMessageAck() {
+        List<Object> arguments = new ArrayList<>();
+        arguments.add("Successful");
+        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
+        response.setIsAck(true);
+        return response;
+    }
 
     public Message consumerJoinGroupRegistrationAck() {
         List<Object> arguments = new ArrayList<>();
@@ -162,6 +173,32 @@ public class Broker {
 //        client.run();
 ////        Message response = new Message(MessageType.REBALANCEPLAN,)
 //    }
+
+
+    public void rebalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        balanceMap.remove(groupId);
+        // coordinator invole rebalance of leader
+        while (!balanceMap.containsKey(groupId)) {
+            HostRecord leader = consumerLeader.get(groupId);
+            TcpClient client = new TcpClient(leader.getHost(), leader.getPort());
+            List<Object> arguments = new ArrayList<>();
+            arguments.add(groupId);
+            Message response = new Message(MessageType.REBALANCE, arguments);
+            client.setHandler(this, response);
+            client.run();
+        }
+        // multicast
+        // Map<String, Map<HostRecord, Map<Topic, List<Pair<Integer, HostRecord>>>>> balanceMap;
+        Map<HostRecord, Map<String, List<Pair<Integer, HostRecord>>>> map = balanceMap.get(groupId);
+        for (HostRecord consumer : map.keySet()) {
+            TcpClient client = new TcpClient(consumer.getHost(), consumer.getPort());
+            List<Object> arguments = new ArrayList<>();
+            arguments.add(map.get(consumer));
+            Message request = new Message(MessageType.REBALANCEPLAN, arguments);
+            client.setHandler(this, request);
+            client.run();
+        }
+    }
 
 
     public Message storeInfoAndGetTopic(String topic, String groupId) throws IOException {
