@@ -106,6 +106,7 @@ public class Consumer {
 
     public void updateCoordinator(HostRecord coordinator) {
         this.coordinator = coordinator;
+        System.out.println("My coordinator is " + coordinator.getPort());
     }
 
     // to coordinator
@@ -116,12 +117,14 @@ public class Consumer {
     public static void main(String[] args) {
         Consumer consumerSend = null;
         try {
-            consumerSend = new Consumer("localhost", 10001, "group1", "localhost", 9000);
+            consumerSend = new Consumer("localhost", 10001, "group1", "localhost", 9005);
             consumerSend.findCoordinator(consumerSend.defaultBroker);
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
+
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
