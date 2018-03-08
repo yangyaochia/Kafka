@@ -70,7 +70,6 @@ public class Broker {
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler( this, request);
             sock.run();
-
         }
         // This broker already stored the topic info
         synchronized (this) {
@@ -92,16 +91,23 @@ public class Broker {
         return;
     }
 
-    public void setTopicLeader(String topic, Integer partition ) {
+    public void setTopicPartitionLeader(String topic, Integer partition ) {
         // Structure for topicMessage
         // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
         Map<Integer, List<String>> partitionMap = new HashMap<>();
         partitionMap.put(partition, new ArrayList());
         topicMessage.put(topic, partitionMap);
     }
+    public void setTopicPartitionReplicationHolder(String topic, Integer partition ) {
+        // Structure for topicMessage
+        // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
+//        Map<Integer, List<String>> partitionMap = new HashMap<>();
+//        partitionMap.put(partition, new ArrayList());
+//        topicMessage.put(topic, partitionMap);
+    }
 
     public Message publishMessage(String topic, Integer partition, String message) {
-        setTopicLeader(topic,partition);
+        setTopicPartitionLeader(topic,partition);
 
         System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
         topicMessage.get(topic).get(partition).add(message);
@@ -145,13 +151,7 @@ public class Broker {
         return response;
     }
 
-    public Message publishMessageAck() {
-        List<Object> arguments = new ArrayList<>();
-        arguments.add("Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
-        response.setIsAck(true);
-        return response;
-    }
+
 
     public Message consumerJoinGroupRegistrationAck() {
         List<Object> arguments = new ArrayList<>();
