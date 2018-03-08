@@ -1,27 +1,6 @@
 package com.scu.coen317;
 
 public enum MessageType {
-    // SENDER_ACTION("RECEIVER_ACTION")
-    // Producer
-//    CREATE_TOPIC("getTopic"),                   // P -> B
-//    PUB_MESSAGE("publishMessage"),              // P -> B
-//    // Broker
-//    GET_TOPIC("topicAssignment"),               // B -> Z
-//    TOPIC_ASSIGNMENT_TO_PRODUCER("publish_Message"),        // B -> P
-//    GET_REPLICATION_UPDATE("replicationResponse"),    // B -> B
-//    REPLICATION_RESPONSE("replicationUpdate"),
-//    SEND_HEARTBEAT("monitorCluster"),           // B -> Z
-//    NEW_BROKER_REGISTER("newBrokerRegister"),   // B -> Z
-//    GET_COORDINATOR("coordinatorAssignment"),
-//    CONSUMER_JOIN_GROUP_REGISTRATION_ACK("receiveConsumerJoinGroupRegistrationAck"),
-//    REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance
-//
-//    UPDATE_TOPIC_PARTITION("updateTopicPartition"),// Coordinator send rebalance result, and send it to each group member
-//
-//
-//
-//    SEND_MESSAGE("receivedMessage"),
-//    SEND_MESSAGE_ACK("receivedMessageAck");
 
     // Producer
     CREATE_TOPIC("getTopic"),                   // P -> B   Yaochia

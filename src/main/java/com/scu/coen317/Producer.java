@@ -97,9 +97,6 @@ public class Producer {
 
     public void publishMessageAck(String message) {
         System.out.println(message);
-
-
-        return;
     }
 
     public void update(String s) {
