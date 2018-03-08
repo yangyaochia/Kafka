@@ -52,10 +52,14 @@ public class Broker {
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
 
-        Set<HostRecord> replicationHolders = new HashSet<>();
-        replicationHolders.add(new HostRecord("localhost", 9001));
-        replicationHolders.add(new HostRecord("localhost", 9002));
-        setTopicPartitionLeader("topic1", 2, thisHost, (HashSet<HostRecord>) replicationHolders);
+        if ( port == 9000 ) {
+            Set<HostRecord> replicationHolders = new HashSet<>();
+            replicationHolders.add(new HostRecord("localhost", 9001));
+            replicationHolders.add(new HostRecord("localhost", 9002));
+            setTopicPartitionLeader("topic1", 0, thisHost, (HashSet<HostRecord>) replicationHolders);
+            setTopicPartitionLeader("topic1", 1, thisHost, (HashSet<HostRecord>) replicationHolders);
+        }
+
     }
     ////////////////// Yao-Chia
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
@@ -74,7 +78,7 @@ public class Broker {
 
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler( this, request);
-            sock.run();
+            sock.send(request);
         }
         // This broker already stored the topic info
         synchronized (this) {
@@ -99,7 +103,7 @@ public class Broker {
     public void setTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> replicationHolders) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
         // Structure for topicMessage
         // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
-
+        System.out.println(thisHost.getHost() + " " + thisHost.getPort());
         if ( topicMessage.get(topic) == null ) {
             // Case 1 : This broker has not known this topic partition ever
             Map<Integer, List<String>> partitionMap = new HashMap<>();
@@ -117,7 +121,9 @@ public class Broker {
         } else if ( topicPartitionReplicationBrokers.get(topic).get(partition) == null ) {
             topicPartitionReplicationBrokers.get(topic).put(partition, replicationHolders);
         }
-
+        System.out.println("This host: " + thisHost.getPort() + " leader : " + leader.getPort());
+        System.out.println("Partition: " + partition );
+        System.out.println(thisHost.equals(leader));
         if ( thisHost.equals(leader) ) {
             List<Object> argument = new ArrayList<>();
             argument.add(topic);
@@ -130,9 +136,11 @@ public class Broker {
     }
     public void informReplicationHolders(Message request, HashSet<HostRecord> replicationHolders) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         for ( HostRecord h : replicationHolders ) {
+            System.out.println("Send to : " + h.getPort());
             TcpClient sock = new TcpClient(h.getHost(), h.getPort());
             sock.setHandler( this, request);
-            sock.run();
+            sock.connect();
+            sock.send(request);
         }
     }
 
@@ -145,7 +153,7 @@ public class Broker {
 
         // Send publishMessage to the corresponding topic partition replication holders
         Set<HostRecord> replicationHolders = topicPartitionReplicationBrokers.get(topic).get(partition);
-        if ( !replicationHolders.contains(thisHost)) {
+        if ( !replicationHolders.contains(thisHost) ) {
             System.out.println("Hello!!!");
             List<Object> argument = new ArrayList<>();
             argument.add(topic);
@@ -168,14 +176,14 @@ public class Broker {
 
 
     ////////////////// Xin-Zhu
-    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
-        List<Object> arguments = new ArrayList<>();
-        arguments.add(new HostRecord(this.host, this.port));
-        Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
-        client.setHandler(this,request);
-        client.run();
-    }
+//    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+//        TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+//        List<Object> arguments = new ArrayList<>();
+//        arguments.add(new HostRecord(this.host, this.port));
+//        Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
+//        client.setHandler(this,request);
+//        client.run();
+//    }
 
     public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         while (!topics_coordinator.containsKey(groupId)) {

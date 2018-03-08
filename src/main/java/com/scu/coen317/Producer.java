@@ -21,6 +21,7 @@ import static java.lang.Thread.sleep;
 public class Producer {
     String host;
     int port;
+
     // Set of default brokers
     // If the producer does not know whom to contact
     //
@@ -82,7 +83,7 @@ public class Producer {
             createTopic(topic,1,1);
         }
         int partition = hashCode(message) % topicsMember.get(topic).size();
-        System.out.println(partition);
+        System.out.println(topic + " " + message + " " + partition);
         HostRecord partitionLeader = topicsMember.get(topic).get(partition);
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
@@ -93,7 +94,7 @@ public class Producer {
         TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
 //        sock.setReadInterval(1000);
         sock.setHandler( this, request);
-        sock.run();
+        sock.send(request);
     }
 
     public void publishMessageAck(String message, String ackMessage) {
