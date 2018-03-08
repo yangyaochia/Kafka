@@ -72,6 +72,8 @@ public class Producer {
         return;
     }
 
+
+
     public void publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         //sock.connect();
 
@@ -95,9 +97,6 @@ public class Producer {
 
     public void publishMessageAck(String message) {
         System.out.println(message);
-
-
-        return;
     }
 
     public void update(String s) {

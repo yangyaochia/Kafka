@@ -58,11 +58,20 @@ public class Consumer {
         Message request = new Message(MessageType.SUBSCRIBE_TOPIC, arguments);
         // send to coordinator and wait for partitions of this topic
         TcpClient consumerClient = new TcpClient(coordinator.getHost(), coordinator.getPort());
-        consumerClient.setHandler(this.getClass(), this, request);
+        consumerClient.setHandler(this, request);
     }
 
     public void assignByRebalancePlan(Map<String, List<Pair<Integer, HostRecord>>> topicPartitions) {
         subscribedTopicPartitions = topicPartitions;
+    }
+
+    public void rebalance() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        TcpClient client = new TcpClient(coordinator.getHost(), coordinator.getPort());
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(this.groupId);
+        Message request = new Message(MessageType.REBALANCE, arguments);
+        client.setHandler(this,request);
+        client.run();
     }
 
     public List<ConsumerRecord> poll() {
@@ -82,20 +91,21 @@ public class Consumer {
         }
     }
 
+    public void receiveConsumerJoinGroupRegistrationAck(String ack) {
+        System.out.println(ack);
+    }
+
+
     public void findCoordinator(HostRecord broker) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
         // send request to defaultBroker with the groupId
         TcpClient sock = new TcpClient(broker.getHost(), broker.getPort());
-        sock.setHandler(this.getClass(), this, request);
+        sock.setHandler(this, request);
         sock.run();
     }
 
     public void updateCoordinator(HostRecord coordinator) {
         this.coordinator = coordinator;
-        System.out.println("coordinator's host ： " + coordinator.getHost());
-        System.out.println("coordinator's port ： " + coordinator.getPort());
-//        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK);
-//        return response;
     }
 
     // to coordinator
