@@ -21,7 +21,7 @@ public class Consumer {
     HostRecord defaultBroker;
     List<HostRecord> brokers;
 
-    Map<String, List<Pair<Integer, HostRecord>>> subscribedTopicPartitions;
+    Map<String, Map<Integer, HostRecord>> subscribedTopicPartitions;
 
 
     // for leader of group
@@ -44,34 +44,53 @@ public class Consumer {
         this.defaultBroker = new HostRecord(defaultBrokerIp, defaultBrokerPort);
         brokers = new ArrayList();
         brokers.add(this.defaultBroker);
+        subscribedTopicPartitions = new HashMap<>();
     }
 
 
-    public void subscribe(String topic) throws IOException {
+    public void subscribe(String topic) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (subscribedTopicPartitions.containsKey(topic)) {
             return;
         }
         List<Object> arguments = new ArrayList();
         arguments.add(topic);
         arguments.add(this.groupId);
+        arguments.add(new HostRecord(this.host, this.port));
 
         Message request = new Message(MessageType.SUBSCRIBE_TOPIC, arguments);
         // send to coordinator and wait for partitions of this topic
         TcpClient consumerClient = new TcpClient(coordinator.getHost(), coordinator.getPort());
         consumerClient.setHandler(this, request);
+        consumerClient.run();
     }
 
-    public void assignByRebalancePlan(Map<String, List<Pair<Integer, HostRecord>>> topicPartitions) {
+    public void updateTopicPartition(Map<String, Map<Integer, HostRecord>> topicPartitions) {
         subscribedTopicPartitions = topicPartitions;
     }
 
-    public void rebalance() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        TcpClient client = new TcpClient(coordinator.getHost(), coordinator.getPort());
+    public Message rebalance(Map<String, List<HostRecord>> topic_consumers, Map<String, Map<Integer, HostRecord>> topic_partitions) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        Map<HostRecord, Map<String, Map<Integer, HostRecord>>> rebalanceResult = new HashMap<>();
+        for (Map.Entry<String, List<HostRecord>> eachTopic : topic_consumers.entrySet()) {
+            List<HostRecord> consumerList = eachTopic.getValue();
+            int indexConsumer = 0;
+            int sizeCondumer = eachTopic.getValue().size();
+            Iterator<Map.Entry<Integer, HostRecord>> it = topic_partitions.get(eachTopic.getKey()).entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<Integer, HostRecord> partition = it.next();// c1 : [topic1, [1,b1]
+                Map<String, Map<Integer, HostRecord>> partitionOfConsumer = rebalanceResult.getOrDefault(consumerList.get(indexConsumer % sizeCondumer), new HashMap<>());   // c2 : [topic1, [2,b1]
+                Map<Integer, HostRecord> partitionOfTopic = partitionOfConsumer.getOrDefault(eachTopic.getKey(), new HashMap<>());
+                partitionOfTopic.put(partition.getKey(),partition.getValue());
+                partitionOfConsumer.put(eachTopic.getKey(), partitionOfTopic);
+                rebalanceResult.put(consumerList.get(indexConsumer % sizeCondumer), partitionOfConsumer);
+                indexConsumer++;
+            }
+        }
+
         List<Object> arguments = new ArrayList<>();
         arguments.add(this.groupId);
-        Message request = new Message(MessageType.REBALANCE, arguments);
-        client.setHandler(this,request);
-        client.run();
+        arguments.add(rebalanceResult);
+        Message response = new Message(MessageType.REBALANCEPLAN, arguments);
+        return response;
     }
 
     public List<ConsumerRecord> poll() {
@@ -96,10 +115,10 @@ public class Consumer {
     }
 
 
-    public void findCoordinator(HostRecord broker) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void findCoordinator() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
         // send request to defaultBroker with the groupId
-        TcpClient sock = new TcpClient(broker.getHost(), broker.getPort());
+        TcpClient sock = new TcpClient(this.defaultBroker.getHost(), this.defaultBroker.getPort());
         sock.setHandler(this, request);
         sock.run();
     }
@@ -118,7 +137,7 @@ public class Consumer {
         Consumer xinzhuConsumer = null;
         try {
             xinzhuConsumer = new Consumer("localhost", 10001, "group1", "localhost", 9005);
-            xinzhuConsumer.findCoordinator(xinzhuConsumer.defaultBroker);
+            xinzhuConsumer.findCoordinator();
 
         } catch (IOException e) {
             e.printStackTrace();
