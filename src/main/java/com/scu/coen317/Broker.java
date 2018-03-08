@@ -48,16 +48,7 @@ public class Broker {
         consumerOffset = new HashMap();
         topicMessage = new HashMap<>();
     }
-
-    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
-        List<Object> arguments = new ArrayList<>();
-        arguments.add(new HostRecord(this.host, this.port));
-        Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
-        client.setHandler(this,request);
-        client.run();
-    }
-
+    ////////////////// Yao-Chia
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
         String topicName = topic.getName();
@@ -116,6 +107,26 @@ public class Broker {
         Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
         return response;
     }
+    public Message publishMessageAck() {
+        List<Object> arguments = new ArrayList<>();
+        arguments.add("Successful");
+        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
+        response.setIsAck(true);
+        return response;
+    }
+
+    ////////////////// Yao-Chia
+    ////////////////// Xin-Zhu
+    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(new HostRecord(this.host, this.port));
+        Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
+        client.setHandler(this,request);
+        client.run();
+    }
+
+
 
 
     public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -135,13 +146,7 @@ public class Broker {
         return response;
     }
 
-    public Message publishMessageAck() {
-        List<Object> arguments = new ArrayList<>();
-        arguments.add("Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
-        response.setIsAck(true);
-        return response;
-    }
+
 
     public Message consumerJoinGroupRegistrationAck() {
         List<Object> arguments = new ArrayList<>();
@@ -161,7 +166,7 @@ public class Broker {
         Message response = new Message(MessageType.REBALANCE, arguments);
         client.setHandler(this,response);
         client.run();
-        Message response = new Message(MessageType.REBALANCEPLAN,)
+//        Message response = new Message(MessageType.REBALANCEPLAN,)
     }
 
 
@@ -182,7 +187,10 @@ public class Broker {
         Message response = new Message(MessageType.REBALANCEPLAN, arguments);
         return response;
     }
-
+////////////////// Xin-Zhu
+// //////////////// Hsuan-Chih
+    
+// //////////////// Hsuan-Chih
 
     public void listen() throws IOException, ClassNotFoundException {
         listenSocket.listen();
