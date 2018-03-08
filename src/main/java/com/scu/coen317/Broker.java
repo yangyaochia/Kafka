@@ -138,8 +138,7 @@ public class Broker {
         }
         HostRecord coordinator = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
-//        arguments.add(coordinator);
-        arguments.add(new HostRecord("localhost", this.port));
+        arguments.add(coordinator);
         Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
         return response;
     }
