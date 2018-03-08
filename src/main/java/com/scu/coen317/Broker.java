@@ -66,12 +66,9 @@ public class Broker {
         balanceMap = new HashMap<>();
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
-/*
-        Set<HostRecord> replicationHolders = new HashSet<>();
-        replicationHolders.add(new HostRecord("localhost", 9001));
-        replicationHolders.add(new HostRecord("localhost", 9002));
-        setTopicPartitionLeader("topic1", 2, thisHost, (HashSet<HostRecord>) replicationHolders);
-        */
+
+
+
     }
     ////////////////// Yao-Chia
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
