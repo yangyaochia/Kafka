@@ -113,6 +113,8 @@ public class Broker {
     }
 
     ////////////////// Yao-Chia
+
+
     ////////////////// Xin-Zhu
     public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
@@ -122,9 +124,6 @@ public class Broker {
         client.setHandler(this,request);
         client.run();
     }
-
-
-
 
     public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         while (!topics_coordinator.containsKey(groupId)) {
@@ -137,10 +136,14 @@ public class Broker {
         }
         HostRecord coordinator = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
-        arguments.add(coordinator);
-//        arguments.add(new HostRecord("localhost", this.port));
+//        arguments.add(coordinator);
+        arguments.add(new HostRecord("localhost", this.port));
         Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
         return response;
+    }
+
+    public void updateCoordinator(String groupId, HostRecord coordinator) {
+        topics_coordinator.put(groupId, coordinator);
     }
 
     public Message publishMessageAck() {
@@ -212,7 +215,5 @@ public class Broker {
     public void listen() throws IOException, ClassNotFoundException {
         listenSocket.listen();
     }
-
-
 }
 

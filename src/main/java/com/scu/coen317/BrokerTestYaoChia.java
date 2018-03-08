@@ -6,5 +6,8 @@ public class BrokerTestYaoChia {
         Broker b2 = new Broker("localhost", 9001, "localhost", 2181);
         b1.listen();
         b2.listen();
+        Broker xinzhuBroker = new Broker("localhost", 9005, "localhost", 2181);
+        xinzhuBroker.updateCoordinator("group1", new HostRecord(xinzhuBroker.host, xinzhuBroker.port));
+        xinzhuBroker.listen();
     }
 }

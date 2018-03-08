@@ -115,10 +115,10 @@ public class Consumer {
     }
 
     public static void main(String[] args) {
-        Consumer consumerSend = null;
+        Consumer xinzhuConsumer = null;
         try {
-            consumerSend = new Consumer("localhost", 10001, "group1", "localhost", 9005);
-            consumerSend.findCoordinator(consumerSend.defaultBroker);
+            xinzhuConsumer = new Consumer("localhost", 10001, "group1", "localhost", 9005);
+            xinzhuConsumer.findCoordinator(xinzhuConsumer.defaultBroker);
 
         } catch (IOException e) {
             e.printStackTrace();
