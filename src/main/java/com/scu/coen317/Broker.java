@@ -54,20 +54,9 @@ public class Broker {
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
 
-        if ( port == 9000 ) {
-            Set<HostRecord> replicationHolders = new HashSet<>();
-            replicationHolders.add(new HostRecord("localhost", 9001));
-            replicationHolders.add(new HostRecord("localhost", 9002));
-            setTopicPartitionLeader("topic1", 0, thisHost, (HashSet<HostRecord>) replicationHolders);
-            setTopicPartitionLeader("topic1", 1, thisHost, (HashSet<HostRecord>) replicationHolders);
-        }
-
-
         balanceMap = new HashMap<>();
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
-
-
 
     }
     ////////////////// Yao-Chia
@@ -112,7 +101,6 @@ public class Broker {
     public void setTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> replicationHolders) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
         // Structure for topicMessage
         // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
-        System.out.println(thisHost.getHost() + " " + thisHost.getPort());
         if ( topicMessage.get(topic) == null ) {
             // Case 1 : This broker has not known this topic partition ever
             Map<Integer, List<String>> partitionMap = new HashMap<>();
@@ -130,10 +118,7 @@ public class Broker {
         } else if ( topicPartitionReplicationBrokers.get(topic).get(partition) == null ) {
             topicPartitionReplicationBrokers.get(topic).put(partition, replicationHolders);
         }
-        System.out.println("This host: " + thisHost.getPort() + " leader : " + leader.getPort());
-        System.out.println("Partition: " + partition );
-        System.out.println(thisHost.equals(leader));
-        if ( thisHost.equals(leader) ) {
+        if ( leader.equals(thisHost) ) {
             List<Object> argument = new ArrayList<>();
             argument.add(topic);
             argument.add(partition);
@@ -145,7 +130,6 @@ public class Broker {
     }
     public void informReplicationHolders(Message request, HashSet<HostRecord> replicationHolders) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         for ( HostRecord h : replicationHolders ) {
-            System.out.println("Send to : " + h.getPort());
             TcpClient sock = new TcpClient(h.getHost(), h.getPort());
             sock.setHandler( this, request);
             sock.connect();
@@ -162,6 +146,10 @@ public class Broker {
 
         // Send publishMessage to the corresponding topic partition replication holders
         Set<HostRecord> replicationHolders = topicPartitionReplicationBrokers.get(topic).get(partition);
+        System.out.println("This host : " + thisHost.getHost() + " " + thisHost.getPort() );
+        System.out.println("!replicationHolders.contains(thisHost) = " + !replicationHolders.contains(thisHost));
+        for ( HostRecord h : replicationHolders )
+            System.out.println(h.getPort());
         if ( !replicationHolders.contains(thisHost)) {
             System.out.println("Hello!!!");
             List<Object> argument = new ArrayList<>();
