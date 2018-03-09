@@ -14,7 +14,10 @@ public class HostRecord implements Serializable {
 
     @Override
     public boolean equals(Object that) {
-        return ((HostRecord)that) != null && that instanceof HostRecord && ((HostRecord)that).host == host && ((HostRecord)that).port == port;
+        return ((HostRecord)that) != null
+                && that instanceof HostRecord
+                && ((HostRecord)that).host.equals(host)
+                && ((HostRecord)that).getPort().equals(port);
     }
 
     @Override public int hashCode() {

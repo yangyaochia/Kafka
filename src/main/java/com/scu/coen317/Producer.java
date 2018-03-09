@@ -50,19 +50,25 @@ public class Producer {
         }
         return hash;
     }
-    public void createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        List<Object> argument = new ArrayList<>();
-        Topic t = new Topic(topic, partition, replication);
-        argument.add(t);
-        publishTopicSet.add(topic);
-        Message request = new Message(MessageType.CREATE_TOPIC, argument);
-        HostRecord defaultBroker = defaultBrokers.iterator().next();
-        TcpClient sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
-        sock.setHandler( this, request);
-        //sock.setReadInterval(2000);
-//        System.out.println(sock.getReadInterval());
-        sock.run();
+    public boolean createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 
+        if ( !topicsMember.containsKey(topic) ) {
+            List<Object> argument = new ArrayList<>();
+            Topic t = new Topic(topic, partition, replication);
+            argument.add(t);
+            publishTopicSet.add(topic);
+            Message request = new Message(MessageType.CREATE_TOPIC, argument);
+            HostRecord defaultBroker = defaultBrokers.iterator().next();
+            TcpClient sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
+            sock.setHandler( this, request);
+            //sock.setReadInterval(2000);
+//        System.out.println(sock.getReadInterval());
+            sock.run();
+            return true;
+        } else {
+            // This topic has already been created.
+            return false;
+        }
     }
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
@@ -85,6 +91,7 @@ public class Producer {
         int partition = hashCode(message) % topicsMember.get(topic).size();
         System.out.println(topic + " " + message + " " + partition);
         HostRecord partitionLeader = topicsMember.get(topic).get(partition);
+        System.out.println(partitionLeader.getPort());
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
         argument.add(partition);
@@ -94,7 +101,7 @@ public class Producer {
         TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
 //        sock.setReadInterval(1000);
         sock.setHandler( this, request);
-        sock.send(request);
+        sock.run();
     }
 
     public void publishMessageAck(String message, String ackMessage) {
