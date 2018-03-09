@@ -10,6 +10,9 @@ public enum MessageType {
     GET_TOPIC("topicAssignment"),               // B -> Z   Y
     TOPIC_ASSIGNMENT_TO_PRODUCER("updateTopicPartitionLeader"),        // B -> P   Y
     PUBLISH_MESSAGE_ACK("publishMessageAck"),       // B->P Y
+    SUBSCRIBE_ACK("subscribeAck"),
+    ACK(""),
+    INITIAL_LEADER("initialLeader"),
 
     GET_REPLICATION_UPDATE("replicationResponse"),    // B -> B
     REPLICATION_RESPONSE("replicationUpdate"),
@@ -36,9 +39,12 @@ public enum MessageType {
     FIND_COORDINATOR("getCoordinator"), //C->B  Xinzhu getCoordinator(String groupId)
     UPDATE_COORDINATOR("updateCoordinator"), // Xinzhu updateCoordinator(HostRecord coordinator)
     JOIN_GROUP("addConsumerToGroup"), //C->Bg
-    SUBSCRIBE_TOPIC("storeInfoAndGetTopic"), //C->Bg //store who subscribe what topics and give to consumer leader later
+    SUBSCRIBE_TOPIC("storeInfoAndGetTopicAndRebalance"), //C->Bg //store who subscribe what topics and give to consumer leader later
     REBALANCEPLAN("updateBalanceMap"), //C1->Bg Xinzhu
+    TEST1("test1"),
+    TEST2("test2"),
     PULLMESSAGE("giveMassage"); //C->B
+
 
 
     private String messageMame;
