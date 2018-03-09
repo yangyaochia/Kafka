@@ -98,7 +98,7 @@ public class Broker {
         return;
     }
 
-    public void setTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> replicationHolders) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
+    public void setTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> replicationHolders) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException, InterruptedException {
         // Structure for topicMessage
         // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
         if ( topicMessage.get(topic) == null ) {
@@ -129,7 +129,7 @@ public class Broker {
             informReplicationHolders(request, replicationHolders);
         }
     }
-    public void informReplicationHolders(Message request, HashSet<HostRecord> replicationHolders) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void informReplicationHolders(Message request, HashSet<HostRecord> replicationHolders) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         for ( HostRecord h : replicationHolders ) {
             System.out.println("This leader host " + thisHost.getPort());
             System.out.println("Send to " + h.getPort());
@@ -139,7 +139,7 @@ public class Broker {
         }
     }
 
-    public Message publishMessage(String topic, Integer partition, String message) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
+    public Message publishMessage(String topic, Integer partition, String message) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
 
         System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
@@ -167,7 +167,8 @@ public class Broker {
         List<Object> arguments = new ArrayList<>();
         arguments.add(message);
         arguments.add("Published Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, false);
+//        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, false);
+        Message response = new Message(MessageType.ACK, arguments, true);
         return response;
     }
 
@@ -175,7 +176,7 @@ public class Broker {
 
 
     ////////////////// Xin-Zhu
-    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
         List<Object> arguments = new ArrayList<>();
         arguments.add(this.thisHost);
@@ -184,7 +185,7 @@ public class Broker {
         client.run();
     }
 
-    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         while (!topics_coordinator.containsKey(groupId)) {
             TcpClient client = new TcpClient(defaultZookeeper.host,defaultZookeeper.port);
             List<Object> arguments = new ArrayList<>();
@@ -220,7 +221,7 @@ public class Broker {
         return response;
     }
 
-    public void rebalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void rebalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         // 让leader做rebalance
         balanceMap.remove(groupId);
         Map<String, Map<Integer, HostRecord>> topic_partitions = new HashMap<>();

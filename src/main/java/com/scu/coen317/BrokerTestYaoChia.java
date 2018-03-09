@@ -21,11 +21,11 @@ public class BrokerTestYaoChia {
         Broker b1 = new Broker("localhost", 9000, "localhost", 2181);
         b1.setTopicPartitionLeader("topic1", 0, new HostRecord("localhost", 9000), (HashSet<HostRecord>) replicationHolders);
         b1.listen();
+
         Set<HostRecord> replicationHolders2 = new HashSet<>();
         replicationHolders2.add(b1h);
         replicationHolders2.add(b3h);
         b2.setTopicPartitionLeader("topic1", 1, new HostRecord("localhost", 9001), (HashSet<HostRecord>) replicationHolders2);
-        b1.listen();
 
 
 //        Broker xinzhuBroker = new Broker("localhost", 9005, "localhost", 2181);

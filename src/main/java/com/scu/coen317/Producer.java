@@ -50,7 +50,7 @@ public class Producer {
         }
         return hash;
     }
-    public boolean createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public boolean createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
 
         if ( !topicsMember.containsKey(topic) ) {
             List<Object> argument = new ArrayList<>();
@@ -72,7 +72,7 @@ public class Producer {
     }
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println(topic);
+        System.out.println("haha finally" + topic);
         topicsMember.put(topic, partitionLeaders);
         publishTopicSet.add(topic);
 
@@ -82,12 +82,15 @@ public class Producer {
 
 
     public void publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        //sock.connect();
-
+        Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
+        partitionLeaders.put(0, new HostRecord("localhost", 9000));
+        partitionLeaders.put(1, new HostRecord("localhost", 9001));
+        topicsMember.put(topic, partitionLeaders);
         if ( !topicsMember.containsKey(topic) ) {
             // Reuse the createTopic function to get corresponding topic partition leaders
             createTopic(topic,1,1);
         }
+
         int partition = hashCode(message) % topicsMember.get(topic).size();
         System.out.println(topic + " " + message + " " + partition);
         HostRecord partitionLeader = topicsMember.get(topic).get(partition);
@@ -99,9 +102,11 @@ public class Producer {
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
         TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
-//        sock.setReadInterval(1000);
+        //while ( sock.getCloser() )
+        //sock.setReadInterval(1000);
         sock.setHandler( this, request);
         sock.run();
+        return;
     }
 
     public void publishMessageAck(String message, String ackMessage) {

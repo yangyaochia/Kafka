@@ -48,21 +48,21 @@ public class Consumer {
     }
 
 
-    public void subscribe(String topic) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        if (subscribedTopicPartitions.containsKey(topic)) {
-            return;
-        }
-        List<Object> arguments = new ArrayList();
-        arguments.add(topic);
-        arguments.add(this.groupId);
-        arguments.add(new HostRecord(this.host, this.port));
-
-        Message request = new Message(MessageType.SUBSCRIBE_TOPIC, arguments);
-        // send to coordinator and wait for partitions of this topic
-        TcpClient consumerClient = new TcpClient(coordinator.getHost(), coordinator.getPort());
-        consumerClient.setHandler(this, request);
-        consumerClient.run();
-    }
+//    public void subscribe(String topic) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+//        if (subscribedTopicPartitions.containsKey(topic)) {
+//            return;
+//        }
+//        List<Object> arguments = new ArrayList();
+//        arguments.add(topic);
+//        arguments.add(this.groupId);
+//        arguments.add(new HostRecord(this.host, this.port));
+//
+//        Message request = new Message(MessageType.SUBSCRIBE_TOPIC, arguments);
+//        // send to coordinator and wait for partitions of this topic
+//        TcpClient consumerClient = new TcpClient(coordinator.getHost(), coordinator.getPort());
+//        consumerClient.setHandler(this, request);
+//        consumerClient.run();
+//    }
 
     public void updateTopicPartition(Map<String, Map<Integer, HostRecord>> topicPartitions) {
         subscribedTopicPartitions = topicPartitions;
@@ -115,13 +115,13 @@ public class Consumer {
     }
 
 
-    public void findCoordinator() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
-        // send request to defaultBroker with the groupId
-        TcpClient sock = new TcpClient(this.defaultBroker.getHost(), this.defaultBroker.getPort());
-        sock.setHandler(this, request);
-        sock.run();
-    }
+//    public void findCoordinator() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+//        Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
+//        // send request to defaultBroker with the groupId
+//        TcpClient sock = new TcpClient(this.defaultBroker.getHost(), this.defaultBroker.getPort());
+//        sock.setHandler(this, request);
+//        sock.run();
+//    }
 
     public void updateCoordinator(HostRecord coordinator) {
         this.coordinator = coordinator;
@@ -135,20 +135,20 @@ public class Consumer {
 
     public static void main(String[] args) {
         Consumer xinzhuConsumer = null;
-        try {
-            xinzhuConsumer = new Consumer("localhost", 10001, "group1", "localhost", 9005);
-            xinzhuConsumer.findCoordinator();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            xinzhuConsumer = new Consumer("localhost", 10001, "group1", "localhost", 9005);
+//            xinzhuConsumer.findCoordinator();
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } catch (NoSuchMethodException e) {
+//            e.printStackTrace();
+//
+//        } catch (IllegalAccessException e) {
+//            e.printStackTrace();
+//        } catch (InvocationTargetException e) {
+//            e.printStackTrace();
+//        }
 
     }
 }

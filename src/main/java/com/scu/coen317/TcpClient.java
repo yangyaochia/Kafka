@@ -34,7 +34,7 @@ public class TcpClient {
         this.sock = connected_socket;
     }
 
-    public boolean run() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public boolean run() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         this.closer = false;
         try{
             if ( inFromClient == null )
@@ -78,7 +78,7 @@ public class TcpClient {
         return true;
     }
 
-    public boolean connect() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public boolean connect() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         if(this.sock != null) return false;
         try{
             this.sock = new Socket(host, port);
@@ -128,8 +128,10 @@ public class TcpClient {
             public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InterruptedException {
                 //handler.onMessage(cid, msg);
                 System.out.println("进入client的handler");
+                System.out.println("msg.isAck() = " + msg.isAck());
                 if ( msg.isAck() ) {
-                    System.out.println(msg.getMethodNameValue());
+//                    System.out.println(msg.getMethodNameValue());
+                    System.out.println(msg.arguments.get(0));
                     that_sock.close();
                 } else {
 
@@ -137,12 +139,13 @@ public class TcpClient {
                     Method method = object.getClass().getMethod(msg.getMethodNameValue(), inputTypes);
                     Object[] inputs = msg.getInputValue();
                     method.invoke(this_object, inputs);
-
+//                    Message response = (Message) method.invoke(this_object, inputs);
+//                    that_sock.send(response);
                     System.out.println(msg.getMethodName());
                 }
             }
 
-            public void onOpen() {
+            public void onOpen() throws InterruptedException {
                 System.out.println("* socket connected");
                 int count = 1;  // Number of retry
                 that_sock.send(request);
@@ -150,6 +153,7 @@ public class TcpClient {
 //                    if ( count == 1 )
 //                        that_sock.send(request);
                     if(count < 1){
+//                        Thread.sleep(1000);
                         that_sock.close();
                         break;
                     }
@@ -168,6 +172,8 @@ public class TcpClient {
             }
         };
     }
+
+    public boolean getCloser() { return closer;}
 
 
     public void addEventHandler(TcpClientEventHandler handler){
