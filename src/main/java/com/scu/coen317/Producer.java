@@ -97,20 +97,20 @@ public class Producer {
         System.out.println(partitionLeader.getPort());
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
-        argument.add(partition);
+        argument.add((Integer)partition);
         argument.add(message);
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
         TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
         //while ( sock.getCloser() )
-        //sock.setReadInterval(1000);
+//        sock.setReadInterval(10000);
         sock.setHandler( this, request);
         sock.run();
         return;
     }
 
     public void publishMessageAck(String message, String ackMessage) {
-        System.out.println(message + ackMessage);
+        System.out.println("This is Ack message " + message + " " + ackMessage);
     }
 
     public void update(String s) {

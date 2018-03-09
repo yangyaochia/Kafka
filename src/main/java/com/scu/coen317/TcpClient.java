@@ -159,7 +159,7 @@ public class TcpClient {
                     }
                     count--;
                     try{
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     }
                     catch(Exception ex){
                         ex.printStackTrace();

@@ -37,6 +37,8 @@ public class Broker {
     // balance Map for each group
     // 记录consumer，each topic offset
     Map<Consumer, Map<String,Integer>> consumerOffset;
+
+    final int heartBeatInterval = 3000;
     
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -137,6 +139,7 @@ public class Broker {
             sock.setHandler( this, request);
             sock.run();
         }
+        return;
     }
 
     public Message publishMessage(String topic, Integer partition, String message) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
@@ -152,15 +155,15 @@ public class Broker {
         System.out.println("!replicationHolders.contains(thisHost) = " + !replicationHolders.contains(thisHost));
         for ( HostRecord h : replicationHolders )
             System.out.println(h.getPort());
-        if ( !replicationHolders.contains(thisHost)) {
-            System.out.println("Hello!!!");
-            List<Object> argument = new ArrayList<>();
-            argument.add(topic);
-            argument.add(partition);
-            argument.add(message);
-            Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
-            informReplicationHolders(request, (HashSet<HostRecord>) replicationHolders);
-        }
+//        if ( !replicationHolders.contains(thisHost)) {
+//            System.out.println("Hello!!!");
+//            List<Object> argument = new ArrayList<>();
+//            argument.add(topic);
+//            argument.add(partition);
+//            argument.add(message);
+//            Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
+//            informReplicationHolders(request, (HashSet<HostRecord>) replicationHolders);
+//        }
 //        sock.setReadInterval(1000);
 
 
@@ -168,10 +171,22 @@ public class Broker {
         arguments.add(message);
         arguments.add("Published Successful");
 //        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, false);
-        Message response = new Message(MessageType.ACK, arguments, true);
+        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, false);
         return response;
     }
+    public void publishMessageAck(String message, String ackMessage) {
+        System.out.println("This is ack" + message + " " + ackMessage);
+    }
 
+    public void sendHeartBeat() throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
+
+        List<Object> argument = new ArrayList<>();
+        argument.add(thisHost);
+        Message heartbeat = new Message(MessageType.SEND_HEARTBEAT, argument);
+        TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+        sock.setHandler( this, heartbeat);
+        sock.run();
+    }
     ////////////////// Yao-Chia
 
 
@@ -205,13 +220,13 @@ public class Broker {
         topics_coordinator.put(groupId, coordinator);
     }
 
-    public Message publishMessageAck() {
-        List<Object> arguments = new ArrayList<>();
-        arguments.add("Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
-        response.setIsAck(true);
-        return response;
-    }
+//    public Message publishMessageAck() {
+//        List<Object> arguments = new ArrayList<>();
+//        arguments.add("Successful");
+//        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
+//        response.setIsAck(true);
+//        return response;
+//    }
 
     public Message consumerJoinGroupRegistrationAck() {
         List<Object> arguments = new ArrayList<>();
@@ -293,8 +308,25 @@ public class Broker {
 
 // //////////////// Hsuan-Chih
 
-    public void listen() throws IOException, ClassNotFoundException {
+    public void listen() throws IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         listenSocket.listen();
+        while (true) {
+            // Send hearbeat per 1 min
+            Thread.sleep(heartBeatInterval);
+            try {
+                sendHeartBeat();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 
