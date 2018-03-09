@@ -12,8 +12,10 @@ public class Consumer {
     String host;
     int port;
     String groupId;
+    HostRecord thisHost;
     TcpServer serverSocket;
     HostRecord coordinator;
+    boolean isLeader;
     TcpServerEventHandler serverHandler;
     TcpClientEventHandler consumerClientEventHandler;
 
@@ -36,9 +38,9 @@ public class Consumer {
     }
 
     public Consumer (String host, int port, String groupId, String defaultBrokerIp, int defaultBrokerPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        this.host = host;
-        this.port = port;
+        thisHost = new HostRecord(this.host = host, this.port = port);
         this.groupId = groupId;
+
 
         // ask default broker this group's coordinator (broker)
         this.defaultBroker = new HostRecord(defaultBrokerIp, defaultBrokerPort);
@@ -48,28 +50,43 @@ public class Consumer {
     }
 
 
+
+
+    public void initialLeader() {
+        isLeader = true;
+        serverSocket = new TcpServer(thisHost.getPort());
+        serverSocket.setHandler(this);
+        serverSocket.listen();
+    }
+
+    public void updateTopicPartition(HashMap<String, Map<Integer, HostRecord>> topicPartitions) {
+        subscribedTopicPartitions = topicPartitions;
+        System.out.println("topicPartition updated in consumer");
+        for (Map.Entry<String, Map<Integer, HostRecord>> en : topicPartitions.entrySet()) {
+            System.out.println(en.getKey() + " : " + en.getValue());
+        }
+    }
+
     public void subscribe(String topic) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         if (subscribedTopicPartitions.containsKey(topic)) {
             return;
         }
+        subscribedTopicPartitions.put(topic, new HashMap<>());
+
+        // send to coordinator and wait for partitions of this topic
+        TcpClient consumerClient = new TcpClient(coordinator.getHost(), coordinator.getPort());
         List<Object> arguments = new ArrayList();
         arguments.add(topic);
         arguments.add(this.groupId);
-        arguments.add(new HostRecord(this.host, this.port));
-
+        arguments.add(thisHost);
         Message request = new Message(MessageType.SUBSCRIBE_TOPIC, arguments);
-        // send to coordinator and wait for partitions of this topic
-        TcpClient consumerClient = new TcpClient(coordinator.getHost(), coordinator.getPort());
         consumerClient.setHandler(this, request);
         consumerClient.run();
     }
 
-    public void updateTopicPartition(Map<String, Map<Integer, HostRecord>> topicPartitions) {
-        subscribedTopicPartitions = topicPartitions;
-    }
-
-    public Message rebalance(Map<String, List<HostRecord>> topic_consumers, Map<String, Map<Integer, HostRecord>> topic_partitions) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        Map<HostRecord, Map<String, Map<Integer, HostRecord>>> rebalanceResult = new HashMap<>();
+    // Map<String, List<HostRecord>>, Map<String, Map<Integer, HostRecord>>
+    public Message rebalance(HashMap<String, List<HostRecord>> topic_consumers, HashMap<String, Map<Integer, HostRecord>> topic_partitions) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        HashMap<HostRecord, Map<String, Map<Integer, HostRecord>>> rebalanceResult = new HashMap<>();
         for (Map.Entry<String, List<HostRecord>> eachTopic : topic_consumers.entrySet()) {
             List<HostRecord> consumerList = eachTopic.getValue();
             int indexConsumer = 0;
@@ -133,22 +150,14 @@ public class Consumer {
 
     }
 
-    public static void main(String[] args) {
-        Consumer xinzhuConsumer = null;
-        try {
-            xinzhuConsumer = new Consumer("localhost", 10001, "group1", "localhost", 9005);
-            xinzhuConsumer.findCoordinator();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-
+    public Message test1() {
+        Message response = new Message(MessageType.TEST1);
+        return response;
     }
+
+    public Message test2() {
+        System.out.println("received message from broker1");
+        return new Message(MessageType.ACK, Collections.singletonList("consumer received message from broker1"), true);
+    }
+
 }

@@ -129,16 +129,17 @@ public class TcpClient {
                 //handler.onMessage(cid, msg);
                 System.out.println("进入client的handler");
                 if ( msg.isAck() ) {
-                    System.out.println(msg.getMethodNameValue());
+                    System.out.println(msg.arguments.get(0));
                     that_sock.close();
                 } else {
 
                     Class<?>[] inputTypes = msg.getInputParameterType();
                     Method method = object.getClass().getMethod(msg.getMethodNameValue(), inputTypes);
                     Object[] inputs = msg.getInputValue();
+                    System.out.println("* <client> will invoke " + msg.getMethodName());
                     method.invoke(this_object, inputs);
 
-                    System.out.println(msg.getMethodName());
+                    System.out.println(msg.getMethodName() + " is invoked successful");
                 }
             }
 

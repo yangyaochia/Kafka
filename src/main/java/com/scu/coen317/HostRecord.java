@@ -25,4 +25,9 @@ public class HostRecord implements Serializable {
         }
         return hash * 31 + port;
     }
+
+    @Override
+    public String toString() {
+        return "hostName: " + this.host + ", portNumber: " + this.port;
+    }
 }
