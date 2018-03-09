@@ -67,7 +67,7 @@ public class Broker {
         Message response;
         Map<Integer,HostRecord> leaders = new HashMap<>();
         leaders.put(0, new HostRecord("localhost", 9000));
-        leaders.put(1, new HostRecord("localhost", 9000));
+        leaders.put(1, new HostRecord("localhost", 9001));
         topicsPartitionLeader.put(topicName, leaders);
         // This broker does now know the topic, then ask the zookeeper
         if ( !topicsPartitionLeader.containsKey(topicName) ) {
@@ -118,6 +118,7 @@ public class Broker {
         } else if ( topicPartitionReplicationBrokers.get(topic).get(partition) == null ) {
             topicPartitionReplicationBrokers.get(topic).put(partition, replicationHolders);
         }
+
         if ( leader.equals(thisHost) ) {
             List<Object> argument = new ArrayList<>();
             argument.add(topic);
@@ -130,9 +131,10 @@ public class Broker {
     }
     public void informReplicationHolders(Message request, HashSet<HostRecord> replicationHolders) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         for ( HostRecord h : replicationHolders ) {
+            System.out.println("This leader host " + thisHost.getPort());
+            System.out.println("Send to " + h.getPort());
             TcpClient sock = new TcpClient(h.getHost(), h.getPort());
             sock.setHandler( this, request);
-            sock.connect();
             sock.run();
         }
     }
@@ -165,7 +167,7 @@ public class Broker {
         List<Object> arguments = new ArrayList<>();
         arguments.add(message);
         arguments.add("Published Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, true);
+        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, false);
         return response;
     }
 

@@ -12,11 +12,19 @@ public class BrokerTestYaoChia {
         b3.listen();
 
         Set<HostRecord> replicationHolders = new HashSet<>();
-        replicationHolders.add(new HostRecord("localhost", 9001));
-        replicationHolders.add(new HostRecord("localhost", 9002));
+        HostRecord b1h = new HostRecord("localhost", 9000);
+        HostRecord b2h = new HostRecord("localhost", 9001);
+        HostRecord b3h = new HostRecord("localhost", 9002);
+
+        replicationHolders.add(b2h);
+        replicationHolders.add(b3h);
         Broker b1 = new Broker("localhost", 9000, "localhost", 2181);
         b1.setTopicPartitionLeader("topic1", 0, new HostRecord("localhost", 9000), (HashSet<HostRecord>) replicationHolders);
-        b1.setTopicPartitionLeader("topic1", 1, new HostRecord("localhost", 9000), (HashSet<HostRecord>) replicationHolders);
+        b1.listen();
+        Set<HostRecord> replicationHolders2 = new HashSet<>();
+        replicationHolders2.add(b1h);
+        replicationHolders2.add(b3h);
+        b2.setTopicPartitionLeader("topic1", 1, new HostRecord("localhost", 9001), (HashSet<HostRecord>) replicationHolders2);
         b1.listen();
 
 

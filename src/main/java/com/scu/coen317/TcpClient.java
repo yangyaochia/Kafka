@@ -144,7 +144,7 @@ public class TcpClient {
 
             public void onOpen() {
                 System.out.println("* socket connected");
-                int count = 2;  // Number of retry
+                int count = 1;  // Number of retry
                 that_sock.send(request);
                 while(true){
 //                    if ( count == 1 )
