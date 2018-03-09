@@ -22,13 +22,14 @@ public enum MessageType {
     GIVE_MESSAGE("showMessageOut"), //B->C
 
     //ZooKeeper
-    TOPIC_ASSIGNMENT_TO_BROKER("topicAssignmentToProduer"), //Z->B
+    TOPIC_ASSIGNMENT_TO_BROKER("topicAssignmentToProducer"), //Z->B
     SET_TOPIC_LEADER("setTopicLeader"),  //Z->B follower
     //send broker and tell it its new leader
     //if leader die, set a follower to be leader
     //if follower die, tell a new broker who is its leader
     REGISTER_SUCCESS("receiveNewBrokerRegistrationAck"), //Z->B
     COORDINATOR_ASSIGNMENT("coordinatorAssignmentToConsumer"), //Z->B
+    ADD_PARTITIONS("createPartitions"),
 
     //Consumer
     FIND_COORDINATOR("getCoordinator"), //C->B  Xinzhu getCoordinator(String groupId)
