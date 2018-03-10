@@ -40,7 +40,7 @@ public class Consumer {
         */
     }
 
-    public void joinToGroup() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void joinToGroup() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         TcpClient client = new TcpClient(coordinator.getHost(), coordinator.getPort());
         List<Object> arguments = new ArrayList<>();
         arguments.add(this.groupId);
@@ -65,7 +65,7 @@ public class Consumer {
         }
     }
 
-    public void subscribe(String topic) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void subscribe(String topic) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         if (subscribedTopicPartitions.containsKey(topic)) {
             return;
         }
@@ -108,12 +108,38 @@ public class Consumer {
         return response;
     }
 
-    public List<ConsumerRecord> poll() {
-
+    public void poll() throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
+        // Map<String, Map<Integer, HostRecord>> subscribedTopicPartitions;
         // multicast of each partition in subscribedPartitions;
-        while (true) {
-            // new Thread接收回传讯息
+        List<String> messages = new ArrayList<>();
+
+        for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : subscribedTopicPartitions.entrySet()) {
+            String topic = eachTopic.getKey();
+            Map<Integer, HostRecord> partitions = eachTopic.getValue();
+            for (Map.Entry<Integer, HostRecord> partition : partitions.entrySet()) {
+                HostRecord broker = partition.getValue();
+                TcpClient client = new TcpClient(broker.getHost(), broker.getPort());
+                List<Object> arguments = new ArrayList<>();
+                arguments.add(groupId);
+                arguments.add(topic);
+                arguments.add(partition.getKey());
+                Message request = new Message(MessageType.PULLMESSAGE, arguments);
+                client.addEventHandler(this, request);
+                client.run();
+            }
         }
+    }
+
+    public Message dealWithMessage(List<String> messages, String topic, HostRecord broker) {
+        for (String message : messages) {
+            System.out.println(message);
+        }
+        List<Object> arguments = new ArrayList<>();
+        arguments.add("Message in topic of " + topic
+                + " received successful from " + broker);
+
+        Message responseAck = new Message(MessageType.ACK, arguments, true);
+        return responseAck;
     }
 
 
@@ -130,7 +156,7 @@ public class Consumer {
     }
 
 
-    public void findCoordinator() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void findCoordinator() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
         // send request to defaultBroker with the groupId
         TcpClient sock = new TcpClient(this.defaultBroker.getHost(), this.defaultBroker.getPort());

@@ -192,7 +192,7 @@ public class Broker {
 
 
     ////////////////// Xin-Zhu
-    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void registerToZookeeper() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
         List<Object> arguments = new ArrayList<>();
         arguments.add(this.thisHost);
@@ -201,7 +201,7 @@ public class Broker {
         client.run();
     }
 
-    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         while (!topics_coordinator.containsKey(groupId)) {
             TcpClient client = new TcpClient(defaultZookeeper.host, defaultZookeeper.port);
             List<Object> arguments = new ArrayList<>();
@@ -221,7 +221,7 @@ public class Broker {
         topics_coordinator.put(groupId, coordinator);
     }
 
-    public void rebalance(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void rebalance(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         // 让leader做rebalance
         balanceMap.remove(groupId);
         Map<String, Map<Integer, HostRecord>> topic_partitions = new HashMap<>();
@@ -247,7 +247,7 @@ public class Broker {
         assignNewBalance(groupId);
     }
 
-    public void assignNewBalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void assignNewBalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         // multicast
         // Map<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> balanceMap;
         Map<HostRecord, Map<String, Map<Integer, HostRecord>>> map = balanceMap.get(groupId);
@@ -342,7 +342,7 @@ public class Broker {
         topicsPartitionLeader.put(topic, topicPartitionLeaders);
     }
 
-    public Message test1() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public Message test1() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
 //        TcpClient client = new TcpClient("localhost", 9007);
 //        Message request = new Message(MessageType.TEST2);
 //        client.setHandler(this, request);
@@ -355,7 +355,7 @@ public class Broker {
         return new Message(MessageType.ACK, Collections.singletonList("broker received the request from consumer"), true);
     }
 
-    public Message test2() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public Message test2() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         TcpClient client = new TcpClient("localhost", 1001);
         Message request = new Message(MessageType.ACK, Collections.singletonList("broker2 send request to consumer"), true);
         client.setHandler(this, request);

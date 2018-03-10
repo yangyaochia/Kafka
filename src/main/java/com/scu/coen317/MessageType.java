@@ -19,7 +19,6 @@ public enum MessageType {
     SEND_HEARTBEAT("monitorCluster"),           // B -> Z
     NEW_BROKER_REGISTER("newBrokerRegister"),   // B -> Z Xinzhu
     GET_COORDINATOR("coordinatorAssignment"),   // B -> C      Xinzhu
-    CONSUMER_JOIN_GROUP_REGISTRATION_ACK("receiveConsumerJoinGroupRegistrationAck"),   // Xinzhu
     REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance Xinzhu
     REBALANCE_RESULT("updateTopicPartition"), // Coordinator send rebalance result, and send it <></>o each group member
     GIVE_MESSAGE("showMessageOut"), //B->C
@@ -42,7 +41,7 @@ public enum MessageType {
     REBALANCEPLAN("updateBalanceMap"), //C1->Bg Xinzhu
     TEST1("test1"),
     TEST2("test2"),
-    PULLMESSAGE("giveMassage"); //C->B
+    PULLMESSAGE("giveMessage"); //C->B
 
 
 
