@@ -23,7 +23,7 @@ public enum MessageType {
     REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance Xinzhu
     REBALANCE_RESULT("updateTopicPartition"), // Coordinator send rebalance result, and send it <></>o each group member
     GIVE_MESSAGE("showMessageOut"), //B->C
-    ACK(""),
+    /*ACK(""),*/
 
     //ZooKeeper
     TOPIC_ASSIGNMENT_TO_BROKER("topicAssignmentToProduer"), //Z->B
