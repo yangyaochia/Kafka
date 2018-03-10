@@ -124,7 +124,7 @@ public class Consumer {
                 arguments.add(topic);
                 arguments.add(partition.getKey());
                 Message request = new Message(MessageType.PULLMESSAGE, arguments);
-                client.addEventHandler(this, request);
+                client.setHandler(this, request);
                 client.run();
             }
         }
