@@ -28,7 +28,6 @@ public class Producer {
     Set<HostRecord> defaultBrokers;
 
     Map<String, Map<Integer,HostRecord>> topicsMember;
-//    Set<String> publishTopicSet;
 
     boolean ack = false;
 
@@ -41,7 +40,6 @@ public class Producer {
         defaultBrokers.add(h);
 
         topicsMember = new HashMap<>();
-//        publishTopicSet = new HashSet<>();
     }
 
     private int hashCode(String msg) {
@@ -100,7 +98,11 @@ public class Producer {
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
         System.out.println("haha finally" + topic);
         topicsMember.put(topic, partitionLeaders);
-//        publishTopicSet.add(topic);
+
+        for (  Map.Entry<Integer, HostRecord> pair : partitionLeaders.entrySet() ) {
+            defaultBrokers.add(pair.getValue());
+        }
+
         synchronized (this) {
             ack = true;
             notify();
@@ -148,12 +150,6 @@ public class Producer {
         }
         if ( leaderAliveChance < 0 )
             return false;
-
-
-
-
-
-        //while ( sock.getCloser() )
 //        sock.setReadInterval(10000);
 
         sock.run();
@@ -162,11 +158,6 @@ public class Producer {
 
     public void publishMessageAck(String message, String ackMessage) {
         System.out.println("This is Ack message " + message + " " + ackMessage);
-    }
-
-    public void update(String s) {
-        System.out.println("received response from broker");
-        return;
     }
 
     public void addDefaultBroker(String host, Integer port) {
