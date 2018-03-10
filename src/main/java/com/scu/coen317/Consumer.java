@@ -15,27 +15,12 @@ public class Consumer {
     HostRecord thisHost;
     TcpServer serverSocket;
     HostRecord coordinator;
-    boolean isLeader;
-    TcpServerEventHandler serverHandler;
-    TcpClientEventHandler consumerClientEventHandler;
 
     // default brokers and broker cache
     HostRecord defaultBroker;
     List<HostRecord> brokers;
 
     Map<String, Map<Integer, HostRecord>> subscribedTopicPartitions;
-
-
-    // for leader of group
-//    boolean isLeader;
-    Map<String, Consumer> groupTopicAndConsumer;
-    Map<String, List<Pair<Integer, Broker>>> groupTopicAndPartition;
-
-
-    public void setToLeader() {
-        serverSocket = new TcpServer(port);
-//        setHandler();
-    }
 
     public Consumer (String host, int port, String groupId, String defaultBrokerIp, int defaultBrokerPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         thisHost = new HostRecord(this.host = host, this.port = port);
@@ -47,13 +32,26 @@ public class Consumer {
         brokers = new ArrayList();
         brokers.add(this.defaultBroker);
         subscribedTopicPartitions = new HashMap<>();
+        serverSocket = new TcpServer(thisHost.getPort());
+        serverSocket.setHandler(this);
+        serverSocket.listen();
+        /*findCoordinator();
+        joinToGroup();
+        */
+    }
+
+    public void joinToGroup() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        TcpClient client = new TcpClient(coordinator.getHost(), coordinator.getPort());
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(this.groupId);
+        arguments.add(this.thisHost);
+        Message request = new Message(MessageType.JOIN_GROUP, arguments);
+        client.setHandler(this, request);
+        client.run();
     }
 
 
-
-
     public void initialLeader() {
-        isLeader = true;
         serverSocket = new TcpServer(thisHost.getPort());
         serverSocket.setHandler(this);
         serverSocket.listen();
@@ -90,15 +88,15 @@ public class Consumer {
         for (Map.Entry<String, List<HostRecord>> eachTopic : topic_consumers.entrySet()) {
             List<HostRecord> consumerList = eachTopic.getValue();
             int indexConsumer = 0;
-            int sizeCondumer = eachTopic.getValue().size();
+            int sizeConsumer = eachTopic.getValue().size();
             Iterator<Map.Entry<Integer, HostRecord>> it = topic_partitions.get(eachTopic.getKey()).entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<Integer, HostRecord> partition = it.next();// c1 : [topic1, [1,b1]
-                Map<String, Map<Integer, HostRecord>> partitionOfConsumer = rebalanceResult.getOrDefault(consumerList.get(indexConsumer % sizeCondumer), new HashMap<>());   // c2 : [topic1, [2,b1]
+                Map<String, Map<Integer, HostRecord>> partitionOfConsumer = rebalanceResult.getOrDefault(consumerList.get(indexConsumer % sizeConsumer), new HashMap<>());   // c2 : [topic1, [2,b1]
                 Map<Integer, HostRecord> partitionOfTopic = partitionOfConsumer.getOrDefault(eachTopic.getKey(), new HashMap<>());
                 partitionOfTopic.put(partition.getKey(),partition.getValue());
                 partitionOfConsumer.put(eachTopic.getKey(), partitionOfTopic);
-                rebalanceResult.put(consumerList.get(indexConsumer % sizeCondumer), partitionOfConsumer);
+                rebalanceResult.put(consumerList.get(indexConsumer % sizeConsumer), partitionOfConsumer);
                 indexConsumer++;
             }
         }

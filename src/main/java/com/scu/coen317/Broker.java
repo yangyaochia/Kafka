@@ -207,22 +207,6 @@ public class Broker {
         topics_coordinator.put(groupId, coordinator);
     }
 
-    public Message publishMessageAck() {
-        List<Object> arguments = new ArrayList<>();
-        arguments.add("Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
-        response.setIsAck(true);
-        return response;
-    }
-
-    public Message consumerJoinGroupRegistrationAck() {
-        List<Object> arguments = new ArrayList<>();
-        arguments.add("Successful");
-        Message response = new Message(MessageType.CONSUMER_JOIN_GROUP_REGISTRATION_ACK, arguments);
-        response.setIsAck(true);
-        return response;
-    }
-
     public void rebalance(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         // 让leader做rebalance
         balanceMap.remove(groupId);
@@ -238,11 +222,14 @@ public class Broker {
             // Map<String, List<HostRecord>>
             arguments.add(topic_partitions);
             // Map<String, Map<Integer, HostRecord>>
+
             Message request = new Message(MessageType.REBALANCE, arguments);
             TcpClient socket = new TcpClient(leader.getHost(), leader.getPort());
             socket.setHandler(this, request);
             socket.run();
         }
+
+        Map<HostRecord, Map<String, Map<Integer, HostRecord>>> arguments = balanceMap.get(groupId);
         assignNewBalance(groupId);
     }
 
@@ -260,7 +247,6 @@ public class Broker {
         }
     }
 
-
     public Message storeInfoAndGetTopicAndRebalance(String topic, String groupId, HostRecord consumer) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
         storeInfoAndGetTopic(topic, groupId, consumer);
         rebalance(groupId, consumer);
@@ -273,20 +259,17 @@ public class Broker {
 
     public void storeInfoAndGetTopic(String topic, String groupId, HostRecord consumer) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
         // Map<String, Map<String, List<HostRecord>>> topic_consumer;
-
-        if (!topic_consumer.containsKey(groupId)) {
-            // group中的第一个consumer
-            updateConsumerLeader(groupId, consumer);
-            assignLeader(consumer);
-        }
-
-        Map<String, List<HostRecord>> topic_subscribedCunsumer = topic_consumer.getOrDefault(groupId, new HashMap<>());
-
-        if (topic_subscribedCunsumer.containsKey(topic)) {
-            topic_subscribedCunsumer.get(topic).add(consumer);
+        Map<String, List<HostRecord>> topic_subscribedConsumer = topic_consumer.getOrDefault(groupId, new HashMap<>());
+        if (topic_subscribedConsumer.containsKey(topic)) {
+            if (topic_subscribedConsumer.get(topic).contains(consumer)) {
+                return;
+            }
+            topic_subscribedConsumer.get(topic).add(consumer);
+            topic_consumer.put(groupId, topic_subscribedConsumer);
         } else {
-            topic_subscribedCunsumer.put(topic, new ArrayList(Arrays.asList(consumer)));
-            topic_consumer.put(groupId, topic_subscribedCunsumer);
+            topic_subscribedConsumer.put(topic, new ArrayList(Arrays.asList(consumer)));
+            topic_consumer.put(groupId, topic_subscribedConsumer);
+            System.out.println();
             List<String> topics = group_topic.getOrDefault(groupId, new ArrayList<>());
             topics.add(topic);
             group_topic.put(groupId, topics);
@@ -295,15 +278,7 @@ public class Broker {
         while (!topicsPartitionLeader.containsKey(topic)) {
             getTopic(topic);
         }
-//        Message response;
-//        List<Object> arguments = new ArrayList<>();
-//        if (!needToSetLeader) {
-//            arguments.add("Subscribe Successful");
-//            response = new Message(MessageType.ACK, arguments, true);
-//        } else {
-//            response = new Message(MessageType.INITIAL_LEADER);
-//        }
-//        return response;
+
     }
 
     public void assignLeader(HostRecord consumer) throws IOException {
@@ -325,6 +300,25 @@ public class Broker {
             sock.run();
         }
     }
+
+    public Message addConsumerToGroup(String groupId, HostRecord consumer) throws IOException {
+        if (!topic_consumer.containsKey(groupId)) {
+            // group中的第一个consumer
+            updateConsumerLeader(groupId, consumer);
+//            assignLeader(consumer);
+        }
+//        } else {
+//            topic_consumer.put(groupId, new HashMap<>());
+//        }
+
+        List<Object> arguments = new ArrayList<>();
+        arguments.add("Consumer Registered Successful");
+        Message response = new Message(MessageType.ACK, arguments, true);
+        System.out.println("consumer added into the group successful");
+        return response;
+    }
+
+
     // Map<HostRecord, Map<String, Map<Integer, HostRecord>>>
     public void updateBalanceMap(String groupId, HashMap<HostRecord, Map<String, Map<Integer, HostRecord>>> newBalance) {
         balanceMap.put(groupId, newBalance);
