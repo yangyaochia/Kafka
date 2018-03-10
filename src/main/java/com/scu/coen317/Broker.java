@@ -68,7 +68,7 @@ public class Broker {
         List<Object> argument = new ArrayList<>();
         Message response;
         Map<Integer,HostRecord> leaders = new HashMap<>();
-        leaders.put(0, new HostRecord("localhost", 9000));
+        leaders.put(0, new HostRecord("localhost", 9001));
         leaders.put(1, new HostRecord("localhost", 9001));
         topicsPartitionLeader.put(topicName, leaders);
         // This broker does now know the topic, then ask the zookeeper
@@ -155,15 +155,15 @@ public class Broker {
         System.out.println("!replicationHolders.contains(thisHost) = " + !replicationHolders.contains(thisHost));
         for ( HostRecord h : replicationHolders )
             System.out.println(h.getPort());
-//        if ( !replicationHolders.contains(thisHost)) {
-//            System.out.println("Hello!!!");
-//            List<Object> argument = new ArrayList<>();
-//            argument.add(topic);
-//            argument.add(partition);
-//            argument.add(message);
-//            Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
-//            informReplicationHolders(request, (HashSet<HostRecord>) replicationHolders);
-//        }
+        if ( !replicationHolders.contains(thisHost)) {
+            System.out.println("Hello!!!");
+            List<Object> argument = new ArrayList<>();
+            argument.add(topic);
+            argument.add(partition);
+            argument.add(message);
+            Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
+            informReplicationHolders(request, (HashSet<HostRecord>) replicationHolders);
+        }
 //        sock.setReadInterval(1000);
 
 
@@ -310,23 +310,23 @@ public class Broker {
 
     public void listen() throws IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         listenSocket.listen();
-        while (true) {
-            // Send hearbeat per 1 min
-            Thread.sleep(heartBeatInterval);
-            try {
-                sendHeartBeat();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }
+//        while (true) {
+//            // Send hearbeat per 1 min
+//            Thread.sleep(heartBeatInterval);
+//            try {
+//                sendHeartBeat();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } catch (InvocationTargetException e) {
+//                e.printStackTrace();
+//            } catch (NoSuchMethodException e) {
+//                e.printStackTrace();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            } catch (IllegalAccessException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 }
 

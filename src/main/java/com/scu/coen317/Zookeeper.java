@@ -3,6 +3,7 @@ package com.scu.coen317;
 import javafx.util.Pair;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class Zookeeper {
     String host;
     int port;
     ServerSocket receiveSocket;
-
+    TcpServer listenSocket;
     // min heap round robin timestamp queue
     // assign brokers when new producer apply a new topic
     PriorityQueue<Pair<Timestamp,Broker>> clusters;
@@ -27,7 +28,11 @@ public class Zookeeper {
         this.host = host;
         this.port = port;
         receiveSocket = new ServerSocket(port);
+
         clusters = new PriorityQueue<>((p1, p2) -> p1.getKey().compareTo(p2.getKey()));
+
+        this.listenSocket = new TcpServer(port);
+        listenSocket.setHandler(this);
     }
 
     public void addBroker() {
@@ -54,4 +59,10 @@ public class Zookeeper {
         // pair of partition and Broker
         return partitions;
     }
+    // Yao-Chia
+    public void listen() throws IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        listenSocket.listen();
+    }
+
+    // Yao-Chia
 }
