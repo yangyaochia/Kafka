@@ -25,7 +25,7 @@ public enum MessageType {
     GIVE_MESSAGE("showMessageOut"), //B->C
 
     //ZooKeeper
-    TOPIC_ASSIGNMENT_TO_BROKER("topicAssignmentToProduer"), //Z->B
+    TOPIC_ASSIGNMENT_TO_BROKER("topicAssignmentToProducer"), //Z->B
     SET_TOPIC_PARTITION_LEADER("setTopicPartitionLeader"),  //Z->B follower
     SET_TOPIC_PARTITION_REPLICATION_HOLDER("setTopicPartitionReplicationHolder"),
     //send broker and tell it its new leader
@@ -42,7 +42,9 @@ public enum MessageType {
     REBALANCEPLAN("updateBalanceMap"), //C1->Bg Xinzhu
     TEST1("test1"),
     TEST2("test2"),
-    PULLMESSAGE("giveMassage"); //C->B
+    PULLMESSAGE("giveMessage"), //C->B
+    SEND_MESSAGE_TO_CONSUMER("dealWithMessage");
+
 
 
 

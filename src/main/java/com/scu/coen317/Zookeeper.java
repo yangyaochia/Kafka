@@ -76,24 +76,24 @@ public class Zookeeper {
         replicationBrokerQueue = new LinkedList<>();
 
 
-        HostRecord ha = new HostRecord("localhost", 9000 );
-        HostRecord haha = new HostRecord("localhost", 9001 );
-        HostRecord hahaha = new HostRecord("localhost",9002 );
-        HostRecord hahahaha = new HostRecord("localhost",9003 );
-
-        topicBrokerQueue.add(ha);
-        replicationBrokerQueue.add(ha);
-        topicBrokerQueue.add(haha);
-        replicationBrokerQueue.add(haha);
-        topicBrokerQueue.add(hahaha);
-        replicationBrokerQueue.add(hahaha);
-        topicBrokerQueue.add(hahahaha);
-        replicationBrokerQueue.add(hahahaha);
-
-        Topic one = new Topic("hahahahah");
-        one.replication = 3;
-        one.partition = 3;
-        topicAssignment(one);
+//        HostRecord ha = new HostRecord("localhost", 9000 );
+//        HostRecord haha = new HostRecord("localhost", 9001 );
+//        HostRecord hahaha = new HostRecord("localhost",9002 );
+//        HostRecord hahahaha = new HostRecord("localhost",9003 );
+//
+//        topicBrokerQueue.add(ha);
+//        replicationBrokerQueue.add(ha);
+//        topicBrokerQueue.add(haha);
+//        replicationBrokerQueue.add(haha);
+//        topicBrokerQueue.add(hahaha);
+//        replicationBrokerQueue.add(hahaha);
+//        topicBrokerQueue.add(hahahaha);
+//        replicationBrokerQueue.add(hahahaha);
+//
+//        Topic one = new Topic("hahahahah");
+//        one.replication = 3;
+//        one.partition = 3;
+//        topicAssignment(one);
 
 
 //        System.out.println(topicBrokerQueue.peek().getBorkerInfo().getPort().toString()+topicBrokerQueue.poll().getTimeStamp().toString());
@@ -185,6 +185,7 @@ public class Zookeeper {
 
         Message response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_BROKER, arguments);
 //        response.setIsAck(true);
+        System.out.println(response.getMethodNameValue());
         return response;
 //        return topicAssignmentToBroker();
     }
@@ -269,7 +270,7 @@ public class Zookeeper {
 
             String key =name.toString();
             partitions.get(name).toString();
-            System.out.println("Partition " +key.toString() + "  at" + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
+            System.out.println("Partition " +key.toString() + " at " + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
         }
 
     }
@@ -288,6 +289,7 @@ public class Zookeeper {
 
     public Message newBrokerRegister(HostRecord oneBroker) {
         List<Object> arguments = new ArrayList();
+        System.out.println(brokerList.size());
         if (!containsBroker(oneBroker)) {
             brokerList.add(oneBroker);
             coordinatorBrokerQueue.add(oneBroker);
@@ -299,10 +301,11 @@ public class Zookeeper {
             arguments.add(temp);
             displayBrokerList();
             Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
-
+            System.out.println(brokerList.size());
 //            response.setIsAck(true);
             return response;
         }
+
         String temp = "Register failed";
         arguments.add(temp);
         Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
