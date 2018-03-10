@@ -98,7 +98,7 @@ public class brokerTest{
     public void getTopic() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
 //        String topic = "hahaha";
-        Topic topic = new Topic("hahaha");
+        Topic topic = new Topic("hahahaha");
 
         List<Object> argument = new ArrayList<>();
 //        Message response;
@@ -109,9 +109,10 @@ public class brokerTest{
 
         // This broker does now know the topic, then ask the zookeeper
 //        if ( !topicsPartitionLeader.containsKey(topicName) ) {
+
+        topic.partition = 3;
         argument.add(topic);
-        Integer temp = 5;
-        argument.add(temp);
+
         Message request = new Message(MessageType.GET_TOPIC, argument);
 
         TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
@@ -137,19 +138,40 @@ public class brokerTest{
 
         return;
     }
+    public void updateCoordinator(String groupID, HostRecord message){
+        System.out.println("getCoordinator!!!!!!");
+        System.out.println(groupID);
+        System.out.println(message);
+    }
 
     public void topicAssignmentToProducer(Topic topic, HashMap<Integer,HostRecord> partitions) {
         System.out.println("hahahahah");
 //        System.out.println(msg);
         System.out.println("topic : "+ topic.getName());
         for (Integer name: partitions.keySet()){
-
             String key =name.toString();
             partitions.get(name).toString();
             System.out.println("Partition " +key.toString() + "  at" + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
         }
     }
 
+
+
+    public void getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+//        while (!topics_coordinator.containsKey(groupId)) {
+        TcpClient client = new TcpClient(defaultZookeeper.host,defaultZookeeper.port);
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(groupId);
+        Message request = new Message(MessageType.GET_COORDINATOR, arguments);
+        client.setHandler(this, request);
+        client.run();
+
+//        HostRecord coordinator = topics_coordinator.get(groupId);
+//        List<Object> arguments = new ArrayList();
+//        arguments.add(coordinator);
+//        Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
+
+    }
     //    public Message topicAss
     public void updateTopicPartitionLeader(String topic, List<Pair<Integer,Broker>> partitionLeaders) {
         topicPartitionLeaders.put(topic, partitionLeaders);
@@ -162,9 +184,9 @@ public class brokerTest{
 
     public static void main(String argv[]) throws Exception {
         brokerTest p = new brokerTest("localhost", 9008, "localhost", 2181);
-
-//        p.getTopic();
-
+        p.registerToZookeeper();
+        p.getTopic();
+        p.getCoordinator("1111");
 //        p.registerToZookeeper();
 //
 //        p.sendMessage("topic1", "1");
