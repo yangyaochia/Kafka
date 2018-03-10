@@ -9,44 +9,57 @@ import java.net.*;
 import java.util.*;
 
 public class Broker {
-    String host;
-    int port;
+    HostRecord thisHost;
     TcpServer listenSocket;
 
     HostRecord defaultZookeeper;
 
-//    TcpServerEventHandler serverHandler;
     // 某topic, partition 的其他組員是誰
+    // Map<topic, Map<partition, message>>
     Map<String, Map<Integer,List<String>>> topicMessage;
     Map<String, Map<Integer,HostRecord>> topicsPartitionLeader;
 
     // Map<topic,Map<partition,List<replicationHolders>>
-    Map<String,Map<String,List<HostRecord>>> topicPartitionReplicationBrokers;
+    Map<String,Map<Integer,Set<HostRecord>>> topicPartitionReplicationBrokers;
     Map<String, HostRecord> topics_coordinator;
+
     // 作为coordinator要用到的讯息
-    Map<String, List<HostRecord>> topic_consumer;
-    Map<HostRecord, Map<String, List<Pair<Integer, HostRecord>>>> balance;
+
+    // 记录每个group中，每个topic都是哪些consumer订阅
+    Map<String, Map<String, List<HostRecord>>> topic_consumer;
+    Map<String, List<String>> group_topic;
+
+    // 记录每个group中，每一个consumer订阅的每一个topic都有哪些partition
+    Map<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> balanceMap;
     // each group's leader
     Map<String, HostRecord> consumerLeader;
 
     // balance Map for each group
     // 记录consumer，each topic offset
     Map<Consumer, Map<String,Integer>> consumerOffset;
+
+    final int heartBeatInterval = 3000;
     
 
-    public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException {
-        this.host = host;
-        this.port = port;
+    public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        this.thisHost = new HostRecord(host, port);
         this.defaultZookeeper = new HostRecord(zookeeperHost, zookeeperPort);
 
         this.listenSocket = new TcpServer(port);
         listenSocket.setHandler(this);
 
+        topicMessage = new HashMap<>();
         topicsPartitionLeader = new HashMap();
+        topicPartitionReplicationBrokers = new HashMap<>();
+
         topics_coordinator = new HashMap();
         consumerLeader = new HashMap();
         consumerOffset = new HashMap();
-        topicMessage = new HashMap<>();
+
+        balanceMap = new HashMap<>();
+        topic_consumer = new HashMap<>();
+        group_topic = new HashMap<>();
+
     }
     ////////////////// Yao-Chia
     public Message getTopic(Topic topic) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
@@ -56,7 +69,7 @@ public class Broker {
         Message response;
         Map<Integer,HostRecord> leaders = new HashMap<>();
         leaders.put(0, new HostRecord("localhost", 9000));
-        leaders.put(1, new HostRecord("localhost", 9000));
+        leaders.put(1, new HostRecord("localhost", 9001));
         topicsPartitionLeader.put(topicName, leaders);
         // This broker does now know the topic, then ask the zookeeper
         if ( !topicsPartitionLeader.containsKey(topicName) ) {
@@ -87,48 +100,107 @@ public class Broker {
         return;
     }
 
-    public void setTopicLeader(String topic, Integer partition ) {
+    public void setTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> replicationHolders) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException, InterruptedException {
         // Structure for topicMessage
         // Map<String, Map<Integer,List<String>>>  Map<topic, Map<partition, List<message>>
-        Map<Integer, List<String>> partitionMap = new HashMap<>();
-        partitionMap.put(partition, new ArrayList());
-        topicMessage.put(topic, partitionMap);
+        if ( topicMessage.get(topic) == null ) {
+            // Case 1 : This broker has not known this topic partition ever
+            Map<Integer, List<String>> partitionMap = new HashMap<>();
+            partitionMap.put(partition, new ArrayList());
+            topicMessage.put(topic, partitionMap);
+        } else if ( topicMessage.get(topic).get(partition) == null ) {
+            // Case 2: This broker has not known this partition ever
+            topicMessage.get(topic).put(partition, new ArrayList<>());
+        }
+
+        if ( topicPartitionReplicationBrokers.get(topic) == null ) {
+            Map<Integer, Set<HostRecord>> partitionHolderMap = new HashMap<>();
+            partitionHolderMap.put(partition, replicationHolders);
+            topicPartitionReplicationBrokers.put(topic, partitionHolderMap);
+        } else if ( topicPartitionReplicationBrokers.get(topic).get(partition) == null ) {
+            topicPartitionReplicationBrokers.get(topic).put(partition, replicationHolders);
+        }
+
+        if ( leader.equals(thisHost) ) {
+            List<Object> argument = new ArrayList<>();
+            argument.add(topic);
+            argument.add(partition);
+            argument.add(leader);
+            argument.add(replicationHolders);
+            Message request = new Message(MessageType.SET_TOPIC_PARTITION_LEADER, argument);
+            informReplicationHolders(request, replicationHolders);
+        }
+    }
+    public void informReplicationHolders(Message request, HashSet<HostRecord> replicationHolders) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+        for ( HostRecord h : replicationHolders ) {
+            System.out.println("This leader host " + thisHost.getPort());
+            System.out.println("Send to " + h.getPort());
+            TcpClient sock = new TcpClient(h.getHost(), h.getPort());
+            sock.setHandler( this, request);
+            sock.run();
+        }
+        return;
     }
 
-    public Message publishMessage(String topic, Integer partition, String message) {
-        System.out.println("Hello??" + "topic map's size is " + topicMessage.size());
+    public Message publishMessage(String topic, Integer partition, String message) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
+
+        System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
         topicMessage.get(topic).get(partition).add(message);
+        System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
+
+        // Send publishMessage to the corresponding topic partition replication holders
+        Set<HostRecord> replicationHolders = topicPartitionReplicationBrokers.get(topic).get(partition);
+        System.out.println("This host : " + thisHost.getHost() + " " + thisHost.getPort() );
+        System.out.println("!replicationHolders.contains(thisHost) = " + !replicationHolders.contains(thisHost));
+        for ( HostRecord h : replicationHolders )
+            System.out.println(h.getPort());
+//        if ( !replicationHolders.contains(thisHost)) {
+//            System.out.println("Hello!!!");
+//            List<Object> argument = new ArrayList<>();
+//            argument.add(topic);
+//            argument.add(partition);
+//            argument.add(message);
+//            Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
+//            informReplicationHolders(request, (HashSet<HostRecord>) replicationHolders);
+//        }
+//        sock.setReadInterval(1000);
+
 
         List<Object> arguments = new ArrayList<>();
-        arguments.add(topic);
+        arguments.add(message);
         arguments.add("Published Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
+//        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, false);
+        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments, false);
         return response;
     }
-    public Message publishMessageAck() {
-        List<Object> arguments = new ArrayList<>();
-        arguments.add("Successful");
-        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
-        response.setIsAck(true);
-        return response;
+    public void publishMessageAck(String message, String ackMessage) {
+        System.out.println("This is ack" + message + " " + ackMessage);
     }
 
+    public void sendHeartBeat() throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
+
+        List<Object> argument = new ArrayList<>();
+        argument.add(thisHost);
+        Message heartbeat = new Message(MessageType.SEND_HEARTBEAT, argument);
+        TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+        sock.setHandler( this, heartbeat);
+        sock.run();
+    }
     ////////////////// Yao-Chia
+
+
     ////////////////// Xin-Zhu
-    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void registerToZookeeper(HostRecord defaultZookeeper) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         TcpClient client = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
         List<Object> arguments = new ArrayList<>();
-        arguments.add(new HostRecord(this.host, this.port));
+        arguments.add(this.thisHost);
         Message request = new Message(MessageType.NEW_BROKER_REGISTER, arguments);
         client.setHandler(this,request);
         client.run();
     }
 
-
-
-
-    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         while (!topics_coordinator.containsKey(groupId)) {
             TcpClient client = new TcpClient(defaultZookeeper.host,defaultZookeeper.port);
             List<Object> arguments = new ArrayList<>();
@@ -140,12 +212,21 @@ public class Broker {
         HostRecord coordinator = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
         arguments.add(coordinator);
-//        arguments.add(new HostRecord("localhost", this.port));
         Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
         return response;
     }
 
+    public void updateCoordinator(String groupId, HostRecord coordinator) {
+        topics_coordinator.put(groupId, coordinator);
+    }
 
+//    public Message publishMessageAck() {
+//        List<Object> arguments = new ArrayList<>();
+//        arguments.add("Successful");
+//        Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
+//        response.setIsAck(true);
+//        return response;
+//    }
 
     public Message consumerJoinGroupRegistrationAck() {
         List<Object> arguments = new ArrayList<>();
@@ -155,47 +236,97 @@ public class Broker {
         return response;
     }
 
-    public Message rebalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        // coordinator invole rebalance of leader
-
-        HostRecord leader = consumerLeader.get(groupId);
-        TcpClient client = new TcpClient(leader.getHost(),leader.getPort());
-        List<Object> arguments = new ArrayList<>();
-        arguments.add(groupId);
-        Message response = new Message(MessageType.REBALANCE, arguments);
-        client.setHandler(this,response);
-        client.run();
-//        Message response = new Message(MessageType.REBALANCEPLAN,)
-        return response;
+    public void rebalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+        // 让leader做rebalance
+        balanceMap.remove(groupId);
+        Map<String, Map<Integer, HostRecord>> topic_partitions = new HashMap<>();
+        for (String topic : group_topic.get(groupId)) {
+            topic_partitions.put(topic, topicsPartitionLeader.get(topic));
+        }
+        while (!balanceMap.containsKey(groupId)) {
+            HostRecord leader = consumerLeader.get(consumerLeader.get(groupId));
+            Message request = new Message(MessageType.REBALANCE);
+            List<Object> arguments = new ArrayList<>();
+            arguments.add(topic_consumer.get(groupId));
+            arguments.add(topic_partitions.get(groupId));
+            TcpClient socket = new TcpClient(leader.getHost(),leader.getPort());
+            socket.setHandler(this, request);
+            socket.run();
+        }
+        // multicast
+        // Map<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> balanceMap;
+        Map<HostRecord, Map<String, Map<Integer, HostRecord>>> map = balanceMap.get(groupId);
+        for (HostRecord consumer : map.keySet()) {
+            TcpClient client = new TcpClient(consumer.getHost(), consumer.getPort());
+            List<Object> arguments = new ArrayList<>();
+            arguments.add(map.get(consumer));
+            Message request = new Message(MessageType.REBALANCE_RESULT, arguments);
+            client.setHandler(this, request);
+            client.run();
+        }
     }
 
 
-    public Message storeInfoAndGetTopic(String topic, String groupId) throws IOException {
-        /*balance = null;
-        while (balance == null) {
-            Consumer leader = consumerLeader.get(consumerLeader.get(groupId));
-            Message request = new Message(MessageType.REBALANCE);
-            TcpClient socket = new TcpClient(leader.host, leader.port);
-            socket.setHandler(this.getClass(), this, request);
+    public void storeInfoAndGetTopic(String topic, String groupId, HostRecord consumer) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
+        // Map<String, Map<String, List<HostRecord>>> topic_consumer;
+        if(topic_consumer.get(groupId).containsKey(topic)) {
+            topic_consumer.get(groupId).get(topic).add(consumer);
+            group_topic.get(groupId).add(topic);
+        } else {
+            topic_consumer.get(groupId).put(topic, new ArrayList(Arrays.asList(consumer)));
         }
-        */
 
-        List<Object> arguments = new ArrayList<>();
-        Map<String, HostRecord> map = new HashMap<>();
-        map.put("topic1", new HostRecord("localhost", 9000));
-        arguments.add(map);
-        Message response = new Message(MessageType.REBALANCEPLAN, arguments);
-        return response;
+        while (!topicsPartitionLeader.containsKey(topic)) {
+            getTopic(topic);
+        }
+        rebalance(groupId);
+    }
+
+
+    // coordinator要找到这个topicName的partition leaders
+    public void getTopic(String topicName) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
+        // This broker does now know the topic, then ask the zookeeper
+        if ( !topicsPartitionLeader.containsKey(topicName) ) {
+            List<Object> argument = new ArrayList<>();
+            argument.add(topicName);
+            Message request = new Message(MessageType.GET_TOPIC, argument);
+
+            TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+            sock.setHandler( this, request);
+            sock.run();
+        }
+    }
+
+    public void updateBalanceMap(String groupId, Map<HostRecord, Map<String, Map<Integer, HostRecord>>> newBalance) {
+        balanceMap.put(groupId, newBalance);
+    }
+    public void updateTopicsPartitionLeader(String topic, Map<Integer, HostRecord> topicPartitionLeaders) {
+        topicsPartitionLeader.put(topic, topicPartitionLeaders);
     }
 ////////////////// Xin-Zhu
 // //////////////// Hsuan-Chih
 
 // //////////////// Hsuan-Chih
 
-    public void listen() throws IOException, ClassNotFoundException {
+    public void listen() throws IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         listenSocket.listen();
+        while (true) {
+            // Send hearbeat per 1 min
+            Thread.sleep(heartBeatInterval);
+            try {
+                sendHeartBeat();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
     }
-
-
 }
 

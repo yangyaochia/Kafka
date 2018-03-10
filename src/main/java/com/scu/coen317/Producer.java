@@ -21,6 +21,7 @@ import static java.lang.Thread.sleep;
 public class Producer {
     String host;
     int port;
+
     // Set of default brokers
     // If the producer does not know whom to contact
     //
@@ -49,23 +50,29 @@ public class Producer {
         }
         return hash;
     }
-    public void createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        List<Object> argument = new ArrayList<>();
-        Topic t = new Topic(topic, partition, replication);
-        argument.add(t);
-        publishTopicSet.add(topic);
-        Message request = new Message(MessageType.CREATE_TOPIC, argument);
-        HostRecord defaultBroker = defaultBrokers.iterator().next();
-        TcpClient sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
-        sock.setHandler( this, request);
-        //sock.setReadInterval(2000);
-//        System.out.println(sock.getReadInterval());
-        sock.run();
+    public boolean createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
 
+        if ( !topicsMember.containsKey(topic) ) {
+            List<Object> argument = new ArrayList<>();
+            Topic t = new Topic(topic, partition, replication);
+            argument.add(t);
+            publishTopicSet.add(topic);
+            Message request = new Message(MessageType.CREATE_TOPIC, argument);
+            HostRecord defaultBroker = defaultBrokers.iterator().next();
+            TcpClient sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
+            sock.setHandler( this, request);
+            //sock.setReadInterval(2000);
+//        System.out.println(sock.getReadInterval());
+            sock.run();
+            return true;
+        } else {
+            // This topic has already been created.
+            return false;
+        }
     }
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println(topic);
+        System.out.println("haha finally" + topic);
         topicsMember.put(topic, partitionLeaders);
         publishTopicSet.add(topic);
 
@@ -75,28 +82,35 @@ public class Producer {
 
 
     public void publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        //sock.connect();
-
+        Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
+        partitionLeaders.put(0, new HostRecord("localhost", 9000));
+        partitionLeaders.put(1, new HostRecord("localhost", 9001));
+        topicsMember.put(topic, partitionLeaders);
         if ( !topicsMember.containsKey(topic) ) {
             // Reuse the createTopic function to get corresponding topic partition leaders
             createTopic(topic,1,1);
         }
+
         int partition = hashCode(message) % topicsMember.get(topic).size();
+        System.out.println(topic + " " + message + " " + partition);
         HostRecord partitionLeader = topicsMember.get(topic).get(partition);
+        System.out.println(partitionLeader.getPort());
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
-        argument.add(partition);
+        argument.add((Integer)partition);
         argument.add(message);
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
         TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
-//        sock.setReadInterval(1000);
+        //while ( sock.getCloser() )
+//        sock.setReadInterval(10000);
         sock.setHandler( this, request);
         sock.run();
+        return;
     }
 
-    public void publishMessageAck(String message) {
-        System.out.println(message);
+    public void publishMessageAck(String message, String ackMessage) {
+        System.out.println("This is Ack message " + message + " " + ackMessage);
     }
 
     public void update(String s) {
