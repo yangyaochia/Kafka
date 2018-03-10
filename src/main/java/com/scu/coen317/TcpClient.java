@@ -12,110 +12,110 @@ public class TcpClient {
     private int port;
     private Socket sock;
     private int readInterval;
-    public int getReadInterval(){ return readInterval; }
-    public void setReadInterval(int msec){ this.readInterval = msec; }
+
+    public int getReadInterval() {
+        return readInterval;
+    }
+
+    public void setReadInterval(int msec) {
+        this.readInterval = msec;
+    }
+
     private ObjectInputStream inFromClient;
 //    private BufferedReader bReader;
 
-//    private BufferedWriter bWriter;
+    //    private BufferedWriter bWriter;
     private ObjectOutputStream outToServer;
     private TcpClientEventHandler handler;
     private boolean closer = false;
 
     public TcpClient(String host, int port) throws IOException {
         this.host = host;
+
         this.port = port;
-        this.sock = new Socket(host,port);
+        this.sock = new Socket(host, port);
         outToServer = new ObjectOutputStream(this.sock.getOutputStream());
         inFromClient = new ObjectInputStream(this.sock.getInputStream());
+
     }
 
-    public TcpClient(Socket connected_socket){
+    public TcpClient(Socket connected_socket) {
         this.sock = connected_socket;
     }
 
     public boolean run() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         this.closer = false;
-        try{
-            if ( inFromClient == null )
+        try {
+            if (inFromClient == null)
                 this.inFromClient = new ObjectInputStream(this.sock.getInputStream());
-            if ( outToServer == null )
+            if (outToServer == null)
                 this.outToServer = new ObjectOutputStream(this.sock.getOutputStream());
-        }
-        catch(ConnectException ex){
-            if(handler != null) handler.onClose();
+        } catch (ConnectException ex) {
+            if (handler != null) handler.onClose();
             return false;
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             this.close();
-            if(handler != null) handler.onClose();
+            if (handler != null) handler.onClose();
             return false;
         }
         final TcpClient that = this;
         new Thread(() -> {
 
-            while(!closer){
-                try{
+            while (!closer) {
+                try {
                     Thread.sleep(readInterval);
                     Message message = (Message) inFromClient.readObject();
-                    if(message != null ){
-                        if(handler != null) handler.onMessage(message);
+                    if (message != null) {
+                        if (handler != null) handler.onMessage(message);
                     }
 
-                }
-                catch(SocketException ex){
+                } catch (SocketException ex) {
                     that.close();
-                }
-                catch(IOException ex){
+                } catch (IOException ex) {
                     that.close();
-                }
-                catch(Exception ex){
+                } catch (Exception ex) {
                     that.close();
                 }
             }
         }).start();
-        if(handler != null) handler.onOpen();
+        if (handler != null) handler.onOpen();
         return true;
     }
 
     public boolean connect() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-        if(this.sock != null) return false;
-        try{
+        if (this.sock != null) return false;
+        try {
             this.sock = new Socket(host, port);
-        }
-        catch(ConnectException ex){
-            if(handler != null) handler.onClose();
+        } catch (ConnectException ex) {
+            if (handler != null) handler.onClose();
             return false;
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             this.close();
-            if(handler != null) handler.onClose();
+            if (handler != null) handler.onClose();
             return false;
         }
         return run();
     }
 
-    public void close(){
-        try{
+    public void close() {
+        try {
             closer = true;
             inFromClient.close();
             outToServer.close();
             sock.close();
             sock = null;
-            if(handler != null) handler.onClose();
-        }
-        catch(Exception ex){
+            if (handler != null) handler.onClose();
+        } catch (Exception ex) {
         }
     }
 
-    public boolean send(Message message){
-        if(sock == null) return false;
-        try{
+    public boolean send(Message message) {
+        if (sock == null) return false;
+        try {
             outToServer.writeObject(message);
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             this.close();
-            if(handler != null) handler.onClose();
+            if (handler != null) handler.onClose();
             return false;
         }
         return true;
@@ -124,12 +124,12 @@ public class TcpClient {
     public void setHandler(Object object, Message request) {
         final TcpClient that_sock = this;
         final Object this_object = object;
-        this.handler = new TcpClientEventHandler(){
+        this.handler = new TcpClientEventHandler() {
             public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InterruptedException {
                 //handler.onMessage(cid, msg);
                 System.out.println("进入client的handler");
                 System.out.println("msg.isAck() = " + msg.isAck());
-                if ( msg.isAck() ) {
+                if (msg.isAck()) {
 //                    System.out.println(msg.getMethodNameValue());
                     System.out.println(msg.arguments.get(0));
                     that_sock.close();
@@ -149,34 +149,36 @@ public class TcpClient {
                 System.out.println("* socket connected");
                 int count = 1;  // Number of retry
                 that_sock.send(request);
-                while(true){
+                while (true) {
 //                    if ( count == 1 )
 //                        that_sock.send(request);
-                    if(count < 1){
+                    if (count < 1) {
 //                        Thread.sleep(1000);
                         that_sock.close();
                         break;
                     }
                     count--;
-                    try{
+                    try {
                         Thread.sleep(500);
-                    }
-                    catch(Exception ex){
+                    } catch (Exception ex) {
                         ex.printStackTrace();
                     }
                 }
 
             }
-            public void onClose(){
+
+            public void onClose() {
                 System.out.println("* socket closed");
             }
         };
     }
 
-    public boolean getCloser() { return closer;}
+    public boolean getCloser() {
+        return closer;
+    }
 
 
-    public void addEventHandler(TcpClientEventHandler handler){
+    public void addEventHandler(TcpClientEventHandler handler) {
         this.handler = handler;
     }
 }
