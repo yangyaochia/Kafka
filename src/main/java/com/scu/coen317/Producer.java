@@ -28,7 +28,9 @@ public class Producer {
     Set<HostRecord> defaultBrokers;
 
     Map<String, Map<Integer,HostRecord>> topicsMember;
-    Set<String> publishTopicSet;
+//    Set<String> publishTopicSet;
+
+    boolean ack = false;
 
     public Producer (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
         this.host = host;
@@ -39,7 +41,7 @@ public class Producer {
         defaultBrokers.add(h);
 
         topicsMember = new HashMap<>();
-        publishTopicSet = new HashSet<>();
+//        publishTopicSet = new HashSet<>();
     }
 
     private int hashCode(String msg) {
@@ -50,21 +52,45 @@ public class Producer {
         }
         return hash;
     }
-    public boolean createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-
+    public boolean createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+        // This producer has not store the topic information before
+        // Or partition = -1 : the topic partition leader is broken
+        // Re-request the topic partition leaders information
         if ( !topicsMember.containsKey(topic) ) {
             List<Object> argument = new ArrayList<>();
             Topic t = new Topic(topic, partition, replication);
             argument.add(t);
-            publishTopicSet.add(topic);
+//            publishTopicSet.add(topic);
             Message request = new Message(MessageType.CREATE_TOPIC, argument);
             HostRecord defaultBroker = defaultBrokers.iterator().next();
-            TcpClient sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
+            System.out.println(defaultBroker.getPort());
+            TcpClient sock = null;
+
+            // Handle the case : default broker down
+            while (!defaultBrokers.isEmpty()) {
+                System.out.println(defaultBrokers.size());
+                defaultBroker = defaultBrokers.iterator().next();
+                try {
+                    sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
+                    break;
+                } catch (IOException e) {
+                    System.out.println("The first default broker is down");
+                    defaultBrokers.remove(defaultBrokers.iterator().next());
+
+                }
+            }
+            if ( defaultBrokers.isEmpty() )
+                return false;
+
             sock.setHandler( this, request);
-            //sock.setReadInterval(2000);
-//        System.out.println(sock.getReadInterval());
             sock.run();
-            return true;
+            synchronized (this) {
+                while (!ack ) {
+                    wait();
+                }
+                ack = false;
+                return true;
+            }
         } else {
             // This topic has already been created.
             return false;
@@ -72,40 +98,70 @@ public class Producer {
     }
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println(topic);
+        System.out.println("haha finally" + topic);
         topicsMember.put(topic, partitionLeaders);
-        publishTopicSet.add(topic);
-
+//        publishTopicSet.add(topic);
+        synchronized (this) {
+            ack = true;
+            notify();
+        }
         return;
     }
 
-
-
-    public void publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        //sock.connect();
-
+    public boolean publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        // Hardcode
+        Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
+        partitionLeaders.put(0, new HostRecord("localhost", 9000));
+        partitionLeaders.put(1, new HostRecord("localhost", 9001));
+        topicsMember.put(topic, partitionLeaders);
+        // Hardcode
         if ( !topicsMember.containsKey(topic) ) {
             // Reuse the createTopic function to get corresponding topic partition leaders
             createTopic(topic,1,1);
         }
+        TcpClient sock = null;
         int partition = hashCode(message) % topicsMember.get(topic).size();
         System.out.println(topic + " " + message + " " + partition);
-        HostRecord partitionLeader = topicsMember.get(topic).get(partition);
-        System.out.println(partitionLeader.getPort());
+        HostRecord partitionLeader = null;
+
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
-        argument.add(partition);
+        argument.add((Integer)partition);
         argument.add(message);
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
-        TcpClient sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
-//        sock.setReadInterval(1000);
-        sock.setHandler( this, request);
+        int leaderAliveChance = 1;
+        while (leaderAliveChance >= 0) {
+            partitionLeader = topicsMember.get(topic).get(partition);
+            System.out.println(partitionLeader.getPort());
+            try {
+                sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
+                sock.setHandler( this, request);
+                break;
+            } catch (IOException e) {
+//                e.printStackTrace();
+                topicsMember.remove(topic);
+                leaderAliveChance--;
+                // To indicate the topic partition leader broken case
+                createTopic(topic,1,1);
+            }
+        }
+        if ( leaderAliveChance < 0 )
+            return false;
+
+
+
+
+
+        //while ( sock.getCloser() )
+//        sock.setReadInterval(10000);
+
         sock.run();
+        return true;
     }
 
     public void publishMessageAck(String message, String ackMessage) {
-        System.out.println(message + ackMessage);
+        System.out.println("This is Ack message " + message + " " + ackMessage);
     }
 
     public void update(String s) {

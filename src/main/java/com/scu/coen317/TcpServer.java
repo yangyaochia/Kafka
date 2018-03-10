@@ -103,6 +103,7 @@ public class TcpServer {
                     Method method = object.getClass().getMethod(message.getMethodNameValue(), inputTypes);
 
                     Object[] inputs = message.getInputValue();
+
                     System.out.println("* <" + client_id + "> will invoke " + message.getMethodName());
                     Message response = (Message) method.invoke(this_object, inputs);
 
