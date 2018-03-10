@@ -8,7 +8,7 @@ public enum MessageType {
 
     // Broker
     GET_TOPIC("topicAssignment"),               // B -> Z   Y
-    GET_TOPIC_FOR_COORDINATOR("updateTopicPartitionLeaderCache"),   //B -> Z  coordinator ask zookeeper the topic's partitions
+    GET_TOPIC_FOR_COORDINATOR("topicPartitions"),   //B -> Z  coordinator ask zookeeper the topic's partitions
     TOPIC_ASSIGNMENT_TO_PRODUCER("updateTopicPartitionLeader"),        // B -> P   Y
     PUBLISH_MESSAGE_ACK("publishMessageAck"),       // B->P Y
     SUBSCRIBE_ACK("subscribeAck"),
@@ -37,6 +37,7 @@ public enum MessageType {
                                                         if any broker is dead
                                                      */
     COORDINATOR_ASSIGNMENT("updateCoordinator"), //Z->B
+    RETURN_TOPIC_FOR_COORDINATOR("updateTopicPartitionLeaderCache"), // Z -> B
 
     //Consumer
     FIND_COORDINATOR("getCoordinator"), //C->B  Xinzhu getCoordinator(String groupId)

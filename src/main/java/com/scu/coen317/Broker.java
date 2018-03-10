@@ -232,11 +232,7 @@ public class Broker {
         balanceMap.remove(groupId);
         Map<String, Map<Integer, HostRecord>> topic_partitions = new HashMap<>();
         for (String topic : group_topic.get(groupId)) {
-            Map<Integer, HostRecord> partitions = topicsPartitionLeader.get(topic);
-            if (partitions == null) {
-                partitions = topicsPartitionLeaderCache.get(topic);
-            }
-            topic_partitions.put(topic, partitions);
+            topic_partitions.put(topic, topicsPartitionLeaderCache.get(topic));
         }
         while (!balanceMap.containsKey(groupId)) {
             HostRecord leader = consumerLeader.get(groupId);
@@ -316,17 +312,16 @@ public class Broker {
 
     // coordinator要找到这个topicName的partition leaders
     public void getTopic(String topicName) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
-        // This broker does now know the topic, then ask the zookeeper
-        if (!topicsPartitionLeader.containsKey(topicName)) {
-            if (!topicsPartitionLeaderCache.containsKey(topicName)) {
-                List<Object> argument = new ArrayList<>();
-                argument.add(topicName);
-                Message request = new Message(MessageType.GET_TOPIC_FOR_COORDINATOR, argument);
+        // This broker does not know the topic, then ask the zookeeper
+        if (!topicsPartitionLeaderCache.containsKey(topicName)) {
+            List<Object> argument = new ArrayList<>();
+            argument.add(topicName);
+            Message request = new Message(MessageType.GET_TOPIC_FOR_COORDINATOR, argument);
 
-                TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
-                sock.setHandler(this, request);
-                sock.run();
-            }
+            TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+            sock.setHandler(this, request);
+            sock.run();
+
         }
     }
 
