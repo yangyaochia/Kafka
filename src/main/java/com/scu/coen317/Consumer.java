@@ -2,6 +2,7 @@ package com.scu.coen317;
 
 import javafx.util.Pair;
 
+import javax.jws.Oneway;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -41,6 +42,9 @@ public class Consumer {
     }
 
     public void joinToGroup() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+        while (coordinator == null) {
+            findCoordinator();
+        }
         TcpClient client = new TcpClient(coordinator.getHost(), coordinator.getPort());
         List<Object> arguments = new ArrayList<>();
         arguments.add(this.groupId);
@@ -157,16 +161,20 @@ public class Consumer {
 
 
     public void findCoordinator() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-        Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(groupId);
+        arguments.add(thisHost);
+        Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, arguments);
         // send request to defaultBroker with the groupId
         TcpClient sock = new TcpClient(this.defaultBroker.getHost(), this.defaultBroker.getPort());
         sock.setHandler(this, request);
         sock.run();
     }
 
-    public void updateCoordinator(HostRecord coordinator) {
+    public Message updateCoordinator(HostRecord coordinator) {
         this.coordinator = coordinator;
-        System.out.println("My coordinator is " + coordinator.getPort());
+        Message ack = new Message(MessageType.ACK, Collections.singletonList("Coordinator updated successful"), true);
+        return ack;
     }
 
     // to coordinator

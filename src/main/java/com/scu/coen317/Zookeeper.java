@@ -222,22 +222,17 @@ public class Zookeeper {
     public Message topicPartitions(String topic)
     {
         List<Object> arguments = new ArrayList();
-        if(!topicAssignmentHash.containsKey(topic))
-        {
-            System.out.println("Don't have the topic for consumer");
-            arguments.add("ZooKeeper Don't have the topic: "+topic);
-            Message response = new Message(MessageType.ACK, arguments,true);
-            return response;
-
+        HashMap<Integer, HostRecord> result = new HashMap<>();
+        if(topicAssignmentHash.containsKey(topic)) {
+            result = topicAssignmentHash.get(topic);
         }
         System.out.println("TOPICASSIGNMENT for Consumer");
         System.out.println("Topic: "+topic);
         System.out.println();
         displayTopicAssignment(topic);
 
-
         arguments.add(topic);
-        arguments.add(topicAssignmentHash.get(topic));
+        arguments.add(result);
         Message response = new Message(MessageType.RETURN_TOPIC_FOR_COORDINATOR, arguments);
         return response;
 //        ("updateTopicPartitionLeaderCache")

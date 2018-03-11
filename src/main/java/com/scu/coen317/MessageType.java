@@ -37,7 +37,7 @@ public enum MessageType {
                                                         if any broker is dead
                                                      */
     COORDINATOR_ASSIGNMENT("updateCoordinator"), //Z->B
-    RETURN_TOPIC_FOR_COORDINATOR("updateTopicPartitionLeaderCache"), // Z -> B
+    RETURN_TOPIC_FOR_COORDINATOR("updateTopicsPartitionLeaderCache"), // Z -> B updateTopicsPartitionLeaderCache
 
     //Consumer
     FIND_COORDINATOR("getCoordinator"), //C->B  Xinzhu getCoordinator(String groupId)
