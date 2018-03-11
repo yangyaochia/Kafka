@@ -352,27 +352,38 @@ public class Broker {
         balanceMap.put(groupId, newBalance);
     }
 
-    public void replaceTopicPartitionLeader(HostRecord brokenBroker, HostRecord newBroker) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InterruptedException, IOException {
+    public void replaceTopicPartitionLeader(HashMap<String, Map<Integer, Map<HostRecord, HostRecord>>> newInfo) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InterruptedException, IOException {
         // Map<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> balanceMap;
         System.out.println("replaceTopicPartitionLeader start...");
+        Set<Pair<String, HostRecord>> changeSet = new HashSet<>();
+
         for (Map.Entry<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> eachGroup : balanceMap.entrySet()) {
             String groupId = eachGroup.getKey();
             for (Map.Entry<HostRecord, Map<String, Map<Integer, HostRecord>>> eachConsumer : balanceMap.get(groupId).entrySet()) {
                 HostRecord consumer = eachConsumer.getKey();
-                boolean needToReassign = false;
                 for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : balanceMap.get(groupId).get(consumer).entrySet()) {
                     String curTopic = eachTopic.getKey();
-                    for (Map.Entry<Integer, HostRecord> eachPartition : balanceMap.get(groupId).get(consumer).get(curTopic).entrySet()) {
-                        HostRecord broker = eachPartition.getValue();
-                        if (broker.equals(brokenBroker)) {
-                            needToReassign = true;
-                            balanceMap.get(groupId).get(consumer).get(curTopic).put(eachPartition.getKey(), newBroker);
+                    if (newInfo.containsKey(curTopic)) {
+                        Map<Integer, Map<HostRecord, HostRecord>> partitionBroker = newInfo.get(curTopic);
+                        for (Map.Entry<Integer, HostRecord> eachPartition : balanceMap.get(groupId).get(consumer).get(curTopic).entrySet()) {
+                            Integer partition = eachPartition.getKey();
+                            if (partitionBroker.containsKey(partition)) {
+                                HostRecord broker = eachPartition.getValue();
+                                if (eachPartition.getValue().equals(broker)) {
+                                    changeSet.add(new Pair(groupId,consumer));
+                                    System.out.println("add " + consumer + " to set");
+                                    HostRecord newBroker = partitionBroker.get(partition).get(broker);
+                                    balanceMap.get(groupId).get(consumer).get(curTopic).put(partition, newBroker);
+                                }
+                            }
+
+                        }
+
+                        for (Pair<String, HostRecord> consumerNeedToReassign : changeSet) {
+                            assignPartitionToConsumer(consumerNeedToReassign.getValue(), balanceMap.get(groupId).get(consumerNeedToReassign.getValue()));
+                            System.out.println("new replaceTopicPartitionLeader send...");
                         }
                     }
-                }
-                if (needToReassign) {
-                    assignPartitionToConsumer(consumer, eachConsumer.getValue());
-                    System.out.println("new replaceTopicPartitionLeader send...");
                 }
             }
         }
@@ -382,7 +393,8 @@ public class Broker {
         topicsPartitionLeader.put(topic, topicPartitionLeaders);
     }
 
-    public Message test1() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+    public Message test1() throws
+            IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
 //        TcpClient client = new TcpClient("localhost", 9007);
 //        Message request = new Message(MessageType.TEST2);
 //        client.setHandler(this, request);
@@ -395,7 +407,8 @@ public class Broker {
         return new Message(MessageType.ACK, Collections.singletonList("broker received the request from consumer"), true);
     }
 
-    public Message test2() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+    public Message test2() throws
+            IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         TcpClient client = new TcpClient("localhost", 1001);
         Message request = new Message(MessageType.ACK, Collections.singletonList("broker2 send request to consumer"), true);
         client.setHandler(this, request);
@@ -409,7 +422,8 @@ public class Broker {
 
 // //////////////// Hsuan-Chih
 
-    public void listen() throws IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void listen() throws
+            IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         listenSocket.listen();
 //        while (true) {
 //            // Send hearbeat per 1 min
