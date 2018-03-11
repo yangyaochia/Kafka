@@ -14,12 +14,12 @@ public class ProducerTest {
 //
 //        p.printDefaultBrokerList();
 
-        for ( int i = 0 ; i < 25 ; i++) {
+        for ( int i = 0 ; i < 2 ; i++) {
             p.publishMessage("Distributed System Topic", "Message from P1 " + Integer.toString(i));
         }
-        for ( int i = 0 ; i < 25 ; i++) {
-            p.publishMessage("Santa Clara Univ Topic", "Message from P1 " + Integer.toString(i));
-        }
+//        for ( int i = 0 ; i < 25 ; i++) {
+//            p.publishMessage("Santa Clara Univ Topic", "Message from P1 " + Integer.toString(i));
+//        }
 
 
 //        p.createTopic("topic2", 1,1);

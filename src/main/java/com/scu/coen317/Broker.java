@@ -28,7 +28,7 @@ public class Broker {
     // 记录每个group中，每个topic都是哪些consumer订阅
     Map<String, Map<String, List<HostRecord>>> topic_consumer;
     Map<String, List<String>> group_topic;
-    Map<String, Map<Integer, HostRecord>> topicsPartitionLeaderCache;
+    DataCache<String, Map<Integer, HostRecord>> topicsPartitionLeaderCache;
 
 
     // 记录每个group中，每一个consumer订阅的每一个topic都有哪些partition
@@ -66,7 +66,8 @@ public class Broker {
         balanceMap = new HashMap<>();
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
-        topicsPartitionLeaderCache = new HashMap<>();
+        topicsPartitionLeaderCache = new DataCache<>();
+        topicsPartitionLeaderCache.setTimeout(1);
     }
 
     ////////////////// Yao-Chia
