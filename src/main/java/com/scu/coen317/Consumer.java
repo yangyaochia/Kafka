@@ -2,6 +2,7 @@ package com.scu.coen317;
 
 import javafx.util.Pair;
 
+import javax.jws.Oneway;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -41,6 +42,9 @@ public class Consumer {
     }
 
     public void joinToGroup() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+        while (coordinator == null) {
+            findCoordinator();
+        }
         TcpClient client = new TcpClient(coordinator.getHost(), coordinator.getPort());
         List<Object> arguments = new ArrayList<>();
         arguments.add(this.groupId);
@@ -59,9 +63,9 @@ public class Consumer {
 
     public void updateTopicPartition(HashMap<String, Map<Integer, HostRecord>> topicPartitions) {
         subscribedTopicPartitions = topicPartitions;
-        System.out.println("topicPartition updated in consumer");
+        System.out.println("    --- New topicPartition updated in consumer");
         for (Map.Entry<String, Map<Integer, HostRecord>> en : topicPartitions.entrySet()) {
-            System.out.println(en.getKey() + " : " + en.getValue());
+            System.out.println("        " + en.getKey() + " : " + en.getValue());
         }
     }
 
@@ -83,17 +87,32 @@ public class Consumer {
     }
 
     // Map<String, List<HostRecord>>, Map<String, Map<Integer, HostRecord>>
+    // t1 : c1, t1 : []
+    //
     public Message rebalance(HashMap<String, List<HostRecord>> topic_consumers, HashMap<String, Map<Integer, HostRecord>> topic_partitions) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         HashMap<HostRecord, Map<String, Map<Integer, HostRecord>>> rebalanceResult = new HashMap<>();
         for (Map.Entry<String, List<HostRecord>> eachTopic : topic_consumers.entrySet()) {
             List<HostRecord> consumerList = eachTopic.getValue();
+            // t1 : c1, c2
+            // t2 : c2
+            // t1 : p1, p2
+
+            // c1 : t1 ::
+            // c2 : t1 ::
+                  //t2 ::
+            for (HostRecord consumer : consumerList) {
+                Map<String, Map<Integer, HostRecord>> topicMap = rebalanceResult.getOrDefault(consumer, new HashMap<>());
+                topicMap.put(eachTopic.getKey(), new HashMap<>());
+                rebalanceResult.put(consumer, topicMap);
+            }
+
             int indexConsumer = 0;
             int sizeConsumer = eachTopic.getValue().size();
             Iterator<Map.Entry<Integer, HostRecord>> it = topic_partitions.get(eachTopic.getKey()).entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<Integer, HostRecord> partition = it.next();// c1 : [topic1, [1,b1]
-                Map<String, Map<Integer, HostRecord>> partitionOfConsumer = rebalanceResult.getOrDefault(consumerList.get(indexConsumer % sizeConsumer), new HashMap<>());   // c2 : [topic1, [2,b1]
-                Map<Integer, HostRecord> partitionOfTopic = partitionOfConsumer.getOrDefault(eachTopic.getKey(), new HashMap<>());
+                Map<String, Map<Integer, HostRecord>> partitionOfConsumer = rebalanceResult.get(consumerList.get(indexConsumer % sizeConsumer));   // c2 : [topic1, [2,b1]
+                Map<Integer, HostRecord> partitionOfTopic = partitionOfConsumer.get(eachTopic.getKey());
                 partitionOfTopic.put(partition.getKey(),partition.getValue());
                 partitionOfConsumer.put(eachTopic.getKey(), partitionOfTopic);
                 rebalanceResult.put(consumerList.get(indexConsumer % sizeConsumer), partitionOfConsumer);
@@ -157,16 +176,20 @@ public class Consumer {
 
 
     public void findCoordinator() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-        Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, Collections.singletonList(this.groupId));
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(groupId);
+        arguments.add(thisHost);
+        Message request = new Message(MessageType.CREATE_TOPIC.FIND_COORDINATOR, arguments);
         // send request to defaultBroker with the groupId
         TcpClient sock = new TcpClient(this.defaultBroker.getHost(), this.defaultBroker.getPort());
         sock.setHandler(this, request);
         sock.run();
     }
 
-    public void updateCoordinator(HostRecord coordinator) {
+    public Message updateCoordinator(HostRecord coordinator) {
         this.coordinator = coordinator;
-        System.out.println("My coordinator is " + coordinator.getPort());
+        Message ack = new Message(MessageType.ACK, Collections.singletonList("Coordinator updated successful"), true);
+        return ack;
     }
 
     // to coordinator

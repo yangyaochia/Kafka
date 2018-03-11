@@ -294,7 +294,7 @@ public class Broker {
         client.run();
     }
 
-    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+    public Message getCoordinator(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         while (!topics_coordinator.containsKey(groupId)) {
             TcpClient client = new TcpClient(defaultZookeeper.host, defaultZookeeper.port);
             List<Object> arguments = new ArrayList<>();
@@ -303,15 +303,22 @@ public class Broker {
             client.setHandler(this, request);
             client.run();
         }
+        TcpClient tcpClient = new TcpClient(consumer.getHost(), consumer.getPort());
         HostRecord coordinator = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
         arguments.add(coordinator);
-        Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
-        return response;
+        Message request = new Message(MessageType.UPDATE_COORDINATOR, arguments);
+        tcpClient.setHandler(this,request);
+        tcpClient.run();
+
+        Message ack = new Message(MessageType.ACK, Collections.singletonList("Get coordinator successful"), true);
+        return ack;
     }
 
     public void updateCoordinator(String groupId, HostRecord coordinator) {
         topics_coordinator.put(groupId, coordinator);
+        System.out.println("add coordinator " + coordinator.getHost() + " " + coordinator.getPort()
+        + " to " + groupId);
     }
 
     public void rebalance(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
@@ -403,6 +410,7 @@ public class Broker {
         if (!topicsPartitionLeaderCache.containsKey(topicName)) {
             List<Object> arguments = new ArrayList<>();
             arguments.add(topicName);
+            arguments.add(thisHost);
             Message request = new Message(MessageType.GET_TOPIC_FOR_COORDINATOR, arguments);
 
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
@@ -412,8 +420,9 @@ public class Broker {
         }
     }
 
-    public void updateTopicsPartitionLeaderCache(String topic, Map<Integer, HostRecord> topicPartitionLeaders) {
+    public void updateTopicsPartitionLeaderCache(String topic, HashMap<Integer, HostRecord> topicPartitionLeaders) {
         topicsPartitionLeaderCache.put(topic, topicPartitionLeaders);
+        System.out.println("topic partitions update");
     }
 
     public Message addConsumerToGroup(String groupId, HostRecord consumer) throws IOException {

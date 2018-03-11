@@ -128,7 +128,7 @@ public class TcpClient {
             public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InterruptedException {
                 //handler.onMessage(cid, msg);
                 System.out.println("进入client的handler");
-                System.out.println("msg.isAck() = " + msg.isAck());
+
                 if (msg.isAck()) {
 //                    System.out.println(msg.getMethodNameValue());
                     System.out.println(msg.arguments.get(0));
