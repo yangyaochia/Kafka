@@ -21,6 +21,7 @@ import static java.lang.Thread.sleep;
 public class brokerTest{
     String host;
     int port;
+    TcpServer listenSocket;
     //TcpClient sock;
     //TcpClientEventHandler handler;
     // default brokers and broker cache
@@ -37,7 +38,8 @@ public class brokerTest{
         //sock.setReadInterval(5000);
         defaultZookeeper = new HostRecord(defaultZookeeperIp, defaultZookeeperPort);
         topicPartitionLeaders = new HashMap<>();
-
+        this.listenSocket = new TcpServer(port);
+        listenSocket.setHandler(this);
     }
 
     private int hashCode(String msg) {
@@ -98,7 +100,6 @@ public class brokerTest{
     public void getTopic() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
 //        String topic = "hahaha";
-        Topic topic = new Topic("hahahaha");
 
         List<Object> argument = new ArrayList<>();
 //        Message response;
@@ -109,11 +110,14 @@ public class brokerTest{
 
         // This broker does now know the topic, then ask the zookeeper
 //        if ( !topicsPartitionLeader.containsKey(topicName) ) {
-
+        Topic topic = new Topic("hahahaha");
         topic.partition = 3;
+        topic.replication = 3;
+        HostRecord temp = new HostRecord(this.host, this.port);
         argument.add(topic);
-
+        argument.add(temp);
         Message request = new Message(MessageType.GET_TOPIC, argument);
+
 
         TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
         sock.setHandler( this, request);
@@ -145,7 +149,7 @@ public class brokerTest{
     }
 
     public void topicAssignmentToProducer(Topic topic, HashMap<Integer,HostRecord> partitions) {
-        System.out.println("hahahahah");
+        System.out.println("In topic Assignment to producer already... ");
 //        System.out.println(msg);
         System.out.println("topic : "+ topic.getName());
         for (Integer name: partitions.keySet()){
@@ -154,7 +158,18 @@ public class brokerTest{
             System.out.println("Partition " +key.toString() + "  at" + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
         }
     }
+    public void setTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> replicationHolders)
+    {
+        System.out.println("In setTopicPartitionLeader already... ");
+        System.out.println("=leader=");
+        System.out.println(leader.toString());
+        System.out.println("=followers=");
+        for(HostRecord oneFollower : replicationHolders)
+        {
+            System.out.println(oneFollower.toString());
+        }
 
+    }
 
 
     public void getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
@@ -181,12 +196,34 @@ public class brokerTest{
         System.out.println("received response from broker");
         return;
     }
+    public void listen() throws IOException, ClassNotFoundException, InterruptedException {
+
+        listenSocket.listen();
+//         while (true) {
+//            // Send hearbeat per 1 min
+//            Thread.sleep(updateClusterInterval);
+//            try {
+//                updateCluster();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } catch (InvocationTargetException e) {
+//                e.printStackTrace();
+//            } catch (NoSuchMethodException e) {
+//                e.printStackTrace();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            } catch (IllegalAccessException e) {
+//                e.printStackTrace();
+//            }
+//        }
+    }
 
     public static void main(String argv[]) throws Exception {
         brokerTest p = new brokerTest("localhost", 9008, "localhost", 2181);
+        p.listen();
         p.registerToZookeeper();
         p.getTopic();
-        p.getCoordinator("1111");
+//        p.getCoordinator("1111");
 //        p.registerToZookeeper();
 //
 //        p.sendMessage("topic1", "1");
