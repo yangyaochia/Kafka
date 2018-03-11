@@ -6,13 +6,25 @@ import java.util.List;
 public class ProducerTest {
     public static void main(String argv[]) throws Exception {
         Producer p = new Producer("localhost", 8000, "localhost", 9000);
-//        p.addDefaultBroker("localhost", 9001);
-//        p.createTopic("topic1", 1,1);
 
-//        p.createTopic("topic2", 2,2);
+//        p.printDefaultBrokerList();
+//
+//        p.createTopic("Distributed System Topic", 2,1);
+//        p.createTopic("Santa Clara Univ Topic", 3,1);
+//
+//        p.printDefaultBrokerList();
+
+//        p.createTopic("topic2", 1,1);
         for ( int i = 0 ; i < 25 ; i++) {
-            p.publishMessage("topic1", "Message from P1 " + Integer.toString(i));
+            p.publishMessage("Empty Topic", "Message from P1 " + Integer.toString(i));
         }
+//
+//        for ( int i = 0 ; i < 25 ; i++) {
+//            p.publishMessage("Distributed System Topic", "Message from P1 " + Integer.toString(i));
+//        }
+//        for ( int i = 0 ; i < 25 ; i++) {
+//            p.publishMessage("Santa Clara Univ Topic", "Message from P1 " + Integer.toString(i));
+//        }
 //        p.publishMessage("topic1", "test1");
 //        p.publishMessage("topic1", "test2");
 //        p.publishMessage("topic2", "test3");

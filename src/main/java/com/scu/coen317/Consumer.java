@@ -151,6 +151,7 @@ public class Consumer {
                     arguments.add(groupId);
                     arguments.add(topic);
                     arguments.add(partition.getKey());
+                    arguments.add(thisHost);
                     arguments.add(MAX_FETCH_SIZE);
                     Message request = new Message(MessageType.PULLMESSAGE, arguments);
                     System.out.println("Ready to poll!!!");

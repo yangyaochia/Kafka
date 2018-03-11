@@ -243,7 +243,7 @@ public class Broker {
         System.out.println("This is ack" + message + " " + ackMessage);
     }
 
-    public Message giveMessage(String groudID, String topic, Integer partition, Integer maxFetchSize) throws InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException, IOException {
+    public Message giveMessage(String groudID, String topic, Integer partition, HostRecord consumer, Integer maxFetchSize) throws InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException, IOException {
 //        Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
         Message response;
 //        if ( !consumerGroupOffset.containsKey(topic) || !consumerGroupOffset.get(topic).containsKey(partition) ) {
@@ -282,11 +282,11 @@ public class Broker {
         argument.add(topic);
         argument.add(thisHost);
         response = new Message(MessageType.SEND_MESSAGE_TO_CONSUMER, argument);
-        return response;
-//        TcpClient sock = new TcpClient(consumer.getHost(),consumer.getPort());
-//        sock.setHandler(this,response);
-//        sock.run();
-//        return new Message(MessageType.ACK);
+//        return response;
+        TcpClient sock = new TcpClient(consumer.getHost(),consumer.getPort());
+        sock.setHandler(this,response);
+        sock.run();
+        return new Message(MessageType.ACK);
 //        }
     }
     ////////////////// Yao-Chia
