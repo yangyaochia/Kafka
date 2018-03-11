@@ -2,7 +2,6 @@ package com.scu.coen317;
 
 import javafx.util.Pair;
 
-import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -77,9 +76,13 @@ public class Broker {
         List<Object> argument = new ArrayList<>();
         Message response;
         Map<Integer,HostRecord> leaders = new HashMap<>();
-        leaders.put(0, new HostRecord("localhost", 9000));
+        leaders.put(0, new HostRecord("localhost", 9001));
 //        leaders.put(1, new HostRecord("localhost", 9001));
         topicsPartitionLeader.put(topicName, leaders);
+
+//        for ( Map.Entry<Integer,HostRecord> pair : topicsPartitionLeader.get(topic).entrySet() ) {
+//            System.out.println("This topic is " + topic + " " + pair.getKey() + " " + pair.getValue());
+//        }
         // This broker does now know the topic, then ask the zookeeper
         if ( !topicsPartitionLeader.containsKey(topicName) ) {
             argument.add(topic);
