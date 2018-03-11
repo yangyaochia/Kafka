@@ -23,7 +23,8 @@ public class Consumer {
 
     Map<String, Map<Integer, HostRecord>> subscribedTopicPartitions;
     // 5 min;
-    final int MAX_POLL_INTERVAL_MS = 10000;
+    final int MAX_POLL_INTERVAL_MS = 3000;
+    final int MAX_FETCH_SIZE = 10;
 
     public Consumer (String host, int port, String groupId, String defaultBrokerIp, int defaultBrokerPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         thisHost = new HostRecord(this.host = host, this.port = port);
@@ -133,29 +134,35 @@ public class Consumer {
         // Map<String, Map<Integer, HostRecord>> subscribedTopicPartitions;
         // multicast of each partition in subscribedPartitions;
 
-
         List<String> messages = new ArrayList<>();
+        while (true) {
+            Thread.sleep(MAX_POLL_INTERVAL_MS);
+            for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : subscribedTopicPartitions.entrySet()) {
 
-        for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : subscribedTopicPartitions.entrySet()) {
-//            Thread.sleep(MAX_POLL_INTERVAL_MS);
-            String topic = eachTopic.getKey();
-            Map<Integer, HostRecord> partitions = eachTopic.getValue();
-            for (Map.Entry<Integer, HostRecord> partition : partitions.entrySet()) {
-                System.out.println("Ready to poll!!!");
-                HostRecord broker = partition.getValue();
-                TcpClient client = new TcpClient(broker.getHost(), broker.getPort());
-                List<Object> arguments = new ArrayList<>();
-                arguments.add(groupId);
-                arguments.add(topic);
-                arguments.add(partition.getKey());
-                Message request = new Message(MessageType.PULLMESSAGE, arguments);
-                client.setHandler(this, request);
-                client.run();
+                System.out.println("Hello?");
+                String topic = eachTopic.getKey();
+                Map<Integer, HostRecord> partitions = eachTopic.getValue();
+                for (Map.Entry<Integer, HostRecord> partition : partitions.entrySet()) {
+//                    Thread.sleep(1000);
+
+                    HostRecord broker = partition.getValue();
+                    TcpClient client = new TcpClient(broker.getHost(), broker.getPort());
+                    List<Object> arguments = new ArrayList<>();
+                    arguments.add(groupId);
+                    arguments.add(topic);
+                    arguments.add(partition.getKey());
+                    arguments.add(MAX_FETCH_SIZE);
+                    Message request = new Message(MessageType.PULLMESSAGE, arguments);
+                    System.out.println("Ready to poll!!!");
+                    client.setHandler(this, request);
+                    client.run();
+                }
             }
         }
+
     }
 
-    public Message dealWithMessage(List<String> messages, String topic, HostRecord broker) {
+    public Message dealWithMessage(ArrayList<String> messages, String topic, HostRecord broker) {
         System.out.println("Enter consumer deal!!!");
         for (String message : messages) {
             System.out.println(message);

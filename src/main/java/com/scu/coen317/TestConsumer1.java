@@ -11,6 +11,7 @@ public class TestConsumer1 {
 //        con1.updateCoordinator(new HostRecord("localhost", 9005));
         con1.joinToGroup();
         con1.subscribe("topic1");
+        Thread.sleep(5000);
         con1.poll();
 
 

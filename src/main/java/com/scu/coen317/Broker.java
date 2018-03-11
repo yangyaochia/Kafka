@@ -97,20 +97,21 @@ public class Broker {
 
         // This broker already stored the topic info
         synchronized (this) {
-            while (!topicsPartitionLeader.containsKey(topicName) ) {
+            while (!topicsPartitionLeader.containsKey(topicName)) {
                 wait();
             }
-            List<Object> argument = new ArrayList<>();
-            argument.add(topicName);
-            argument.add(topicsPartitionLeader.get(topicName) );
-            response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
-            System.out.println(producer.getPort());
-
-            TcpClient sock = new TcpClient(producer.getHost(), producer.getPort());
-            sock.setHandler(this, response);
-            sock.run();
-
         }
+        List<Object> argument = new ArrayList<>();
+        argument.add(topicName);
+        argument.add(topicsPartitionLeader.get(topicName) );
+        response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
+        System.out.println(producer.getPort());
+
+        TcpClient sock = new TcpClient(producer.getHost(), producer.getPort());
+        sock.setHandler(this, response);
+        sock.run();
+
+
         return new Message(MessageType.ACK);
     }
     public void topicAssignmentToProducer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
@@ -198,12 +199,16 @@ public class Broker {
     public Message publishMessage(String topic, Integer partition, String message, HostRecord producer) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
 
-        System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
+
         List<String> msgs = topicMessage.get(topic).get(partition);
-        msgs.add(message);
-        System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
-        for ( String m : msgs)
-            System.out.println(m);
+        synchronized (this) {
+            System.out.println("topic partition's size is " + topicMessage.get(topic).get(partition).size());
+            msgs.add(message);
+            System.out.println("topic partition's size is " + topicMessage.get(topic).get(partition).size());
+        }
+
+//        for ( String m : msgs)
+//            System.out.println(m);
 
         // Send publishMessage to the corresponding topic partition replication holders
         Set<HostRecord> replicationHolders = topicPartitionReplicationBrokers.get(topic).get(partition);
@@ -238,7 +243,7 @@ public class Broker {
         System.out.println("This is ack" + message + " " + ackMessage);
     }
 
-    public Message giveMessage(String groudID, String topic, Integer partition) {
+    public Message giveMessage(String groudID, String topic, Integer partition, Integer maxFetchSize) throws InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException, IOException {
 //        Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
         Message response;
 //        if ( !consumerGroupOffset.containsKey(topic) || !consumerGroupOffset.get(topic).containsKey(partition) ) {
@@ -246,35 +251,42 @@ public class Broker {
 //            return response;
 //        } else {
 
-        if ( consumerGroupOffset.get(topic) == null || consumerGroupOffset.get(topic).get(partition) == null ) {
-
-        }
-            HashMap<String,Integer> consumerGroup = (HashMap<String, Integer>) consumerGroupOffset.get(topic).get(partition);
+        HashMap<String,Integer> consumerGroup = (HashMap<String, Integer>) consumerGroupOffset.get(topic).get(partition);
 
         if ( !consumerGroup.containsKey(groudID) ) {
-            System.out.println("initialisation issue");
             consumerGroup.put(groudID,0);
         }
         System.out.println("ready to give message to consumer!!!");
         System.out.println("Topic : " + topic + " partition : " + partition);
-        List<String> topicPartitionMessage = topicMessage.get(topic).get(partition);
-        System.out.println("Current message size : " + topicPartitionMessage.size());
-        int offset = consumerGroup.get(groudID);
-        int maxOffset = Integer.min(offset + 10, topicMessage.get(topic).get(partition).size());
-//            topicMessage.get(topic).get(partition)
-        System.out.println("offset : " + offset + " maxOffset : " + maxOffset);
+        List<String> sendingMessages;
+        synchronized (this) {
+            List<String> topicPartitionMessage = topicMessage.get(topic).get(partition);
+            System.out.println("Current message size : " + topicPartitionMessage.size());
+            int offset = consumerGroup.get(groudID);
+            System.out.println("offset : " + offset);
+            if ( offset == topicPartitionMessage.size() ){
+                return new Message(MessageType.ACK);
+            }
+            int maxOffset = Integer.min(offset + maxFetchSize, topicPartitionMessage.size());
+            consumerGroup.put(groudID,maxOffset);
+            System.out.println("offset : " + offset + " maxOffset : " + maxOffset);
+            sendingMessages = new ArrayList<>(topicPartitionMessage.subList(offset, maxOffset));
+        }
 
-            List<String> sendingMessages = new ArrayList<>(topicPartitionMessage.subList(offset, maxOffset));
         System.out.println("sendingMessages.size() : " + sendingMessages.size());
         for (String s : sendingMessages )
             System.out.println(s);
 //            list<String>, String, HostRecord
-            List<Object> argument = new ArrayList<>();
-            argument.add(sendingMessages);
-            argument.add(topic);
-            argument.add(thisHost);
-            response = new Message(MessageType.SEND_MESSAGE_TO_CONSUMER, argument);
-            return response;
+        List<Object> argument = new ArrayList<>();
+        argument.add(sendingMessages);
+        argument.add(topic);
+        argument.add(thisHost);
+        response = new Message(MessageType.SEND_MESSAGE_TO_CONSUMER, argument);
+        return response;
+//        TcpClient sock = new TcpClient(consumer.getHost(),consumer.getPort());
+//        sock.setHandler(this,response);
+//        sock.run();
+//        return new Message(MessageType.ACK);
 //        }
     }
     ////////////////// Yao-Chia
