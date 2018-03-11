@@ -111,12 +111,12 @@ public class Producer {
 
     public boolean publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         // Hardcode
-        Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
-        partitionLeaders.put(0, new HostRecord("localhost", 9000));
+//        Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
+//        partitionLeaders.put(0, new HostRecord("localhost", 9000));
 //        partitionLeaders.put(1, new HostRecord("localhost", 9000));
 
-        topicsMember.put(topic, partitionLeaders);
-        System.out.println("Initial topic " + topic + " " + 0 + " leader " + topicsMember.get(topic).get(0));
+//        topicsMember.put(topic, partitionLeaders);
+//        System.out.println("Initial topic " + topic + " " + 0 + " leader " + topicsMember.get(topic).get(0));
         // Hardcode
         if ( !topicsMember.containsKey(topic) ) {
             // Reuse the createTopic function to get corresponding topic partition leaders

@@ -16,12 +16,12 @@ public class BrokerTestYaoChia {
 //
 //
         Broker b2 = new Broker("localhost", 9001, "localhost", 2181);
-////        b2.registerToZookeeper();
         b2.listen();
+        b2.registerToZookeeper();
+        b2.sendHeartBeat();
 //
-        Broker b3 = new Broker("localhost", 9002, "localhost", 2181);
-//        b3.registerToZookeeper();
-        b3.listen();
+
+
 //
 //        b1.getTopic(t);
 //
