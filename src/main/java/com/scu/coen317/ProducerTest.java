@@ -14,17 +14,20 @@ public class ProducerTest {
 //
 //        p.printDefaultBrokerList();
 
-//        p.createTopic("topic2", 1,1);
         for ( int i = 0 ; i < 25 ; i++) {
-            p.publishMessage("Empty Topic", "Message from P1 " + Integer.toString(i));
+            p.publishMessage("Distributed System Topic", "Message from P1 " + Integer.toString(i));
         }
+        for ( int i = 0 ; i < 25 ; i++) {
+            p.publishMessage("Santa Clara Univ Topic", "Message from P1 " + Integer.toString(i));
+        }
+
+
+//        p.createTopic("topic2", 1,1);
+//        for ( int i = 0 ; i < 25 ; i++) {
+//            p.publishMessage("Empty Topic", "Message from P1 " + Integer.toString(i));
+//        }
 //
-//        for ( int i = 0 ; i < 25 ; i++) {
-//            p.publishMessage("Distributed System Topic", "Message from P1 " + Integer.toString(i));
-//        }
-//        for ( int i = 0 ; i < 25 ; i++) {
-//            p.publishMessage("Santa Clara Univ Topic", "Message from P1 " + Integer.toString(i));
-//        }
+
 //        p.publishMessage("topic1", "test1");
 //        p.publishMessage("topic1", "test2");
 //        p.publishMessage("topic2", "test3");
