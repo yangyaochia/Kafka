@@ -132,6 +132,18 @@ public class Zookeeper {
 //    }
 
     public void reAssignLeader(HostRecord oneLeader)
+    // Yao-Chia
+
+    public void  informCoordinator() {
+//        HostRecord broken = new HostRecord();
+//        HostRecord newAssigned
+        List<Object> argument = new ArrayList<>();
+        Message request = new Message(MessageType.REPLACE_BROKER, argument);
+    }
+
+    // Yao-Chia
+
+    public void monitorCluster(HostRecord oneBrokerHeart)
     {
 
 //        if(replicationHash.containsKey(oneLeader))
