@@ -132,6 +132,11 @@ public class Consumer {
         // multicast of each partition in subscribedPartitions;
         List<String> messages = new ArrayList<>();
 
+        System.out.println("    --- Current topicPartition in consumer :");
+        for (Map.Entry<String, Map<Integer, HostRecord>> en : subscribedTopicPartitions.entrySet()) {
+            System.out.println("        " + en.getKey() + " : " + en.getValue());
+        }
+
         for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : subscribedTopicPartitions.entrySet()) {
             String topic = eachTopic.getKey();
             Map<Integer, HostRecord> partitions = eachTopic.getValue();
@@ -139,9 +144,11 @@ public class Consumer {
                 HostRecord broker = partition.getValue();
                 TcpClient client = new TcpClient(broker.getHost(), broker.getPort());
                 List<Object> arguments = new ArrayList<>();
-                arguments.add(groupId);
+
                 arguments.add(topic);
                 arguments.add(partition.getKey());
+                arguments.add(groupId);
+                // giveMessage(String topic, Integer partition, String groudID) {
                 Message request = new Message(MessageType.PULLMESSAGE, arguments);
                 client.setHandler(this, request);
                 client.run();

@@ -1,12 +1,17 @@
 package com.scu.coen317;
 
+import com.sun.corba.se.impl.orbutil.graph.Graph;
 import javafx.util.Pair;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
+import java.security.Key;
 import java.util.*;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 public class Broker {
     HostRecord thisHost;
@@ -28,7 +33,7 @@ public class Broker {
     // 记录每个group中，每个topic都是哪些consumer订阅
     Map<String, Map<String, List<HostRecord>>> topic_consumer;
     Map<String, List<String>> group_topic;
-    Map<String, Map<Integer, HostRecord>> topicsPartitionLeaderCache;
+    DataCache<String, Map<Integer, HostRecord>> topicsPartitionLeaderCache;
 
 
     // 记录每个group中，每一个consumer订阅的每一个topic都有哪些partition
@@ -66,7 +71,9 @@ public class Broker {
         balanceMap = new HashMap<>();
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
-        topicsPartitionLeaderCache = new HashMap<>();
+        // Map<String, Map<Integer, HostRecord>>
+
+        topicsPartitionLeaderCache = new DataCache<>();
     }
 
     ////////////////// Yao-Chia
@@ -250,6 +257,7 @@ public class Broker {
 
     public Message giveMessage(String topic, Integer partition, String groudID) {
 //        Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
+        System.out.println("******* Enter the function giveMessage()");
         Message response;
 //        if ( !consumerGroupOffset.containsKey(topic) || !consumerGroupOffset.get(topic).containsKey(partition) ) {
 //            response = new Message(MessageType.ACK);
