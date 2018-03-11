@@ -388,6 +388,7 @@ public class Zookeeper {
 
     public Message newBrokerRegister(HostRecord oneBroker) {
         List<Object> arguments = new ArrayList();
+        System.out.println(brokerList.size());
         if (!containsBroker(oneBroker)) {
             brokerList.add(oneBroker);
             coordinatorBrokerQueue.add(oneBroker);
@@ -400,12 +401,13 @@ public class Zookeeper {
             displayBrokerList();
             Message response = new Message(MessageType.ACK, arguments, true);
 
+            System.out.println(brokerList.size());
 //            response.setIsAck(true);
             return response;
         }
         String temp = "Already Registered";
         arguments.add(temp);
-        Message response = new Message(MessageType.ACK, arguments);
+        Message response = new Message(MessageType.ACK, arguments, true);
 //        response.setIsAck(true);
         return response;
     }

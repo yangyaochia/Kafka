@@ -36,6 +36,7 @@ public class TcpServer {
     }
 
     public TcpServer(int port) {
+        System.out.println("The server is listening at " + port);
         if (server != null && !server.isClosed()) return;
         if (clients == null) clients = new ArrayList<TcpClient>();
         try {
@@ -47,10 +48,10 @@ public class TcpServer {
     public void listen() {
         new Thread() {
             public void run() {
+
                 while (!closer) {
                     try {
                         TcpClient sock = new TcpClient(server.accept());
-
                         clients.add(sock);
                         final int cid = clients.size() - 1; // client id
                         handler.onAccept(cid);
@@ -106,7 +107,7 @@ public class TcpServer {
 
                     System.out.println("* <" + client_id + "> will invoke " + message.getMethodName());
                     Message response = (Message) method.invoke(this_object, inputs);
-
+                    System.out.println(response.getMethodNameValue());
 
                 //msg.add(0, "echo : <"+client_id+"> ");
                     that_server.getClient(client_id).send(response);

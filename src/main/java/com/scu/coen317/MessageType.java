@@ -47,7 +47,9 @@ public enum MessageType {
     REBALANCEPLAN("updateBalanceMap"), //C1->Bg Xinzhu
     TEST1("test1"),
     TEST2("test2"),
-    PULLMESSAGE("giveMessage"); //C->B
+    PULLMESSAGE("giveMessage"), //C->B
+    SEND_MESSAGE_TO_CONSUMER("dealWithMessage");
+
 
 
 
