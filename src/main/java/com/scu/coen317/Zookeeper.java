@@ -299,6 +299,7 @@ public class Zookeeper {
 
     public Message newBrokerRegister(HostRecord oneBroker) {
         List<Object> arguments = new ArrayList();
+        System.out.println(brokerList.size());
         if (!containsBroker(oneBroker)) {
             brokerList.add(oneBroker);
             coordinatorBrokerQueue.add(oneBroker);
@@ -310,10 +311,11 @@ public class Zookeeper {
             arguments.add(temp);
             displayBrokerList();
             Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
-
+            System.out.println(brokerList.size());
 //            response.setIsAck(true);
             return response;
         }
+
         String temp = "Register failed";
         arguments.add(temp);
         Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
