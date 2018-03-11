@@ -65,7 +65,7 @@ public class Consumer {
         subscribedTopicPartitions = topicPartitions;
         System.out.println("    --- New topicPartition updated in consumer");
         for (Map.Entry<String, Map<Integer, HostRecord>> en : topicPartitions.entrySet()) {
-            System.out.println("        --- " + en.getKey() + " : " + en.getValue());
+            System.out.println("        " + en.getKey() + " : " + en.getValue());
         }
     }
 
