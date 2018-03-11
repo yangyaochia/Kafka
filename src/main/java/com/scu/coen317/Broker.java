@@ -73,19 +73,21 @@ public class Broker {
     public Message getTopic(Topic topic, HostRecord producer) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
         String topicName = topic.getName();
-        List<Object> argument = new ArrayList<>();
+
         Message response;
-        Map<Integer,HostRecord> leaders = new HashMap<>();
-        leaders.put(0, new HostRecord("localhost", 9001));
+//        Map<Integer,HostRecord> leaders = new HashMap<>();
+//        leaders.put(0, new HostRecord("localhost", 9001));
 //        leaders.put(1, new HostRecord("localhost", 9001));
-        topicsPartitionLeader.put(topicName, leaders);
+//        topicsPartitionLeader.put(topicName, leaders);
 
 //        for ( Map.Entry<Integer,HostRecord> pair : topicsPartitionLeader.get(topic).entrySet() ) {
 //            System.out.println("This topic is " + topic + " " + pair.getKey() + " " + pair.getValue());
 //        }
         // This broker does now know the topic, then ask the zookeeper
         if ( !topicsPartitionLeader.containsKey(topicName) ) {
+            List<Object> argument = new ArrayList<>();
             argument.add(topic);
+            argument.add(thisHost);
             Message request = new Message(MessageType.GET_TOPIC, argument);
 
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
@@ -98,6 +100,7 @@ public class Broker {
             while (!topicsPartitionLeader.containsKey(topicName) ) {
                 wait();
             }
+            List<Object> argument = new ArrayList<>();
             argument.add(topicName);
             argument.add(topicsPartitionLeader.get(topicName) );
             response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
@@ -111,9 +114,15 @@ public class Broker {
         return new Message(MessageType.ACK);
     }
     public void topicAssignmentToProducer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println("why????");
+//        System.out.println("why????");
+        for (Integer name: partitionLeaders.keySet()){
+            String key =name.toString();
+            partitionLeaders.get(name).toString();
+            System.out.println("Partition " +key.toString() + " at " + partitionLeaders.get(name).getHost() + " "+ partitionLeaders.get(name).getPort());
+        }
         synchronized (this) {
             topicsPartitionLeader.put(topic.getName(), partitionLeaders);
+            System.out.println(topicsPartitionLeader.get(topic.getName()).size());
             notify();
         }
         return;

@@ -17,7 +17,7 @@ public enum MessageType {
 
     GET_REPLICATION_UPDATE("replicationResponse"),    // B -> B
     REPLICATION_RESPONSE("replicationUpdate"),
-    SEND_HEARTBEAT("monitorCluster"),           // B -> Z
+    SEND_HEARTBEAT("updateCluster"),           // B -> Z
     NEW_BROKER_REGISTER("newBrokerRegister"),   // B -> Z Xinzhu
     GET_COORDINATOR("coordinatorAssignment"),   // B -> C      Xinzhu
     REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance Xinzhu

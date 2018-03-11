@@ -111,7 +111,7 @@ public class brokerTest{
         // This broker does now know the topic, then ask the zookeeper
 //        if ( !topicsPartitionLeader.containsKey(topicName) ) {
         Topic topic = new Topic("hahahaha");
-        topic.partition = 3;
+        topic.partition = 1;
         topic.replication = 3;
         HostRecord temp = new HostRecord(this.host, this.port);
         argument.add(topic);
@@ -246,9 +246,9 @@ public class brokerTest{
         brokerTest p = new brokerTest("localhost", 9008, "localhost", 2181);
         p.listen();
         p.registerToZookeeper();
-        p.getTopicConsumer();
-//        p.getTopic();
-        p.getCoordinator("1111");
+//        p.getTopicConsumer();
+        p.getTopic();
+//        p.getCoordinator("1111");
 //        p.registerToZookeeper();
 //
 //        p.sendMessage("topic1", "1");
