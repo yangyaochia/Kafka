@@ -62,7 +62,7 @@ public class Broker {
         balanceMap = new HashMap<>();
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
-
+        topicsPartitionLeaderCache = new HashMap<>();
     }
 
     ////////////////// Yao-Chia
@@ -298,7 +298,7 @@ public class Broker {
             group_topic.put(groupId, topics);
         }
 
-        while (!topicsPartitionLeader.containsKey(topic)) {
+        while (!topicsPartitionLeaderCache.containsKey(topic)) {
             getTopic(topic);
         }
 
@@ -314,9 +314,9 @@ public class Broker {
     public void getTopic(String topicName) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
         // This broker does not know the topic, then ask the zookeeper
         if (!topicsPartitionLeaderCache.containsKey(topicName)) {
-            List<Object> argument = new ArrayList<>();
-            argument.add(topicName);
-            Message request = new Message(MessageType.GET_TOPIC_FOR_COORDINATOR, argument);
+            List<Object> arguments = new ArrayList<>();
+            arguments.add(topicName);
+            Message request = new Message(MessageType.GET_TOPIC_FOR_COORDINATOR, arguments);
 
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler(this, request);
