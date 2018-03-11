@@ -95,6 +95,8 @@ public class Producer {
     }
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
+        System.out.println("我來ＵＰＤＡＴＥ producer資料惹");
+        topicsMember.remove(topic);
         topicsMember.put(topic, partitionLeaders);
         for ( Map.Entry<Integer,HostRecord> pair : topicsMember.get(topic).entrySet() ) {
             System.out.println("This topic is " + topic + " " + pair.getKey() + " " + pair.getValue());
@@ -109,10 +111,12 @@ public class Producer {
 
     public boolean publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         // Hardcode
-        Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
-        partitionLeaders.put(0, new HostRecord("localhost", 9000));
-        partitionLeaders.put(1, new HostRecord("localhost", 9000));
-        topicsMember.put(topic, partitionLeaders);
+//        Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
+//        partitionLeaders.put(0, new HostRecord("localhost", 9000));
+//        partitionLeaders.put(1, new HostRecord("localhost", 9000));
+
+//        topicsMember.put(topic, partitionLeaders);
+//        System.out.println("Initial topic " + topic + " " + 0 + " leader " + topicsMember.get(topic).get(0));
         // Hardcode
         if ( !topicsMember.containsKey(topic) ) {
             // Reuse the createTopic function to get corresponding topic partition leaders
@@ -139,15 +143,17 @@ public class Producer {
                 System.out.println("Determine the partition leader " + partitionLeader.getPort());
                 break;
             } catch (IOException e) {
-                e.printStackTrace();
+//                e.printStackTrace();
                 topicsMember.remove(topic);
                 leaderAliveChance--;
+                if ( leaderAliveChance < 0 )
+                    return false;
                 // To indicate the topic partition leader broken case
                 createTopic(topic,1,1);
             }
         }
-        if ( leaderAliveChance < 0 )
-            return false;
+
+
 //        sock.setReadInterval(10000);this, request);
 
         TcpServer listenSock = new TcpServer(this.port);
@@ -156,7 +162,7 @@ public class Producer {
 
         sock.setHandler( this, request);
         sock.run();
-//        waitInvokeFunction(listenSock);
+        waitInvokeFunction(listenSock);
 
         return true;
     }

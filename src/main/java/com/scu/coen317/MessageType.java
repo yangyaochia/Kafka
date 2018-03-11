@@ -17,7 +17,7 @@ public enum MessageType {
 
     GET_REPLICATION_UPDATE("replicationResponse"),    // B -> B
     REPLICATION_RESPONSE("replicationUpdate"),
-    SEND_HEARTBEAT("monitorCluster"),           // B -> Z
+    SEND_HEARTBEAT("updateCluster"),           // B -> Z
     NEW_BROKER_REGISTER("newBrokerRegister"),   // B -> Z Xinzhu
     GET_COORDINATOR("coordinatorAssignment"),   // B -> C      Xinzhu
     REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance Xinzhu
@@ -40,7 +40,7 @@ public enum MessageType {
                                                         if any broker is dead
                                                      */
     COORDINATOR_ASSIGNMENT("updateCoordinator"), //Z->B
-    RETURN_TOPIC_FOR_COORDINATOR("updateTopicPartitionLeaderCache"), // Z -> B
+    RETURN_TOPIC_FOR_COORDINATOR("updateTopicsPartitionLeaderCache"), // Z -> B updateTopicsPartitionLeaderCache
 
     //Consumer
     FIND_COORDINATOR("getCoordinator"), //C->B  Xinzhu getCoordinator(String groupId)

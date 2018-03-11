@@ -107,7 +107,7 @@ public class TcpServer {
 
                     System.out.println("* <" + client_id + "> will invoke " + message.getMethodName());
                     Message response = (Message) method.invoke(this_object, inputs);
-                    System.out.println(response.getMethodNameValue());
+//                    System.out.println(response.getMethodNameValue());
 
                 //msg.add(0, "echo : <"+client_id+"> ");
                     that_server.getClient(client_id).send(response);

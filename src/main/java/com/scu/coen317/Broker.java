@@ -43,7 +43,7 @@ public class Broker {
     // Map<topic,Map<partition,Map<groupId,offset>>>
     Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
 
-    final int heartBeatInterval = 3000;
+    final int heartBeatInterval = 10000;
 
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -70,50 +70,62 @@ public class Broker {
     }
 
     ////////////////// Yao-Chia
-    public void getTopic(Topic topic, HostRecord producer) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
+    public Message getTopic(Topic topic, HostRecord producer) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
         String topicName = topic.getName();
-        List<Object> argument = new ArrayList<>();
+
         Message response;
 //        Map<Integer,HostRecord> leaders = new HashMap<>();
-//        leaders.put(0, new HostRecord("localhost", 9000));
+//        leaders.put(0, new HostRecord("localhost", 9001));
 //        leaders.put(1, new HostRecord("localhost", 9001));
 //        topicsPartitionLeader.put(topicName, leaders);
+
+//        for ( Map.Entry<Integer,HostRecord> pair : topicsPartitionLeader.get(topic).entrySet() ) {
+//            System.out.println("This topic is " + topic + " " + pair.getKey() + " " + pair.getValue());
+//        }
         // This broker does now know the topic, then ask the zookeeper
-//        if ( !topicsPartitionLeader.containsKey(topicName) ) {
-        argument.add(topic);
-        argument.add(this.thisHost);
-        Message request = new Message(MessageType.GET_TOPIC, argument);
+        if ( !topicsPartitionLeader.containsKey(topicName) ) {
+            List<Object> argument = new ArrayList<>();
+            argument.add(topic);
+            argument.add(thisHost);
+            Message request = new Message(MessageType.GET_TOPIC, argument);
 
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler( this, request);
             sock.run();
-//        }
+        }
 
         // This broker already stored the topic info
-//        synchronized (this) {
-//            while (!topicsPartitionLeader.containsKey(topicName) ) {
-//                wait();
-//            }
-//            argument.add(topicName);
-//            argument.add(topicsPartitionLeader.get(topicName) );
-//            response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
-//            System.out.println(producer.getPort());
-//
-//            TcpClient sock = new TcpClient(producer.getHost(), producer.getPort());
-//            sock.setHandler(this, response);
-//            sock.run();
-//
-//        }
+        synchronized (this) {
+            while (!topicsPartitionLeader.containsKey(topicName)) {
+                wait();
+            }
+        }
+        List<Object> argument = new ArrayList<>();
+        argument.add(topicName);
+        argument.add(topicsPartitionLeader.get(topicName) );
+        response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
+        System.out.println(producer.getPort());
 
-//        return new Message(MessageType.ACK);
+        TcpClient sock = new TcpClient(producer.getHost(), producer.getPort());
+        sock.setHandler(this, response);
+        sock.run();
+
+
+        return new Message(MessageType.ACK);
     }
     public void topicAssignmentToProducer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println("why????");
-//        synchronized (this) {
-//            topicsPartitionLeader.put(topic.getName(), partitionLeaders);
-//            notify();
-//        }
+//        System.out.println("why????");
+        for (Integer name: partitionLeaders.keySet()){
+            String key =name.toString();
+            partitionLeaders.get(name).toString();
+            System.out.println("Partition " +key.toString() + " at " + partitionLeaders.get(name).getHost() + " "+ partitionLeaders.get(name).getPort());
+        }
+        synchronized (this) {
+            topicsPartitionLeader.put(topic.getName(), partitionLeaders);
+            System.out.println(topicsPartitionLeader.get(topic.getName()).size());
+            notify();
+        }
         return;
     }
 
@@ -187,9 +199,16 @@ public class Broker {
     public Message publishMessage(String topic, Integer partition, String message, HostRecord producer) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
 
-        System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
-        topicMessage.get(topic).get(partition).add(message);
-        System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
+
+        List<String> msgs = topicMessage.get(topic).get(partition);
+        synchronized (this) {
+            System.out.println("topic partition's size is " + topicMessage.get(topic).get(partition).size());
+            msgs.add(message);
+            System.out.println("topic partition's size is " + topicMessage.get(topic).get(partition).size());
+        }
+
+//        for ( String m : msgs)
+//            System.out.println(m);
 
         // Send publishMessage to the corresponding topic partition replication holders
         Set<HostRecord> replicationHolders = topicPartitionReplicationBrokers.get(topic).get(partition);
@@ -203,6 +222,7 @@ public class Broker {
             argument.add(topic);
             argument.add(partition);
             argument.add(message);
+            argument.add(thisHost);
             Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
             informOtherBrokers(request, (HashSet<HostRecord>) replicationHolders);
         }
@@ -223,40 +243,50 @@ public class Broker {
         System.out.println("This is ack" + message + " " + ackMessage);
     }
 
-    public void sendHeartBeat() throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
-
-        List<Object> argument = new ArrayList<>();
-        argument.add(thisHost);
-        Message heartbeat = new Message(MessageType.SEND_HEARTBEAT, argument);
-        TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
-        sock.setHandler( this, heartbeat);
-        sock.run();
-    }
-
-    public Message giveMessage(String topic, Integer partition, String groudID) {
+    public Message giveMessage(String groudID, String topic, Integer partition, Integer maxFetchSize) throws InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException, IOException {
 //        Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
         Message response;
 //        if ( !consumerGroupOffset.containsKey(topic) || !consumerGroupOffset.get(topic).containsKey(partition) ) {
 //            response = new Message(MessageType.ACK);
 //            return response;
 //        } else {
-            HashMap<String,Integer> consumerGroup = (HashMap<String, Integer>) consumerGroupOffset.get(topic).get(partition);
-            if ( !consumerGroup.containsKey(groudID) ) {
-                consumerGroup.put(groudID,0);
-            }
-            List<String> topicPartitionMessage = topicMessage.get(topic).get(partition);
-            int offset = consumerGroup.get(groudID);
-            int maxOffset = Integer.max(offset + 10, topicMessage.get(topic).get(partition).size()) + 1;
-//            topicMessage.get(topic).get(partition)
 
-            List<String> sendingMessages = new ArrayList<>(topicPartitionMessage.subList(offset, maxOffset));
+        HashMap<String,Integer> consumerGroup = (HashMap<String, Integer>) consumerGroupOffset.get(topic).get(partition);
+
+        if ( !consumerGroup.containsKey(groudID) ) {
+            consumerGroup.put(groudID,0);
+        }
+        System.out.println("ready to give message to consumer!!!");
+        System.out.println("Topic : " + topic + " partition : " + partition);
+        List<String> sendingMessages;
+        synchronized (this) {
+            List<String> topicPartitionMessage = topicMessage.get(topic).get(partition);
+            System.out.println("Current message size : " + topicPartitionMessage.size());
+            int offset = consumerGroup.get(groudID);
+            System.out.println("offset : " + offset);
+            if ( offset == topicPartitionMessage.size() ){
+                return new Message(MessageType.ACK);
+            }
+            int maxOffset = Integer.min(offset + maxFetchSize, topicPartitionMessage.size());
+            consumerGroup.put(groudID,maxOffset);
+            System.out.println("offset : " + offset + " maxOffset : " + maxOffset);
+            sendingMessages = new ArrayList<>(topicPartitionMessage.subList(offset, maxOffset));
+        }
+
+        System.out.println("sendingMessages.size() : " + sendingMessages.size());
+        for (String s : sendingMessages )
+            System.out.println(s);
 //            list<String>, String, HostRecord
-            List<Object> argument = new ArrayList<>();
-            argument.add(sendingMessages);
-            argument.add(topic);
-            argument.add(thisHost);
-            response = new Message(MessageType.SEND_MESSAGE_TO_CONSUMER, argument);
-            return response;
+        List<Object> argument = new ArrayList<>();
+        argument.add(sendingMessages);
+        argument.add(topic);
+        argument.add(thisHost);
+        response = new Message(MessageType.SEND_MESSAGE_TO_CONSUMER, argument);
+        return response;
+//        TcpClient sock = new TcpClient(consumer.getHost(),consumer.getPort());
+//        sock.setHandler(this,response);
+//        sock.run();
+//        return new Message(MessageType.ACK);
 //        }
     }
     ////////////////// Yao-Chia
@@ -279,7 +309,7 @@ public class Broker {
         client.run();
     }
 
-    public Message getCoordinator(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+    public Message getCoordinator(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         while (!topics_coordinator.containsKey(groupId)) {
             TcpClient client = new TcpClient(defaultZookeeper.host, defaultZookeeper.port);
             List<Object> arguments = new ArrayList<>();
@@ -288,15 +318,22 @@ public class Broker {
             client.setHandler(this, request);
             client.run();
         }
+        TcpClient tcpClient = new TcpClient(consumer.getHost(), consumer.getPort());
         HostRecord coordinator = topics_coordinator.get(groupId);
         List<Object> arguments = new ArrayList();
         arguments.add(coordinator);
-        Message response = new Message(MessageType.UPDATE_COORDINATOR, arguments);
-        return response;
+        Message request = new Message(MessageType.UPDATE_COORDINATOR, arguments);
+        tcpClient.setHandler(this,request);
+        tcpClient.run();
+
+        Message ack = new Message(MessageType.ACK, Collections.singletonList("Get coordinator successful"), true);
+        return ack;
     }
 
     public void updateCoordinator(String groupId, HostRecord coordinator) {
         topics_coordinator.put(groupId, coordinator);
+        System.out.println("add coordinator " + coordinator.getHost() + " " + coordinator.getPort()
+        + " to " + groupId);
     }
 
     public void rebalance(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
@@ -388,6 +425,7 @@ public class Broker {
         if (!topicsPartitionLeaderCache.containsKey(topicName)) {
             List<Object> arguments = new ArrayList<>();
             arguments.add(topicName);
+            arguments.add(thisHost);
             Message request = new Message(MessageType.GET_TOPIC_FOR_COORDINATOR, arguments);
 
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
@@ -397,8 +435,9 @@ public class Broker {
         }
     }
 
-    public void updateTopicsPartitionLeaderCache(String topic, Map<Integer, HostRecord> topicPartitionLeaders) {
+    public void updateTopicsPartitionLeaderCache(String topic, HashMap<Integer, HostRecord> topicPartitionLeaders) {
         topicsPartitionLeaderCache.put(topic, topicPartitionLeaders);
+        System.out.println("topic partitions update");
     }
 
     public Message addConsumerToGroup(String groupId, HostRecord consumer) throws IOException {
@@ -497,23 +536,31 @@ public class Broker {
     public void listen() throws
             IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         listenSocket.listen();
-//        while (true) {
-//            // Send hearbeat per 1 min
-//            Thread.sleep(heartBeatInterval);
-//            try {
-//                sendHeartBeat();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } catch (InvocationTargetException e) {
-//                e.printStackTrace();
-//            } catch (NoSuchMethodException e) {
-//                e.printStackTrace();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            } catch (IllegalAccessException e) {
-//                e.printStackTrace();
-//            }
-//        }
+
+    }
+    public void sendHeartBeat() throws InterruptedException {
+        while (true) {
+            // Send hearbeat per 1 min
+            Thread.sleep(heartBeatInterval);
+            try {
+                List<Object> argument = new ArrayList<>();
+                argument.add(thisHost);
+                Message heartbeat = new Message(MessageType.SEND_HEARTBEAT, argument);
+                TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+                sock.setHandler( this, heartbeat);
+                sock.run();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 
