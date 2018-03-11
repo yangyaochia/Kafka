@@ -87,29 +87,29 @@ public class Zookeeper {
 //        Set<HostRecord>
 
 //
-        HostRecord ha = new HostRecord("localhost", 1 );
-        HostRecord haha = new HostRecord("localhost", 2 );
-        HostRecord hahaha = new HostRecord("localhost",3 );
-        HostRecord hahahaha = new HostRecord("localhost",4 );
+//        HostRecord ha = new HostRecord("localhost", 1 );
+//        HostRecord haha = new HostRecord("localhost", 2 );
+//        HostRecord hahaha = new HostRecord("localhost",3 );
+//        HostRecord hahahaha = new HostRecord("localhost",4 );
+//
+//        topicBrokerQueue.add(ha);
+//        replicationBrokerQueue.add(ha);
+//        brokerList.add(ha);
+//        topicBrokerQueue.add(haha);
+//        replicationBrokerQueue.add(haha);
+//        brokerList.add(haha);
+////        topicBrokerQueue.add(hahaha);
+////        replicationBrokerQueue.add(hahaha);
+////        topicBrokerQueue.add(hahahaha);
+////        replicationBrokerQueue.add(hahahaha);
+//
+//        Topic one = new Topic("hahaha");
+//        one.replication = 2;
+//        one.partition = 3;
+//        HostRecord temp = new HostRecord("localhost", 9004);
+////        createTopicAssignment(one);
 
-        topicBrokerQueue.add(ha);
-        replicationBrokerQueue.add(ha);
-        brokerList.add(ha);
-        topicBrokerQueue.add(haha);
-        replicationBrokerQueue.add(haha);
-        brokerList.add(haha);
-//        topicBrokerQueue.add(hahaha);
-//        replicationBrokerQueue.add(hahaha);
-//        topicBrokerQueue.add(hahahaha);
-//        replicationBrokerQueue.add(hahahaha);
-
-        Topic one = new Topic("hahaha");
-        one.replication = 2;
-        one.partition = 3;
-        HostRecord temp = new HostRecord("localhost", 9004);
-//        createTopicAssignment(one);
-
-        topicAssignment(one, temp);
+//        topicAssignment(one, temp);
 
 
 //        System.out.println(topicBrokerQueue.peek().getBorkerInfo().getPort().toString()+topicBrokerQueue.poll().getTimeStamp().toString());

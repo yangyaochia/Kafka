@@ -245,10 +245,10 @@ public class brokerTest{
     public static void main(String argv[]) throws Exception {
         brokerTest p = new brokerTest("localhost", 9008, "localhost", 2181);
         p.listen();
-//        p.registerToZookeeper();
+        p.registerToZookeeper();
         p.getTopicConsumer();
 //        p.getTopic();
-//        p.getCoordinator("1111");
+        p.getCoordinator("1111");
 //        p.registerToZookeeper();
 //
 //        p.sendMessage("topic1", "1");
