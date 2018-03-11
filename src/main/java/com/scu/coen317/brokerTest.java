@@ -110,9 +110,9 @@ public class brokerTest{
 
         // This broker does now know the topic, then ask the zookeeper
 //        if ( !topicsPartitionLeader.containsKey(topicName) ) {
-        Topic topic = new Topic("hahahaha");
-        topic.partition = 1;
-        topic.replication = 3;
+        Topic topic = new Topic("hahaha");
+        topic.partition = 5;
+        topic.replication = 2;
         HostRecord temp = new HostRecord(this.host, this.port);
         argument.add(topic);
         argument.add(temp);
@@ -134,6 +134,30 @@ public class brokerTest{
 //            return response;
 //        }
 
+    }
+
+
+    public void TestReassign() throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
+        List<Object> argument = new ArrayList<>();
+//        Message response;
+//        Map<Integer,HostRecord> leaders = new HashMap<>();
+//        leaders.put(0, new HostRecord("localhost", 9000));
+//        leaders.put(1, new HostRecord("localhost", 9000));
+//        topicsPartitionLeader.put(topicName, leaders);
+
+        // This broker does now know the topic, then ask the zookeeper
+//        if ( !topicsPartitionLeader.containsKey(topicName) ) {
+//        Topic topic = new Topic("hahahaha");
+//        topic.partition = 3;
+//        topic.replication = 3;
+//        HostRecord temp = new HostRecord(this.host, this.port);
+//        argument.add(topic);
+//        argument.add(temp);
+        argument.add("TEST_REASSIGN");
+        Message request = new Message(MessageType.TEST_REASSIGN, argument);
+        TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+        sock.setHandler( this, request);
+        sock.run();
     }
 
     public void getTopicConsumer() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
@@ -161,6 +185,8 @@ public class brokerTest{
 
     }
     public void receiveNewBrokerRegistrationAck(String message) {
+
+
         System.out.println("hahahaha");
         System.out.println(message);
 
@@ -244,10 +270,22 @@ public class brokerTest{
 
     public static void main(String argv[]) throws Exception {
         brokerTest p = new brokerTest("localhost", 9008, "localhost", 2181);
+        brokerTest p2 = new brokerTest("localhost", 9007, "localhost", 2181);
+        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
+//        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
         p.listen();
+        p2.listen();
+        p3.listen();
         p.registerToZookeeper();
+        p2.registerToZookeeper();
+        p3.registerToZookeeper();
 //        p.getTopicConsumer();
         p.getTopic();
+
+        sleep(5000);
+        p.TestReassign();
+
+//
 //        p.getCoordinator("1111");
 //        p.registerToZookeeper();
 //
