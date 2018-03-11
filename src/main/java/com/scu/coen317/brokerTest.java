@@ -136,6 +136,30 @@ public class brokerTest{
 
     }
 
+    public void getTopicConsumer() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
+        // This broker does not know the topic, then ask the zookeeper
+//        if (!topicsPartitionLeaderCache.containsKey(topicName)) {
+            List<Object> argument = new ArrayList<>();
+            argument.add("hahaha");
+            Message request = new Message(MessageType.GET_TOPIC_FOR_COORDINATOR, argument);
+
+            TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+            sock.setHandler(this, request);
+            sock.run();
+
+//
+    }
+    public void updateTopicPartitionLeaderCache(String topic, HashMap<Integer,HostRecord> partitions){
+        System.out.println("In topic Assignment to Consumer already... ");
+//        System.out.println(msg);
+        System.out.println("topic : "+ topic);
+        for (Integer name: partitions.keySet()){
+            String key =name.toString();
+            partitions.get(name).toString();
+            System.out.println("Partition " +key.toString() + "  at" + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
+        }
+
+    }
     public void receiveNewBrokerRegistrationAck(String message) {
         System.out.println("hahahaha");
         System.out.println(message);
@@ -221,8 +245,9 @@ public class brokerTest{
     public static void main(String argv[]) throws Exception {
         brokerTest p = new brokerTest("localhost", 9008, "localhost", 2181);
         p.listen();
-        p.registerToZookeeper();
-        p.getTopic();
+//        p.registerToZookeeper();
+        p.getTopicConsumer();
+//        p.getTopic();
 //        p.getCoordinator("1111");
 //        p.registerToZookeeper();
 //

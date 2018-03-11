@@ -35,7 +35,8 @@ public class Zookeeper {
     HashMap<String, HashMap<Integer, HostRecord>> topicAssignmentHash;
     HashMap<String, HostRecord> coordinatorAssignmentHash;
 //    Map<HostRecord, Map<String, Map<Integer, Set<HostRecord>>>> replicationsHash;
-    Map<HostRecord, Map<Pair<String, Integer>, Set<HostRecord>>> replicationHash;
+//    Map<HostRecord, Map<Pair<String, Integer>, Set<HostRecord>>> replicationHash;
+    Map<String, Map<Integer,Map<HostRecord, Set<HostRecord>>>> replicationHash;
     Queue<HostRecord> replicationBrokerQueue;
     Integer updateClusterInterval;
     Set<HostRecord> brokerList;
@@ -86,27 +87,29 @@ public class Zookeeper {
 //        Set<HostRecord>
 
 //
-//        HostRecord ha = new HostRecord("localhost", 1 );
-////        HostRecord haha = new HostRecord("localhost", 2 );
-////        HostRecord hahaha = new HostRecord("localhost",3 );
-////        HostRecord hahahaha = new HostRecord("localhost",4 );
-//
-//        topicBrokerQueue.add(ha);
-//        replicationBrokerQueue.add(ha);
-//        brokerList.add(ha);
-////        topicBrokerQueue.add(haha);
-////        replicationBrokerQueue.add(haha);
-////        brokerList.add(haha);
-////        topicBrokerQueue.add(hahaha);
-////        replicationBrokerQueue.add(hahaha);
-////        topicBrokerQueue.add(hahahaha);
-////        replicationBrokerQueue.add(hahahaha);
-//
-//        Topic one = new Topic("hahahahah");
-//        one.replication = 1;
-//        one.partition = 3;
-//        HostRecord temp = new HostRecord("localhost", 9004);
-//        topicAssignment(one, temp);
+        HostRecord ha = new HostRecord("localhost", 1 );
+        HostRecord haha = new HostRecord("localhost", 2 );
+        HostRecord hahaha = new HostRecord("localhost",3 );
+        HostRecord hahahaha = new HostRecord("localhost",4 );
+
+        topicBrokerQueue.add(ha);
+        replicationBrokerQueue.add(ha);
+        brokerList.add(ha);
+        topicBrokerQueue.add(haha);
+        replicationBrokerQueue.add(haha);
+        brokerList.add(haha);
+//        topicBrokerQueue.add(hahaha);
+//        replicationBrokerQueue.add(hahaha);
+//        topicBrokerQueue.add(hahahaha);
+//        replicationBrokerQueue.add(hahahaha);
+
+        Topic one = new Topic("hahaha");
+        one.replication = 2;
+        one.partition = 3;
+        HostRecord temp = new HostRecord("localhost", 9004);
+//        createTopicAssignment(one);
+
+        topicAssignment(one, temp);
 
 
 //        System.out.println(topicBrokerQueue.peek().getBorkerInfo().getPort().toString()+topicBrokerQueue.poll().getTimeStamp().toString());
@@ -131,11 +134,14 @@ public class Zookeeper {
     public void reAssignLeader(HostRecord oneLeader)
     {
 
-        if(replicationHash.containsKey(oneLeader))
-        {
-
-
-        }
+//        if(replicationHash.containsKey(oneLeader))
+//        {
+//            for(HashMap<Pair<String, Integer>, HashSet<HostRecord>> oneLeaderContent: replicationHash.get(oneLeader))
+//            {
+//
+//            }
+//
+//        }
 
 //       for()
 //        for(Map<Integer, Map<HostRecord, Set<HostRecord>>> oneTopicContent : replicationHash )
@@ -150,6 +156,10 @@ public class Zookeeper {
 //        HashMap<HostRecord, HashSet<HostRecord>> LeaderFollowers
 
     }
+
+
+
+
     public Message coordinatorAssignment(String groupID){
 
         System.out.println("COORDINATORASSIGNMENT");
@@ -209,6 +219,30 @@ public class Zookeeper {
 //        return response;
 //        return response;
     }
+    public Message topicPartitions(String topic)
+    {
+        List<Object> arguments = new ArrayList();
+        if(!topicAssignmentHash.containsKey(topic))
+        {
+            System.out.println("Don't have the topic for consumer");
+            arguments.add("ZooKeeper Don't have the topic: "+topic);
+            Message response = new Message(MessageType.ACK, arguments,true);
+            return response;
+
+        }
+        System.out.println("TOPICASSIGNMENT for Consumer");
+        System.out.println("Topic: "+topic);
+        System.out.println();
+        displayTopicAssignment(topic);
+
+
+        arguments.add(topic);
+        arguments.add(topicAssignmentHash.get(topic));
+        Message response = new Message(MessageType.RETURN_TOPIC_FOR_COORDINATOR, arguments);
+        return response;
+//        ("updateTopicPartitionLeaderCache")
+//        public void updateTopicsPartitionLeader(String topic, Map<Integer, HostRecord> topicPartitionLeaders)
+    }
 
     public void topicAssignment(Topic topic, HostRecord sender) throws InterruptedException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
 
@@ -216,7 +250,7 @@ public class Zookeeper {
         {
             createTopicAssignment(topic);
         }
-        System.out.println("TOPICASSIGNMENT");
+        System.out.println("TOPICASSIGNMENT for producer");
         System.out.println("Topic: "+topic.getName());
         System.out.println();
 
@@ -229,9 +263,9 @@ public class Zookeeper {
         arguments.add(topic);
         arguments.add(topicAssignmentHash.get(topic.getName()));
         Message response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_BROKER, arguments);
-        TcpClient sock = new TcpClient(sender.getHost(), sender.getPort());
-        sock.setHandler( this, response );
-        sock.run();
+//        TcpClient sock = new TcpClient(sender.getHost(), sender.getPort());
+//        sock.setHandler( this, response );
+//        sock.run();
 
 //        leaderReplicasAssignment(topic);
 //        return response;
@@ -250,6 +284,7 @@ public class Zookeeper {
 //        return topicAssignmentToBroker();
     }
 
+
     public void leaderReplicasAssignment(Topic topic) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
 
         System.out.println("ReplicationAssignment...");
@@ -267,43 +302,49 @@ public class Zookeeper {
                     i--;
                 topicBrokerQueue.add(tempRep);
             }
-            if(!replicationHash.containsKey(partitions.get(partition)))
+            if(!replicationHash.containsKey(topic.getName()))
             {
-                replicationHash.put(partitions.get(partition), new HashMap<>());
+                replicationHash.put(topic.getName(), new HashMap<>());
             }
-            replicationHash.get(partitions.get(partition)).put(new Pair(topic.getName(), partition), temp);
-//            if(!replicationHash.get(topic.getName()).containsKey(partition))
-//            {
-//                replicationHash.get(topic.getName()).put(partition, new HashMap<>());
-//            }
-
-//            replicationHash.get(topic.getName()).get(partition).put(partitions.get(partition), temp);
+//            replicationHash.get(partitions.get(partition)).put(new Pair(topic.getName(), partition), temp);
+            if(!replicationHash.get(topic.getName()).containsKey(partition))
+            {
+                replicationHash.get(topic.getName()).put(partition, new HashMap<>());
+            }
+            replicationHash.get(topic.getName()).get(partition).put(partitions.get(partition), temp);
 
             List<Object> arguments = new ArrayList();
             arguments.add(topic.getName());
             arguments.add(partition);
             arguments.add(partitions.get(partition));
-            arguments.add(replicationHash.get(partitions.get(partition)).get(new Pair(topic.getName(), partition)));
+//            arguments.add(replicationHash.get(partitions.get(partition)).get(new Pair(topic.getName(), partition)));
+            arguments.add(replicationHash.get(topic.getName()).get(partition).get(partitions.get(partition)));
             Message assignment = new Message(MessageType.SET_TOPIC_PARTITION_LEADER, arguments);
 
 
 
-            TcpClient sock = new TcpClient(partitions.get(partition).getHost(), partitions.get(partition).getPort());
-            sock.setHandler( this, assignment );
-            sock.run();
+//            TcpClient sock = new TcpClient(partitions.get(partition).getHost(), partitions.get(partition).getPort());
+//            sock.setHandler( this, assignment );
+//            sock.run();
 
             String key =partition.toString();
             partitions.get(partition).toString();
             System.out.println("\nPartition " +key.toString() + "\n=Leader=\n" + partitions.get(partition).getHost() + " "+ partitions.get(partition).getPort());
             System.out.println("=Followers=");
-            for(HostRecord oneFollower : replicationHash.get(partitions.get(partition)).get(new Pair(topic.getName(), partition)))
+            for(HostRecord oneFollower : replicationHash.get(topic.getName()).get(partition).get(partitions.get(partition)))
             {
                 System.out.println(oneFollower.getHost() + " "+ oneFollower.getPort());
             }
         }
 //        replicationsHash.get(partitions.get(partition)).get(topic.getName()).put(partition, )
     }
-
+//    public void sendReplicasAssignment(Topic topic)
+//    {
+//        if()
+//
+//
+//
+//    }
     public void displayRelicationsHash(String topic)
     {
 
@@ -354,17 +395,17 @@ public class Zookeeper {
             replicationBrokerQueue.add(oneBroker);
             System.out.println("Broker register completed");   //如果在這掛掉怎辦
 //        arguments.add(coordinator);
-            String temp = "Register Completed ACK ";
+            String temp = "Register Completed ACK";
             arguments.add(temp);
             displayBrokerList();
-            Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
+            Message response = new Message(MessageType.ACK, arguments, true);
 
 //            response.setIsAck(true);
             return response;
         }
-        String temp = "Already Registered Please use another host or port";
+        String temp = "Already Registered";
         arguments.add(temp);
-        Message response = new Message(MessageType.REGISTER_SUCCESS, arguments);
+        Message response = new Message(MessageType.ACK, arguments);
 //        response.setIsAck(true);
         return response;
     }
