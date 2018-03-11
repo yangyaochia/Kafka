@@ -34,7 +34,9 @@ public class Zookeeper {
     HashMap<String, HostRecord> coordinatorAssignmentHash;
     Map<HostRecord, Map<String, Map<Integer, Set<HostRecord>>>> replicationsHash;
     Queue<HostRecord> replicationBrokerQueue;
-
+    Integer updateClusterInterval;
+    Set<HostRecord> brokerList;
+//    Set<>
 //    Comparator<HostWithTime> timeComparator = new HostWithTimeComparator();
 
 
@@ -53,7 +55,6 @@ public class Zookeeper {
 //    Map<String, Consumer> consumerLeader;
 //    Map<Consumer, Integer> consumerOffset;
 
-    List<HostRecord> brokerList;
 
 
 
@@ -70,16 +71,21 @@ public class Zookeeper {
 //        clusters = new PriorityQueue<>((p1, p2) -> p1.getKey().compareTo(p2.getKey()));
         topicAssignmentHash = new HashMap<>() ;
         replicationsHash = new HashMap<>();
-
+        brokerList = new HashSet<>();
         topicBrokerQueue = new LinkedList<>();
         coordinatorBrokerQueue = new LinkedList<>();
         replicationBrokerQueue = new LinkedList<>();
+        updateClusterInterval = 5000;
+        coordinatorAssignmentHash = new HashMap<>();
+//        coordinatorAssignment("1111");
+//        BrokerList
+//        Set<HostRecord>
 
 
-//        HostRecord ha = new HostRecord("localhost", 9000 );
-//        HostRecord haha = new HostRecord("localhost", 9001 );
-//        HostRecord hahaha = new HostRecord("localhost",9002 );
-//        HostRecord hahahaha = new HostRecord("localhost",9003 );
+//        HostRecord ha = new HostRecord("localhost", 1 );
+//        HostRecord haha = new HostRecord("localhost", 2 );
+//        HostRecord hahaha = new HostRecord("localhost",3 );
+//        HostRecord hahahaha = new HostRecord("localhost",4 );
 //
 //        topicBrokerQueue.add(ha);
 //        replicationBrokerQueue.add(ha);
@@ -89,7 +95,7 @@ public class Zookeeper {
 //        replicationBrokerQueue.add(hahaha);
 //        topicBrokerQueue.add(hahahaha);
 //        replicationBrokerQueue.add(hahahaha);
-//
+
 //        Topic one = new Topic("hahahahah");
 //        one.replication = 3;
 //        one.partition = 3;
@@ -105,29 +111,37 @@ public class Zookeeper {
 ////        topics_coordinator = new HashMap();
 ////        consumerLeader = new HashMap();
 ////        consumerOffset = new HashMap();opicsMember = new H
-        brokerList = new ArrayList();
-    }
 
-    public void coordinatorAssignment(String groupID) throws  InterruptedException {
+    }
+    public void monitorCluster(HostRecord oneBrokerHeart)
+    {
+
+
+
+
+    }
+    public Message coordinatorAssignment(String groupID){
+
         System.out.println("COORDINATORASSIGNMENT");
         if(!coordinatorAssignmentHash.containsKey(groupID))
         {
+//                System.out.println("COORDINATORASSIGNMENT SUCCESS");
                 assignCoordinator(groupID);
         }
         HostRecord temp = coordinatorAssignmentHash.get(groupID);
         System.out.println("COORDINATORASSIGNMENT SUCCESS");
         List<Object> arguments = new ArrayList();
+        arguments.add(groupID);
         arguments.add(temp);
         Message response = new Message(MessageType.COORDINATOR_ASSIGNMENT, arguments);
-        response.setIsAck(true);
-//        return response;
-
+        return response;
     }
+
     public void assignCoordinator(String groupID) {
         HostRecord tempBroker= coordinatorBrokerQueue.poll();
         coordinatorAssignmentHash.put(groupID, tempBroker);
         topicBrokerQueue.add(tempBroker);
-        return;
+
     }
 
 
@@ -177,7 +191,7 @@ public class Zookeeper {
         System.out.println();
 
         displayTopicAssignment(topic.getName());
-        leaderReplicasAssignment(topic);
+//        leaderReplicasAssignment(topic);
 
         List<Object> arguments = new ArrayList();
         arguments.add(topic);
@@ -185,7 +199,6 @@ public class Zookeeper {
 
         Message response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_BROKER, arguments);
 //        response.setIsAck(true);
-        System.out.println(response.getMethodNameValue());
         return response;
 //        return topicAssignmentToBroker();
     }
@@ -227,9 +240,9 @@ public class Zookeeper {
 //            sock.setHandler( this, request);
 //            sock.run();
 
-            TcpClient sock = new TcpClient(partitions.get(partition).getHost(), partitions.get(partition).getPort());
-            sock.setHandler( this, assignment );
-            sock.run();
+//            TcpClient sock = new TcpClient(partitions.get(partition).getHost(), partitions.get(partition).getPort());
+//            sock.setHandler( this, assignment );
+//            sock.run();
 
             String key =partition.toString();
             partitions.get(partition).toString();
@@ -238,9 +251,6 @@ public class Zookeeper {
             for(HostRecord oneFollower : replicationsHash.get(partitions.get(partition)).get(topic.getName()).get(partition))
             {
                 System.out.println(oneFollower.getHost() + " "+ oneFollower.getPort());
-
-
-
             }
         }
 //        replicationsHash.get(partitions.get(partition)).get(topic.getName()).put(partition, )
@@ -270,7 +280,7 @@ public class Zookeeper {
 
             String key =name.toString();
             partitions.get(name).toString();
-            System.out.println("Partition " +key.toString() + " at " + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
+            System.out.println("Partition " +key.toString() + "  at" + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
         }
 
     }
@@ -338,6 +348,10 @@ public class Zookeeper {
     public void updateCluster() {
         // 新建broker
 
+
+
+
+
     }
 
     public void registerTopic() {
@@ -356,9 +370,26 @@ public class Zookeeper {
         return partitions;
     }
 
-    public void listen() throws IOException, ClassNotFoundException {
+    public void listen() throws IOException, ClassNotFoundException, InterruptedException {
 
         listenSocket.listen();
+//         while (true) {
+//            // Send hearbeat per 1 min
+//            Thread.sleep(updateClusterInterval);
+//            try {
+//                updateCluster();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            } catch (InvocationTargetException e) {
+//                e.printStackTrace();
+//            } catch (NoSuchMethodException e) {
+//                e.printStackTrace();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            } catch (IllegalAccessException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     public static void main(String argv[]) throws Exception {

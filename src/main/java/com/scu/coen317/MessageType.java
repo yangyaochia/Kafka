@@ -8,6 +8,7 @@ public enum MessageType {
 
     // Broker
     GET_TOPIC("topicAssignment"),               // B -> Z   Y
+    GET_TOPIC_FOR_COORDINATOR("topicPartitions"),   //B -> Z  coordinator ask zookeeper the topic's partitions
     TOPIC_ASSIGNMENT_TO_PRODUCER("updateTopicPartitionLeader"),        // B -> P   Y
     PUBLISH_MESSAGE_ACK("publishMessageAck"),       // B->P Y
     SUBSCRIBE_ACK("subscribeAck"),
@@ -19,7 +20,6 @@ public enum MessageType {
     SEND_HEARTBEAT("monitorCluster"),           // B -> Z
     NEW_BROKER_REGISTER("newBrokerRegister"),   // B -> Z Xinzhu
     GET_COORDINATOR("coordinatorAssignment"),   // B -> C      Xinzhu
-    CONSUMER_JOIN_GROUP_REGISTRATION_ACK("receiveConsumerJoinGroupRegistrationAck"),   // Xinzhu
     REBALANCE("rebalance"),            // B(Coordinator) -> C(Leader) : coordinator request rebalance Xinzhu
     REBALANCE_RESULT("updateTopicPartition"), // Coordinator send rebalance result, and send it <></>o each group member
     GIVE_MESSAGE("showMessageOut"), //B->C
@@ -32,7 +32,12 @@ public enum MessageType {
     //if leader die, set a follower to be leader
     //if follower die, tell a new broker who is its leader
     REGISTER_SUCCESS("receiveNewBrokerRegistrationAck"), //Z->B
-    COORDINATOR_ASSIGNMENT("coordinatorAssignmentToConsumer"), //Z->B
+    REPLACE_BROKER("replaceTopicPartitionLeader"),  /*  Z -> B
+                                                        zookeeper tell coordinator replace respectively topic partition leader
+                                                        if any broker is dead
+                                                     */
+    COORDINATOR_ASSIGNMENT("updateCoordinator"), //Z->B
+    RETURN_TOPIC_FOR_COORDINATOR("updateTopicPartitionLeaderCache"), // Z -> B
 
     //Consumer
     FIND_COORDINATOR("getCoordinator"), //C->B  Xinzhu getCoordinator(String groupId)
