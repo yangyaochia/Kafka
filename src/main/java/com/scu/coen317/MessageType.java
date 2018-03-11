@@ -24,6 +24,9 @@ public enum MessageType {
     REBALANCE_RESULT("updateTopicPartition"), // Coordinator send rebalance result, and send it <></>o each group member
     GIVE_MESSAGE("showMessageOut"), //B->C
 
+
+    TEST_REASSIGN("TEST_REASSIGN"),
+
     //ZooKeeper
     TOPIC_ASSIGNMENT_TO_BROKER("topicAssignmentToProducer"), //Z->B
     SET_TOPIC_PARTITION_LEADER("setTopicPartitionLeader"),  //Z->B follower

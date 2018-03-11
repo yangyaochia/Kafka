@@ -9,9 +9,15 @@ public class BrokerTestYaoChia {
 //        HostRecord z = new HostRecord("localhost", 2181);
         Broker b1 = new Broker("localhost", 9000, "localhost", 2181);
         Set<HostRecord> replicationHolders = new HashSet<>();
-        b1.setTopicPartitionLeader("topic1", 0, new HostRecord("localhost", 9000), (HashSet<HostRecord>) replicationHolders);
-//        b1.registerToZookeeper();
+//        b1.setTopicPartitionLeader("topic1", 0, new HostRecord("localhost", 9000), (HashSet<HostRecord>) replicationHolders);
+        b1.registerToZookeeper();
         b1.listen();
+        HostRecord producer = new HostRecord("localhost", 7777);
+//        b1.registerToZookeeper();
+        Topic topic = new Topic("hahaha");
+        topic.replication =1;
+        topic.partition = 3;
+        b1.getTopic(topic, producer);
 //        b1.publishMessage("topic1", 0,"test1", new HostRecord("localhost",8000));
 
 //        Topic t = new Topic("topic1",1,1);

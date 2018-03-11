@@ -70,48 +70,50 @@ public class Broker {
     }
 
     ////////////////// Yao-Chia
-    public Message getTopic(Topic topic, HostRecord producer) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
+    public void getTopic(Topic topic, HostRecord producer) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException, InterruptedException {
 
         String topicName = topic.getName();
         List<Object> argument = new ArrayList<>();
         Message response;
-        Map<Integer,HostRecord> leaders = new HashMap<>();
-        leaders.put(0, new HostRecord("localhost", 9000));
-        leaders.put(1, new HostRecord("localhost", 9001));
-        topicsPartitionLeader.put(topicName, leaders);
+//        Map<Integer,HostRecord> leaders = new HashMap<>();
+//        leaders.put(0, new HostRecord("localhost", 9000));
+//        leaders.put(1, new HostRecord("localhost", 9001));
+//        topicsPartitionLeader.put(topicName, leaders);
         // This broker does now know the topic, then ask the zookeeper
-        if ( !topicsPartitionLeader.containsKey(topicName) ) {
-            argument.add(topic);
-            Message request = new Message(MessageType.GET_TOPIC, argument);
+//        if ( !topicsPartitionLeader.containsKey(topicName) ) {
+        argument.add(topic);
+        argument.add(this.thisHost);
+        Message request = new Message(MessageType.GET_TOPIC, argument);
 
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler( this, request);
             sock.run();
-        }
+//        }
 
         // This broker already stored the topic info
-        synchronized (this) {
-            while (!topicsPartitionLeader.containsKey(topicName) ) {
-                wait();
-            }
-            argument.add(topicName);
-            argument.add(topicsPartitionLeader.get(topicName) );
-            response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
-            System.out.println(producer.getPort());
+//        synchronized (this) {
+//            while (!topicsPartitionLeader.containsKey(topicName) ) {
+//                wait();
+//            }
+//            argument.add(topicName);
+//            argument.add(topicsPartitionLeader.get(topicName) );
+//            response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
+//            System.out.println(producer.getPort());
+//
+//            TcpClient sock = new TcpClient(producer.getHost(), producer.getPort());
+//            sock.setHandler(this, response);
+//            sock.run();
+//
+//        }
 
-            TcpClient sock = new TcpClient(producer.getHost(), producer.getPort());
-            sock.setHandler(this, response);
-            sock.run();
-
-        }
-        return new Message(MessageType.ACK);
+//        return new Message(MessageType.ACK);
     }
     public void topicAssignmentToProducer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
         System.out.println("why????");
-        synchronized (this) {
-            topicsPartitionLeader.put(topic.getName(), partitionLeaders);
-            notify();
-        }
+//        synchronized (this) {
+//            topicsPartitionLeader.put(topic.getName(), partitionLeaders);
+//            notify();
+//        }
         return;
     }
 
