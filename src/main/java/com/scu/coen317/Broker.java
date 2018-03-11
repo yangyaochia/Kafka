@@ -2,6 +2,7 @@ package com.scu.coen317;
 
 import javafx.util.Pair;
 
+import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -77,7 +78,7 @@ public class Broker {
         Message response;
         Map<Integer,HostRecord> leaders = new HashMap<>();
         leaders.put(0, new HostRecord("localhost", 9000));
-        leaders.put(1, new HostRecord("localhost", 9001));
+//        leaders.put(1, new HostRecord("localhost", 9001));
         topicsPartitionLeader.put(topicName, leaders);
         // This broker does now know the topic, then ask the zookeeper
         if ( !topicsPartitionLeader.containsKey(topicName) ) {
@@ -186,8 +187,11 @@ public class Broker {
 
 
         System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
-        topicMessage.get(topic).get(partition).add(message);
+        List<String> msgs = topicMessage.get(topic).get(partition);
+        msgs.add(message);
         System.out.println("topic map's size is " + topicMessage.get(topic).get(partition).size());
+        for ( String m : msgs)
+            System.out.println(m);
 
         // Send publishMessage to the corresponding topic partition replication holders
         Set<HostRecord> replicationHolders = topicPartitionReplicationBrokers.get(topic).get(partition);
@@ -201,6 +205,7 @@ public class Broker {
             argument.add(topic);
             argument.add(partition);
             argument.add(message);
+            argument.add(thisHost);
             Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
             informOtherBrokers(request, (HashSet<HostRecord>) replicationHolders);
         }

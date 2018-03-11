@@ -111,7 +111,7 @@ public class Producer {
         // Hardcode
         Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
         partitionLeaders.put(0, new HostRecord("localhost", 9000));
-        partitionLeaders.put(1, new HostRecord("localhost", 9000));
+//        partitionLeaders.put(1, new HostRecord("localhost", 9000));
         topicsMember.put(topic, partitionLeaders);
         // Hardcode
         if ( !topicsMember.containsKey(topic) ) {
@@ -139,7 +139,7 @@ public class Producer {
                 System.out.println("Determine the partition leader " + partitionLeader.getPort());
                 break;
             } catch (IOException e) {
-                e.printStackTrace();
+//                e.printStackTrace();
                 topicsMember.remove(topic);
                 leaderAliveChance--;
                 // To indicate the topic partition leader broken case
@@ -156,7 +156,7 @@ public class Producer {
 
         sock.setHandler( this, request);
         sock.run();
-//        waitInvokeFunction(listenSock);
+        waitInvokeFunction(listenSock);
 
         return true;
     }
