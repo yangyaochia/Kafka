@@ -22,6 +22,8 @@ public class Consumer {
     List<HostRecord> brokers;
 
     Map<String, Map<Integer, HostRecord>> subscribedTopicPartitions;
+    // 5 min;
+    final int MAX_POLL_INTERVAL_MS = 10000;
 
     public Consumer (String host, int port, String groupId, String defaultBrokerIp, int defaultBrokerPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         thisHost = new HostRecord(this.host = host, this.port = port);
@@ -130,12 +132,16 @@ public class Consumer {
     public void poll() throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
         // Map<String, Map<Integer, HostRecord>> subscribedTopicPartitions;
         // multicast of each partition in subscribedPartitions;
+
+
         List<String> messages = new ArrayList<>();
 
         for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : subscribedTopicPartitions.entrySet()) {
+//            Thread.sleep(MAX_POLL_INTERVAL_MS);
             String topic = eachTopic.getKey();
             Map<Integer, HostRecord> partitions = eachTopic.getValue();
             for (Map.Entry<Integer, HostRecord> partition : partitions.entrySet()) {
+                System.out.println("Ready to poll!!!");
                 HostRecord broker = partition.getValue();
                 TcpClient client = new TcpClient(broker.getHost(), broker.getPort());
                 List<Object> arguments = new ArrayList<>();
@@ -150,6 +156,7 @@ public class Consumer {
     }
 
     public Message dealWithMessage(List<String> messages, String topic, HostRecord broker) {
+        System.out.println("Enter consumer deal!!!");
         for (String message : messages) {
             System.out.println(message);
         }

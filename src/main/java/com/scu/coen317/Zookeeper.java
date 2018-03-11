@@ -158,9 +158,9 @@ public class Zookeeper {
         while (true) {
 
             tempBrokerList = new HashSet<>(brokerList);
-            System.out.println("tempBrokerList.size() = " + tempBrokerList.size());
+            System.out.println("Before tempBrokerList.size() = " + tempBrokerList.size());
             Thread.sleep(MONITOR_CLUSTER_INTERVAL);
-            System.out.println("tempBrokerList.size() = " + tempBrokerList.size());
+            System.out.println("After tempBrokerList.size() = " + tempBrokerList.size());
             if ( !tempBrokerList.isEmpty() ) {
                 Map< String, Map< Integer,Pair<HostRecord,HostRecord> > > newAssignment = new HashMap<>();
                 for ( HostRecord h: tempBrokerList) {
@@ -246,6 +246,7 @@ public class Zookeeper {
                 HashMap<Integer, HostRecord> h = new HashMap<>();
                 h.put(i, tempBroker);
                 topicAssignmentHash.put(topic.getName(), h);
+
             } else {
                 topicAssignmentHash.get(topic.getName()).put(i, tempBroker);
             }
@@ -523,6 +524,6 @@ public class Zookeeper {
         Zookeeper z = new Zookeeper("localhost", 2181);
         z.listen();
 //        Thread.sleep(1000000);
-//        z.monitorCluster();
+        z.monitorCluster();
     }
 }

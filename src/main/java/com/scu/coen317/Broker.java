@@ -43,7 +43,7 @@ public class Broker {
     // Map<topic,Map<partition,Map<groupId,offset>>>
     Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
 
-    final int heartBeatInterval = 3000;
+    final int heartBeatInterval = 10000;
 
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -238,33 +238,36 @@ public class Broker {
         System.out.println("This is ack" + message + " " + ackMessage);
     }
 
-    public void sendHeartBeat() throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
-
-        List<Object> argument = new ArrayList<>();
-        argument.add(thisHost);
-        Message heartbeat = new Message(MessageType.SEND_HEARTBEAT, argument);
-        TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
-        sock.setHandler( this, heartbeat);
-        sock.run();
-    }
-
-    public Message giveMessage(String topic, Integer partition, String groudID) {
+    public Message giveMessage(String groudID, String topic, Integer partition) {
 //        Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
         Message response;
 //        if ( !consumerGroupOffset.containsKey(topic) || !consumerGroupOffset.get(topic).containsKey(partition) ) {
 //            response = new Message(MessageType.ACK);
 //            return response;
 //        } else {
+
+        if ( consumerGroupOffset.get(topic) == null || consumerGroupOffset.get(topic).get(partition) == null ) {
+
+        }
             HashMap<String,Integer> consumerGroup = (HashMap<String, Integer>) consumerGroupOffset.get(topic).get(partition);
-            if ( !consumerGroup.containsKey(groudID) ) {
-                consumerGroup.put(groudID,0);
-            }
-            List<String> topicPartitionMessage = topicMessage.get(topic).get(partition);
-            int offset = consumerGroup.get(groudID);
-            int maxOffset = Integer.max(offset + 10, topicMessage.get(topic).get(partition).size()) + 1;
+
+        if ( !consumerGroup.containsKey(groudID) ) {
+            System.out.println("initialisation issue");
+            consumerGroup.put(groudID,0);
+        }
+        System.out.println("ready to give message to consumer!!!");
+        System.out.println("Topic : " + topic + " partition : " + partition);
+        List<String> topicPartitionMessage = topicMessage.get(topic).get(partition);
+        System.out.println("Current message size : " + topicPartitionMessage.size());
+        int offset = consumerGroup.get(groudID);
+        int maxOffset = Integer.min(offset + 10, topicMessage.get(topic).get(partition).size());
 //            topicMessage.get(topic).get(partition)
+        System.out.println("offset : " + offset + " maxOffset : " + maxOffset);
 
             List<String> sendingMessages = new ArrayList<>(topicPartitionMessage.subList(offset, maxOffset));
+        System.out.println("sendingMessages.size() : " + sendingMessages.size());
+        for (String s : sendingMessages )
+            System.out.println(s);
 //            list<String>, String, HostRecord
             List<Object> argument = new ArrayList<>();
             argument.add(sendingMessages);
@@ -521,23 +524,31 @@ public class Broker {
     public void listen() throws
             IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         listenSocket.listen();
-//        while (true) {
-//            // Send hearbeat per 1 min
-//            Thread.sleep(heartBeatInterval);
-//            try {
-//                sendHeartBeat();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } catch (InvocationTargetException e) {
-//                e.printStackTrace();
-//            } catch (NoSuchMethodException e) {
-//                e.printStackTrace();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            } catch (IllegalAccessException e) {
-//                e.printStackTrace();
-//            }
-//        }
+
+    }
+    public void sendHeartBeat() throws InterruptedException {
+        while (true) {
+            // Send hearbeat per 1 min
+            Thread.sleep(heartBeatInterval);
+            try {
+                List<Object> argument = new ArrayList<>();
+                argument.add(thisHost);
+                Message heartbeat = new Message(MessageType.SEND_HEARTBEAT, argument);
+                TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+                sock.setHandler( this, heartbeat);
+                sock.run();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 
