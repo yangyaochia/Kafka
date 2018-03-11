@@ -401,6 +401,7 @@ public class Broker {
         if (!topicsPartitionLeaderCache.containsKey(topicName)) {
             List<Object> arguments = new ArrayList<>();
             arguments.add(topicName);
+            arguments.add(thisHost);
             Message request = new Message(MessageType.GET_TOPIC_FOR_COORDINATOR, arguments);
 
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
