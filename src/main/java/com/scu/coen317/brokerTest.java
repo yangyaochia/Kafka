@@ -27,7 +27,7 @@ public class brokerTest{
     // default brokers and broker cache
     HostRecord defaultZookeeper ;
 //    List<Zookeeper> brokers;
-
+    final int heartBeatInterval = 10000;
     // topic, <partition, 負責的broker>
     Map<String, List<Pair<Integer,Broker>> > topicPartitionLeaders;
     private int partition;
@@ -111,7 +111,7 @@ public class brokerTest{
         // This broker does now know the topic, then ask the zookeeper
 //        if ( !topicsPartitionLeader.containsKey(topicName) ) {
         Topic topic = new Topic("hahaha");
-        topic.partition = 5;
+        topic.partition = 2;
         topic.replication = 2;
         HostRecord temp = new HostRecord(this.host, this.port);
         argument.add(topic);
@@ -211,6 +211,8 @@ public class brokerTest{
     public void setTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> replicationHolders)
     {
         System.out.println("In setTopicPartitionLeader already... ");
+
+        System.out.println("You ("+ this.host+ " "+this.port+ ")"+ "have been assigned Topic: "+topic+ "Partition: "+ partition.toString());
         System.out.println("=leader=");
         System.out.println(leader.toString());
         System.out.println("=followers=");
@@ -241,6 +243,14 @@ public class brokerTest{
     public void updateTopicPartitionLeader(String topic, List<Pair<Integer,Broker>> partitionLeaders) {
         topicPartitionLeaders.put(topic, partitionLeaders);
     }
+    public void replaceTopicPartitionLeader(HashMap<String, Map<Integer, Map<HostRecord, HostRecord>>> newInfo)
+    {
+        System.out.println("In coordinator... replaceTopicPartitionLeader");
+
+
+
+    }
+
 
     public void update(String s) {
         System.out.println("received response from broker");
@@ -268,22 +278,52 @@ public class brokerTest{
 //        }
     }
 
+
+    public void sendHeartBeat() throws InterruptedException {
+        while (true) {
+            // Send hearbeat per 1 min
+            Thread.sleep(heartBeatInterval);
+            try {
+                List<Object> argument = new ArrayList<>();
+                argument.add(new HostRecord(this.host, this.port));
+                Message heartbeat = new Message(MessageType.SEND_HEARTBEAT, argument);
+                TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
+                sock.setHandler( this, heartbeat);
+                sock.run();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static void main(String argv[]) throws Exception {
         brokerTest p = new brokerTest("localhost", 9008, "localhost", 2181);
-        brokerTest p2 = new brokerTest("localhost", 9007, "localhost", 2181);
-        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
+//        brokerTest p2 = new brokerTest("localhost", 9007, "localhost", 2181);
+//        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
 //        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
         p.listen();
-        p2.listen();
-        p3.listen();
+//        p2.listen();
+//        p3.listen();
         p.registerToZookeeper();
-        p2.registerToZookeeper();
-        p3.registerToZookeeper();
+//        p2.registerToZookeeper();
+//        p3.registerToZookeeper();
+//        p.sendHeartBeat();;
+//        p3.sendHeartBeat();
 //        p.getTopicConsumer();
         p.getTopic();
+        p.sendHeartBeat();;
+//        p3.sendHeartBeat();
 
-        sleep(5000);
-        p.TestReassign();
+//        sleep(5000);
+//        p.TestReassign();
 
 //
 //        p.getCoordinator("1111");
