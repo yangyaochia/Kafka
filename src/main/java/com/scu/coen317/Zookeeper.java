@@ -341,9 +341,12 @@ public class Zookeeper {
         }
         HostRecord temp = coordinatorAssignmentHash.get(groupID);
         System.out.println("COORDINATORASSIGNMENT SUCCESS");
+
         List<Object> arguments = new ArrayList();
         arguments.add(groupID);
         arguments.add(temp);
+
+
         Message response = new Message(MessageType.COORDINATOR_ASSIGNMENT, arguments);
         return response;
     }
