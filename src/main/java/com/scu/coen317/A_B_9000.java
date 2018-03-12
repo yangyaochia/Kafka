@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class BrokerTestYaoChia1 {
+public class A_B_9000 {
 
     public static void main(String argv[]) throws Exception {
 //        Set<HostRecord> replicationHolders = new HashSet<>();
@@ -19,7 +19,7 @@ public class BrokerTestYaoChia1 {
         //b1.setTopicPartitionLeader("topic1", 0, new HostRecord("localhost", 9000), (HashSet<HostRecord>) replicationHolders);
         b1.registerToZookeeper();
         b1.listen();
-//        b1.sendHeartBeat();
+        b1.sendHeartBeat();
 
 
 //        List<Object> argument = new ArrayList<>();

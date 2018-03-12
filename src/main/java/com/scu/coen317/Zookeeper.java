@@ -46,7 +46,7 @@ public class Zookeeper {
 //    Set<>
 //    Comparator<HostWithTime> timeComparator = new HostWithTimeComparator();
 
-    final int MONITOR_CLUSTER_INTERVAL = 30000;
+    final int MONITOR_CLUSTER_INTERVAL = 8000;
 
 
     // min heap round robin timestamp queue
@@ -730,14 +730,13 @@ public class Zookeeper {
 //                e.printStackTrace();
 //            } catch (IllegalAccessException e) {
 //                e.printStackTrace();
-//            }
+//            con1.findCoordinator();}
 //        }
     }
 
     public static void main(String argv[]) throws Exception {
         Zookeeper z = new Zookeeper("localhost", 2181);
         z.listen();
-//        Thread.sleep(1000000);
-//        z.monitorCluster();
+        z.monitorCluster();
     }
 }

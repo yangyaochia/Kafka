@@ -43,7 +43,7 @@ public class Broker {
     // Map<topic,Map<partition,Map<groupId,offset>>>
     Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
 
-    final int heartBeatInterval = 10000;
+    final int heartBeatInterval = 3000;
 
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -106,6 +106,8 @@ public class Broker {
         argument.add(topicName);
         argument.add(topicsPartitionLeader.get(topicName) );
         response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
+        System.out.println(" ----------- new assigned partition leader : " + topicsPartitionLeader.get(topicName).toString());
+
         System.out.println(producer.getPort());
 
         TcpClient sock = new TcpClient(producer.getHost(), producer.getPort());
@@ -176,14 +178,14 @@ public class Broker {
             Message request = new Message(MessageType.SET_TOPIC_PARTITION_LEADER, argument);
             informOtherBrokers(request, replicationHolders);
         }
-        // Tell Coordinators
-        List<Object> argument = new ArrayList<>();
-        argument.add(topic);
-        argument.add(partition);
-        argument.add(leader);
-        Message request = new Message(MessageType.SET_TOPIC_PARTITION_LEADER, argument);
-        HashSet<HostRecord> coordinators = new HashSet<>();
-        informOtherBrokers(request, coordinators);
+//        // Tell Coordinators
+//        List<Object> argument = new ArrayList<>();
+//        argument.add(topic);
+//        argument.add(partition);
+//        argument.add(leader);
+//        Message request = new Message(MessageType.SET_TOPIC_PARTITION_LEADER, argument);
+//        HashSet<HostRecord> coordinators = new HashSet<>();
+//        informOtherBrokers(request, coordinators);
 
     }
     public void informOtherBrokers(Message request, HashSet<HostRecord> otherBrokers) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
