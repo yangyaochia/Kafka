@@ -73,7 +73,7 @@ public class Producer {
                 } catch (IOException e) {
                     System.out.println("The first default broker is down");
                     defaultBrokers.remove(defaultBrokers.iterator().next());
-
+//                    ack = true;
                 }
             }
             if ( defaultBrokers.isEmpty() )
@@ -86,7 +86,7 @@ public class Producer {
             sock.setHandler( this, request);
             sock.run();
 
-            waitInvokeFunction(listenSock);
+//            waitInvokeFunction(listenSock);
             return true;
         } else {
             // This topic has already been created.
@@ -118,7 +118,7 @@ public class Producer {
 //        topicsMember.put(topic, partitionLeaders);
 //        System.out.println("Initial topic " + topic + " " + 0 + " leader " + topicsMember.get(topic).get(0));
         // Hardcode
-        if ( !topicsMember.containsKey(topic) ) {
+        while ( !topicsMember.containsKey(topic) ) {
             // Reuse the createTopic function to get corresponding topic partition leaders
             createTopic(topic,1,1);
         }
@@ -138,7 +138,7 @@ public class Producer {
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
         int leaderAliveChance = 1;
-        while (leaderAliveChance >= 0) {
+        while ( true ) {//leaderAliveChance >= 0) {
             partitionLeader = topicsMember.get(topic).get(partition);
             System.out.println(partitionLeader.getPort());
             try {
@@ -149,8 +149,9 @@ public class Producer {
 //                e.printStackTrace();
                 topicsMember.remove(topic);
                 leaderAliveChance--;
-                if ( leaderAliveChance < 0 )
-                    return false;
+//                ack = true;
+//                if ( leaderAliveChance < 0 )
+//                    return false;
                 // To indicate the topic partition leader broken case
                 createTopic(topic,1,1);
             }
