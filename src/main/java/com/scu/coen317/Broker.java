@@ -245,8 +245,6 @@ public class Broker {
         sock.run();
 
         return new Message(MessageType.ACK);
-//        return new Message(MessageType.ACK);
-//        return new Message(MessageType.ACK);
     }
     public void publishMessageAck(String message, String ackMessage) {
         System.out.println("This is ack" + message + " " + ackMessage);

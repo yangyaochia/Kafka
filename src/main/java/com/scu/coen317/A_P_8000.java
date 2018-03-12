@@ -5,11 +5,11 @@ import java.util.List;
 
 public class A_P_8000 {
     public static void main(String argv[]) throws Exception {
-        Producer p = new Producer("localhost", 8000, "localhost", 9001);
-//        p.addDefaultBroker("localhost",9001);
+        Producer p = new Producer("localhost", 8000, "localhost", 9000);
+        p.addDefaultBroker("localhost",9001);
 //        p.printDefaultBrokerList();
 ////
-        p.createTopic("Distributed System Topic", 1,2);
+        p.createTopic("Distributed System Topic", 1,3);
 //        p.createTopic("Santa Clara Univ Topic", 1,2);
 ////
 //        p.printDefaultBrokerList();

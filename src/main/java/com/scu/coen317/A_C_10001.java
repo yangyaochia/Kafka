@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutorService;
 
 public class A_C_10001 {
     public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException, InterruptedException {
-        Consumer con1 = new Consumer("localhost", 10001, "group1",
+        Consumer con1 = new Consumer("localhost", 10002, "group1",
                 "localhost", 9001);
 //        con1.findCoordinator();
 //        con1.updateCoordinator(new HostRecord("localhost", 9000));

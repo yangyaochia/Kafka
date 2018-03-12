@@ -32,6 +32,8 @@ public class Producer {
     boolean updateTopicPartitionLeaderACK = false;
     boolean publishMessageACK = false;
 
+    final int MONITOR_CLUSTER_INTERVAL = 4000;
+
     public Producer (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
         this.host = host;
         this.port = port;
@@ -149,8 +151,7 @@ public class Producer {
         argument.add(thisProducer);
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
-        int leaderAliveChance = 1;
-        while ( true ) {//leaderAliveChance >= 0) {
+        while ( true ) {
             partitionLeader = topicsMember.get(topic).get(partition);
             System.out.println(partitionLeader.getPort());
             try {
@@ -160,16 +161,9 @@ public class Producer {
             } catch (IOException e) {
 //                e.printStackTrace();
                 topicsMember.remove(topic);
-                leaderAliveChance--;
-//                ack = true;
-                if ( leaderAliveChance < 0 )
-                    return false;
                 // To indicate the topic partition leader broken case
-                Thread.sleep(10000);
+                Thread.sleep((long) (MONITOR_CLUSTER_INTERVAL*1.4));
                 createTopic(topic,1,1);
-//                while ( !createTopic(topic,1,1) ) {
-//
-//                }
             }
         }
 
