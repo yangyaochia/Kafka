@@ -195,4 +195,10 @@ public class Producer {
         defaultBrokers.remove(h);
     }
 
+    public void printDefaultBrokerList() {
+        System.out.println("Default broker list");
+        for ( HostRecord h : defaultBrokers )
+            System.out.println(h);
+    }
+
 }

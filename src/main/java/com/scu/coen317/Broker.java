@@ -28,7 +28,7 @@ public class Broker {
     // 记录每个group中，每个topic都是哪些consumer订阅
     Map<String, Map<String, List<HostRecord>>> topic_consumer;
     Map<String, List<String>> group_topic;
-    Map<String, Map<Integer, HostRecord>> topicsPartitionLeaderCache;
+    DataCache<String, Map<Integer, HostRecord>> topicsPartitionLeaderCache;
 
 
     // 记录每个group中，每一个consumer订阅的每一个topic都有哪些partition
@@ -66,7 +66,8 @@ public class Broker {
         balanceMap = new HashMap<>();
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
-        topicsPartitionLeaderCache = new HashMap<>();
+        topicsPartitionLeaderCache = new DataCache<>();
+        topicsPartitionLeaderCache.setTimeout(1);
     }
 
     ////////////////// Yao-Chia
@@ -243,7 +244,7 @@ public class Broker {
         System.out.println("This is ack" + message + " " + ackMessage);
     }
 
-    public Message giveMessage(String groudID, String topic, Integer partition, Integer maxFetchSize) throws InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException, IOException {
+    public Message giveMessage(String groudID, String topic, Integer partition, HostRecord consumer, Integer maxFetchSize) throws InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException, IOException {
 //        Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
         Message response;
 //        if ( !consumerGroupOffset.containsKey(topic) || !consumerGroupOffset.get(topic).containsKey(partition) ) {
@@ -282,11 +283,11 @@ public class Broker {
         argument.add(topic);
         argument.add(thisHost);
         response = new Message(MessageType.SEND_MESSAGE_TO_CONSUMER, argument);
-        return response;
-//        TcpClient sock = new TcpClient(consumer.getHost(),consumer.getPort());
-//        sock.setHandler(this,response);
-//        sock.run();
-//        return new Message(MessageType.ACK);
+//        return response;
+        TcpClient sock = new TcpClient(consumer.getHost(),consumer.getPort());
+        sock.setHandler(this,response);
+        sock.run();
+        return new Message(MessageType.ACK);
 //        }
     }
     ////////////////// Yao-Chia

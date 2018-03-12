@@ -738,6 +738,6 @@ public class Zookeeper {
         Zookeeper z = new Zookeeper("localhost", 2181);
         z.listen();
 //        Thread.sleep(1000000);
-        z.monitorCluster();
+//        z.monitorCluster();
     }
 }
