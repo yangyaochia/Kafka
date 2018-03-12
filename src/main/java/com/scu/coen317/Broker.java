@@ -43,7 +43,7 @@ public class Broker {
     // Map<topic,Map<partition,Map<groupId,offset>>>
     Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
 
-    final int heartBeatInterval = 1000;
+    final int heartBeatInterval = 400;
 
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -323,6 +323,7 @@ public class Broker {
             TcpClient client = new TcpClient(defaultZookeeper.host, defaultZookeeper.port);
             List<Object> arguments = new ArrayList<>();
             arguments.add(groupId);
+            arguments.add(this.thisHost);
             Message request = new Message(MessageType.GET_COORDINATOR, arguments);
             client.setHandler(this, request);
             client.run();
@@ -349,6 +350,8 @@ public class Broker {
     }
 
     public void updateCoordinator(String groupId, HostRecord coordinator) {
+        System.out.println("add coordinator " + coordinator.getHost() + " " + coordinator.getPort()
+                + " to " + groupId);
         topics_coordinator.put(groupId, coordinator);
         System.out.println("add coordinator " + coordinator.getHost() + " " + coordinator.getPort()
                 + " to " + groupId);

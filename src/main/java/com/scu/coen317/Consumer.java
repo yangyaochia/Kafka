@@ -140,7 +140,7 @@ public class Consumer {
             Thread.sleep(MAX_POLL_INTERVAL_MS);
             for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : subscribedTopicPartitions.entrySet()) {
 
-                System.out.println("Hello?");
+//                System.out.println("Hello?");
                 String topic = eachTopic.getKey();
                 Map<Integer, HostRecord> partitions = eachTopic.getValue();
                 for (Map.Entry<Integer, HostRecord> partition : partitions.entrySet()) {

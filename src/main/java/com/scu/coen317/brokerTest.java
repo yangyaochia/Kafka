@@ -27,7 +27,7 @@ public class brokerTest{
     // default brokers and broker cache
     HostRecord defaultZookeeper ;
 //    List<Zookeeper> brokers;
-    final int heartBeatInterval = 10000;
+    final int heartBeatInterval = 400;
     // topic, <partition, 負責的broker>
     Map<String, List<Pair<Integer,Broker>> > topicPartitionLeaders;
     private int partition;
@@ -111,8 +111,8 @@ public class brokerTest{
         // This broker does now know the topic, then ask the zookeeper
 //        if ( !topicsPartitionLeader.containsKey(topicName) ) {
         Topic topic = new Topic("hahaha");
-        topic.partition = 3;
-        topic.replication = 4;
+        topic.partition = 1;
+        topic.replication = 3;
         HostRecord temp = new HostRecord(this.host, this.port);
         argument.add(topic);
         argument.add(temp);
@@ -328,7 +328,7 @@ public class brokerTest{
 //        p3.sendHeartBeat();
 //        p.getTopicConsumer();
         p.getTopic();
-        p.sendHeartBeat();;
+        p.sendHeartBeat();
 //        p3.sendHeartBeat();
 
 //        sleep(5000);
