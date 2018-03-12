@@ -10,8 +10,9 @@ public class TestConsumer2 {
         Consumer con2 = new Consumer("localhost", 10002,
                 "group1",
                 "localhost", 9000);
+        con2.findCoordinator();
         con2.joinToGroup();
-        con2.subscribe("topic1");
+        con2.subscribe("Distributed System Topic");
 //        con2.subscribe("topic2");
         con2.poll();
     }

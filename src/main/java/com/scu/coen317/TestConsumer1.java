@@ -12,7 +12,7 @@ public class TestConsumer1 {
 //        con1.updateCoordinator(new HostRecord("localhost", 9005));
         con1.joinToGroup();
         con1.subscribe("Distributed System Topic");
-        Thread.sleep(5000);
+        Thread.sleep(1000);
         con1.poll();
 
 

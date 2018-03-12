@@ -123,7 +123,10 @@ public class Producer {
             createTopic(topic,1,1);
         }
         TcpClient sock = null;
-        Integer partition = hashCode(message) % topicsMember.get(topic).size();
+        Integer partition = (hashCode(message)) % topicsMember.get(topic).size();
+        if ( partition < 0 ) {
+            partition += topicsMember.get(topic).size();
+        }
         System.out.println(topic + " " + message + " " + partition);
         HostRecord partitionLeader = null;
 
