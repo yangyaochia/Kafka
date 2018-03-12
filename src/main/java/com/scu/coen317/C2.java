@@ -10,8 +10,8 @@ public class C2 {
 //        con1.updateCoordinator(new HostRecord("localhost", 9005));
         con2.joinToGroup();
         con2.subscribe("Distributed System Topic");
-//        con2.subscribe("Santa Clara Univ Topic");
-        Thread.sleep(3000);
+        con2.subscribe("Santa Clara Univ Topic");
+        Thread.sleep(1000);
         con2.poll();
     }
 }
