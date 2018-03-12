@@ -335,12 +335,17 @@ public class Zookeeper {
 
     public Message coordinatorAssignment(String groupID) {
 
-        System.out.println("COORDINATORASSIGNMENT");
+//        System.out.println("COORDINATORASSIGNMENT");
         if (!coordinatorAssignmentHash.containsKey(groupID)) {
             assignCoordinator(groupID);
         }
+
         HostRecord temp = coordinatorAssignmentHash.get(groupID);
-        System.out.println("COORDINATORASSIGNMENT SUCCESS");
+        if(temp == null)
+        {
+            System.out.println("temp == null");
+            assignCoordinator(groupID);
+        }
 
         List<Object> arguments = new ArrayList();
         arguments.add(groupID);
@@ -355,7 +360,7 @@ public class Zookeeper {
         HostRecord tempBroker = coordinatorBrokerQueue.poll();
         coordinatorAssignmentHash.put(groupID, tempBroker);
         System.out.println("COORDINATOR for Group "+ groupID + " "+ tempBroker.toString());
-        topicBrokerQueue.add(tempBroker);
+        coordinatorBrokerQueue.add(tempBroker);
     }
 
 

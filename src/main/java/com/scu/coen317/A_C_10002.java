@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public class A_C_10002 {
     public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException, InterruptedException {
-        Consumer con2 = new Consumer("localhost", 10002, "group1",
+        Consumer con2 = new Consumer("localhost", 10002, "group2",
                 "localhost", 9000);
         con2.findCoordinator();
 //        con1.updateCoordinator(new HostRecord("localhost", 9005));
