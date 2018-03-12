@@ -43,7 +43,7 @@ public class Broker {
     // Map<topic,Map<partition,Map<groupId,offset>>>
     Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
 
-    final int heartBeatInterval = 8000;
+    final int heartBeatInterval = 1000;
 
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {

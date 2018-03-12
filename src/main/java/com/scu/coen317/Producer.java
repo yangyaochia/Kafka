@@ -54,8 +54,9 @@ public class Producer {
     public boolean createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         // This producer has not store the topic information before
         if ( !topicsMember.containsKey(topic) ) {
-            if ( partition == -1 )
-                Thread.sleep(40000);
+//            if ( partition == -1 ) {
+//                Thread.sleep(10000);
+//            }
             List<Object> argument = new ArrayList<>();
             Topic t = new Topic(topic, partition, replication);
             argument.add(t);
@@ -149,7 +150,7 @@ public class Producer {
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
         int leaderAliveChance = 1;
-        while (leaderAliveChance >= 0) {
+        while ( true ) {//leaderAliveChance >= 0) {
             partitionLeader = topicsMember.get(topic).get(partition);
             System.out.println(partitionLeader.getPort());
             try {
@@ -164,7 +165,11 @@ public class Producer {
                 if ( leaderAliveChance < 0 )
                     return false;
                 // To indicate the topic partition leader broken case
-                createTopic(topic,-1,1);
+                Thread.sleep(10000);
+                createTopic(topic,1,1);
+//                while ( !createTopic(topic,1,1) ) {
+//
+//                }
             }
         }
 
