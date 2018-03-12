@@ -199,7 +199,7 @@ public class Zookeeper {
         for(HostRecord leader : failLeaders)
         {
             brokerToTopicPartitionHash.remove(leader);
-            coordinatorAssignmentHash.remove(leader);
+//            coordinatorAssignmentHash.remove(leader);
             topicBrokerQueue.remove(leader);
             coordinatorBrokerQueue.remove(leader);
             brokerList.remove(leader);
@@ -236,7 +236,9 @@ public class Zookeeper {
 //                            {
 //                                oldFollowers.remove(oldFollowers.iterator().next());
 //                            }
+
                             HostRecord newLeader = oldFollowers.iterator().next();
+//                            System.out.println("=====New Leader : "+ newLeader.toString()+"=====");
                             oldFollowers.remove(newLeader);
                             HashSet<HostRecord> newFollowers = oldFollowers;
                             replicationHash.get(topic).get(partition).put(newLeader, newFollowers);
@@ -267,7 +269,7 @@ public class Zookeeper {
 
                             sendSetTopicPartitionLeader(topic, partition, newLeader, newFollowers);
 
-
+//                            sendSetTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> followers ) t
 //                            TcpClient sock = new TcpClient(newLeader.getHost(), newLeader.getPort());
 //                            sock.setHandler( this,  );
 //                            sock.run();
@@ -317,8 +319,19 @@ public class Zookeeper {
 //        // Coordinator 要的資料是 Topic -> Partition -> <Broken,New>
 //
 //    }
-//
-    public void monitorCluster() throws InterruptedException {
+    public void sendLastestAssignmentToCoordinator(Map<String, Map<Integer, Map<HostRecord, HostRecord>>> latestAssignment) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
+
+        List<Object> arguments = new ArrayList();
+        arguments.add(latestAssignment);
+        for(HostRecord coordinator: coordinatorAssignmentHash.values() )
+        {
+            Message response = new Message(MessageType.REPLACE_BROKER, arguments);
+            TcpClient sock = new TcpClient(coordinator.getHost(), coordinator.getPort());
+            sock.setHandler( this, response );
+            sock.run();
+        }
+    }
+    public void monitorCluster() throws InterruptedException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         //Set<HostRecord> brokerList;
         System.out.println("brokerList.size() = " + brokerList.size());
         while (true) {
@@ -328,19 +341,32 @@ public class Zookeeper {
             Thread.sleep(MONITOR_CLUSTER_INTERVAL);
             System.out.println("After tempBrokerList.size() = " + tempBrokerList.size());
             if ( !tempBrokerList.isEmpty() ) {
-                Map< String, Map< Integer,Pair<HostRecord,HostRecord> > > newAssignment = new HashMap<>();
-                for ( HostRecord h: tempBrokerList) {
-                    // B -> T-P
-                    brokerList.remove(h);
-                    Map<String, Integer> brokenBrokerTopicPartitionMap = brokerToTopicPartitionHash.get(h);
-                    for ( Map.Entry<String, Integer> pair : brokenBrokerTopicPartitionMap.entrySet()) {
-                        System.out.println(pair.getKey() + " " + pair.getValue());
-                    }
-
+                for(HostRecord item: tempBrokerList) {
+                    System.out.println("tempBrokerList : " + item);
                 }
+
+                Map<String, Map<Integer, Map<HostRecord, HostRecord>>> latestAssignment = reAssignLeader(tempBrokerList);
+                sendLastestAssignmentToCoordinator(latestAssignment);
+//                Map< String, Map< Integer,Pair<HostRecord,HostRecord> > > newAssignment = new HashMap<>();
+//                for ( HostRecord h: tempBrokerList) {
+//                    // B -> T-P
+////                    brokerList.remove(h);
+////                    reAssignLeader()
+////                    String topic, Integer partition, HostRecord leader, HashSet<HostRecord>
+////                    sendSetTopicPartitionLeader(brokerToTopi);
+//
+////                    Map<String, Integer> brokenBrokerTopicPartitionMap = brokerToTopicPartitionHash.get(h);
+////                    for ( Map.Entry<String, Integer> pair : brokenBrokerTopicPartitionMap.entrySet()) {
+////                        System.out.println(pair.getKey() + " " + pair.getValue());
+//////                        sendSetTopicPartitionLeader(pair.getKey(), pair.getValue(), );
+////                    }
+//
+//                }
             }
         }
     }
+
+
 
     public void updateCluster(HostRecord healthyHeartBeat) {
         System.out.println("Zookeeper says hi! " + healthyHeartBeat.getPort());
