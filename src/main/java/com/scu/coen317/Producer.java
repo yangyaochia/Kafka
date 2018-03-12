@@ -65,7 +65,7 @@ public class Producer {
             argument.add(thisProducer);
             Message request = new Message(MessageType.CREATE_TOPIC, argument);
             HostRecord defaultBroker = defaultBrokers.iterator().next();
-            System.out.println("Send createTopic request to default broker: " + defaultBroker.getPort());
+            System.out.println("Producer > Send createTopic request to default broker: " + defaultBroker.getPort());
             TcpClient sock = null;
 
 
@@ -77,7 +77,7 @@ public class Producer {
                     sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
                     break;
                 } catch (IOException e) {
-                    System.out.println("The first default broker is down");
+                    System.out.println("Producer > The first default broker " + defaultBroker.getPort() + " is not open.");
                     defaultBrokers.remove(defaultBrokers.iterator().next());
 //                    ack = true;
                 }
@@ -109,11 +109,11 @@ public class Producer {
 
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println("Receiving brokers information......");
+        System.out.println("Producer > Receiving brokers information......");
         topicsMember.remove(topic);
         topicsMember.put(topic, partitionLeaders);
         for ( Map.Entry<Integer,HostRecord> pair : topicsMember.get(topic).entrySet() ) {
-            System.out.println("This topic is : '" + topic + "' partition : " + pair.getKey() + "  Broker : " + pair.getValue());
+            System.out.println("Producer > This topic is : '" + topic + "' partition : " + pair.getKey() + "  Broker : " + pair.getValue());
             defaultBrokers.add(pair.getValue());
         }
         synchronized (this) {

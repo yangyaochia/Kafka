@@ -10,7 +10,7 @@ public class A_P_8000 {
         p.addDefaultBroker("localhost",9002);
 //        p.printDefaultBrokerList();
 ////
-        p.createTopic("Distributed System Topic", 2,3);
+        p.createTopic("Distributed System Topic", 1,1);
 //        p.createTopic("Santa Clara Univ Topic", 3,1);
 ////
 //        p.printDefaultBrokerList();

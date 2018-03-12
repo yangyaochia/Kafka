@@ -133,7 +133,7 @@ public class Broker {
         }
         synchronized (this) {
             topicsPartitionLeader.put(topic.getName(), partitionLeaders);
-            System.out.println(topicsPartitionLeader.get(topic.getName()).size());
+//            System.out.println(topicsPartitionLeader.get(topic.getName()).size());
             notify();
         }
         return;
@@ -197,8 +197,8 @@ public class Broker {
     }
     public void informOtherBrokers(Message request, HashSet<HostRecord> otherBrokers) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         for ( HostRecord h : otherBrokers ) {
-            System.out.println("This leader host " + thisHost.getPort());
-            System.out.println("Send to " + h.getPort());
+            System.out.println("Broker > This leader host " + thisHost.getPort());
+            System.out.println("Broker > Send to " + h.getPort());
             TcpClient sock = new TcpClient(h.getHost(), h.getPort());
             sock.setHandler( this, request);
             sock.run();
@@ -247,11 +247,11 @@ public class Broker {
         TcpClient sock = new TcpClient(producer.getHost(),producer.getPort());
         sock.setHandler(this, response);
         sock.run();
-        System.out.println(" *** Published message success from " + producer.getPort() + " *** " );
+        System.out.println("Broker > Published message success from Producer" + producer.getPort() + " *** " );
         return new Message(MessageType.ACK);
     }
     public void publishMessageAck(String message, String ackMessage) {
-        System.out.println(" *** " + message + " " + ackMessage + " *** ");
+        System.out.println("Broker > " + message + " " + ackMessage + " *** ");
     }
 
     public Message giveMessage(String groudID, String topic, Integer partition, HostRecord consumer, Integer maxFetchSize) throws InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException, IOException {
@@ -272,21 +272,21 @@ public class Broker {
         List<String> sendingMessages;
         synchronized (this) {
             List<String> topicPartitionMessage = topicMessage.get(topic).get(partition);
-            System.out.println("Current message size : " + topicPartitionMessage.size());
+            System.out.println("Broker > Current message size : " + topicPartitionMessage.size());
             int offset = consumerGroup.get(groudID);
-            System.out.println("offset : " + offset);
+            System.out.println("Broker > offset : " + offset);
             if ( offset == topicPartitionMessage.size() ){
                 return new Message(MessageType.ACK);
             }
             int maxOffset = Integer.min(offset + maxFetchSize, topicPartitionMessage.size());
             consumerGroup.put(groudID,maxOffset);
-            System.out.println("offset : " + offset + " maxOffset : " + maxOffset);
+            System.out.println("Broker > offset : " + offset + " maxOffset : " + maxOffset);
             sendingMessages = new ArrayList<>(topicPartitionMessage.subList(offset, maxOffset));
         }
 
-        System.out.println("sendingMessages.size() : " + sendingMessages.size());
-        for (String s : sendingMessages )
-            System.out.println(s);
+        System.out.println("Broker > sendingMessages.size() : " + sendingMessages.size());
+//        for (String s : sendingMessages )
+//            System.out.println(s);
 //            list<String>, String, HostRecord
         List<Object> argument = new ArrayList<>();
         argument.add(sendingMessages);
@@ -303,8 +303,8 @@ public class Broker {
     ////////////////// Yao-Chia
 
     public void receiveNewBrokerRegistrationAck(String message) {
-        System.out.println(" *** Register Success *** ");
-        System.out.println(message);
+//        System.out.println("Broker > Register Success *** ");
+//        System.out.println(message);
 
         return;
     }
@@ -369,7 +369,7 @@ public class Broker {
         } else {
             topic_subscribedConsumer.put(topic, new ArrayList(Arrays.asList(consumer)));
             topic_consumer.put(groupId, topic_subscribedConsumer);
-            System.out.println();
+//            System.out.println();
             List<String> topics = group_topic.getOrDefault(groupId, new ArrayList<>());
             topics.add(topic);
             group_topic.put(groupId, topics);
@@ -483,7 +483,7 @@ public class Broker {
 //        }
 
         List<Object> arguments = new ArrayList<>();
-        arguments.add(" *** Consumer Registered Successful *** ");
+        arguments.add("Broker > *** Consumer Registered Successful *** ");
         Message response = new Message(MessageType.ACK, arguments, true);
         System.out.println("Broker > Consumer added into the group successful");
         return response;
@@ -514,7 +514,7 @@ public class Broker {
                                 HostRecord broker = eachPartition.getValue();
                                 if (eachPartition.getValue().equals(broker)) {
                                     changeSet.add(new Pair(groupId,consumer));
-                                    System.out.println("add " + consumer + " to set");
+                                    System.out.println("Broker > add " + consumer + " to set");
                                     HostRecord newBroker = partitionBroker.get(partition).get(broker);
                                     balanceMap.get(groupId).get(consumer).get(curTopic).put(partition, newBroker);
                                 }
@@ -546,7 +546,7 @@ public class Broker {
     public void listen() throws
             IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         listenSocket.listen();
-        System.out.println("The server is listening at " + thisHost.toString());
+        System.out.println("Broker > The server is listening at " + thisHost.getHost() + " " + thisHost.getPort());
 
     }
     public void sendHeartBeat() throws InterruptedException {
