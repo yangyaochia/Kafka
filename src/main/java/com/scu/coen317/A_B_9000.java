@@ -19,7 +19,7 @@ public class A_B_9000 {
         //b1.setTopicPartitionLeader("topic1", 0, new HostRecord("localhost", 9000), (HashSet<HostRecord>) replicationHolders);
         b1.registerToZookeeper();
         b1.listen();
-        b1.sendHeartBeat();
+//        b1.sendHeartBeat();
 
 
 //        List<Object> argument = new ArrayList<>();

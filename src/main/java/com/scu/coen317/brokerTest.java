@@ -313,6 +313,7 @@ public class brokerTest{
 
     public static void main(String argv[]) throws Exception {
         brokerTest p = new brokerTest("localhost", 9008, "localhost", 2181);
+
 //        brokerTest p2 = new brokerTest("localhost", 9007, "localhost", 2181);
 //        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
 //        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
