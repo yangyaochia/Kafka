@@ -140,7 +140,6 @@ public class Consumer {
             Thread.sleep(MAX_POLL_INTERVAL_MS);
             for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : subscribedTopicPartitions.entrySet()) {
 
-//                System.out.println("Hello?");
                 String topic = eachTopic.getKey();
                 Map<Integer, HostRecord> partitions = eachTopic.getValue();
                 for (Map.Entry<Integer, HostRecord> partition : partitions.entrySet()) {
@@ -156,7 +155,6 @@ public class Consumer {
                         arguments.add(thisHost);
                         arguments.add(MAX_FETCH_SIZE);
                         Message request = new Message(MessageType.PULLMESSAGE, arguments);
-                        System.out.println("Ready to poll!!!");
                         client.setHandler(this, request);
                         client.run();
                     } catch (IOException e) {
@@ -170,13 +168,16 @@ public class Consumer {
     }
 
     public Message dealWithMessage(ArrayList<String> messages, String topic, HostRecord broker) {
-        System.out.println("Enter consumer deal!!!");
         for (String message : messages) {
-            System.out.println(message);
+            System.out.println("Conserme at port " + thisHost.getPort() + " > * Receive message *");
+            System.out.println("                    From : " + broker.getPort());
+            System.out.println("                   Topic : " + topic);
+            System.out.println("                 Content : " + message);
         }
         List<Object> arguments = new ArrayList<>();
-        arguments.add("Message in topic of " + topic
-                + " received successful from " + broker);
+//        arguments.add(" *** Message in topic of " + topic
+//                + " received successful from " + broker + " *** ");
+        arguments.add("");
 
         Message responseAck = new Message(MessageType.ACK, arguments, true);
         return responseAck;

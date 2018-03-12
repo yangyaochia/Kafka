@@ -47,6 +47,7 @@ public class Broker {
 
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+
         this.thisHost = new HostRecord(host, port);
         this.defaultZookeeper = new HostRecord(zookeeperHost, zookeeperPort);
 
@@ -88,7 +89,7 @@ public class Broker {
         // This broker does now know the topic, then ask the zookeeper
         topicsPartitionLeader.remove(topicName);
         if ( !topicsPartitionLeader.containsKey(topicName) ) {
-            System.out.println("Send get topic request to zookeeper!!");
+//            System.out.println("Send get topic request to zookeeper!!");
             List<Object> argument = new ArrayList<>();
             argument.add(topic);
             argument.add(thisHost);
@@ -105,14 +106,14 @@ public class Broker {
                 wait();
             }
         }
-        System.out.println(" ----------- new assigned partition leader : " + topicsPartitionLeader.get(topicName).toString());
+//        System.out.println(" ----------- new assigned partition leader : " + topicsPartitionLeader.get(topicName).toString());
         List<Object> argument = new ArrayList<>();
         argument.add(topicName);
         argument.add(topicsPartitionLeader.get(topicName) );
         response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_PRODUCER, argument);
-        System.out.println(" ----------- new assigned partition leader : " + topicsPartitionLeader.get(topicName).toString());
+//        System.out.println(" ----------- new assigned partition leader : " + topicsPartitionLeader.get(topicName).toString());
 
-        System.out.println(producer.getPort());
+//        System.out.println(producer.getPort());
 
         TcpClient sock = new TcpClient(producer.getHost(), producer.getPort());
         sock.setHandler(this, response);
@@ -122,15 +123,17 @@ public class Broker {
         return new Message(MessageType.ACK);
     }
     public void topicAssignmentToProducer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println("why????");
+//        System.out.println("why????");
+        System.out.println("Broker > Partition leader assigning ");
         for (Integer name: partitionLeaders.keySet()){
             String key =name.toString();
             partitionLeaders.get(name).toString();
-            System.out.println("Partition " +key.toString() + " at " + partitionLeaders.get(name).getHost() + " "+ partitionLeaders.get(name).getPort());
+//            System.out.println("Broker > Partition " +key.toString() + " at " + partitionLeaders.get(name).getHost() + " "+ partitionLeaders.get(name).getPort());
+            System.out.println("Broker > Partition leader assigned. ");
         }
         synchronized (this) {
             topicsPartitionLeader.put(topic.getName(), partitionLeaders);
-            System.out.println(topicsPartitionLeader.get(topic.getName()).size());
+//            System.out.println(topicsPartitionLeader.get(topic.getName()).size());
             notify();
         }
         return;
@@ -167,10 +170,10 @@ public class Broker {
             consumerGroupOffset.get(topic).put(partition,new HashMap<>());
         }
 
-        System.out.println("This host : " + thisHost.getPort());
-        System.out.println("Leader : " + leader.getPort());
+//        System.out.println("This host : " + thisHost.getPort());
+        System.out.println("Broker > Leader : " + leader.getPort());
         for ( HostRecord h: replicationHolders ) {
-            System.out.println("Replication : " + h.getPort());
+            System.out.println("Broker > Replication : " + h.getPort());
         }
 //        System.out.println();
         if ( leader.equals(thisHost) ) {
@@ -194,8 +197,8 @@ public class Broker {
     }
     public void informOtherBrokers(Message request, HashSet<HostRecord> otherBrokers) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         for ( HostRecord h : otherBrokers ) {
-            System.out.println("This leader host " + thisHost.getPort());
-            System.out.println("Send to " + h.getPort());
+            System.out.println("Broker > This leader host " + thisHost.getPort());
+            System.out.println("Broker > Send to " + h.getPort());
             TcpClient sock = new TcpClient(h.getHost(), h.getPort());
             sock.setHandler( this, request);
             sock.run();
@@ -209,9 +212,9 @@ public class Broker {
 
         List<String> msgs = topicMessage.get(topic).get(partition);
         synchronized (this) {
-            System.out.println("topic partition's size is " + topicMessage.get(topic).get(partition).size());
+//            System.out.println("topic partition's size is " + topicMessage.get(topic).get(partition).size());
             msgs.add(message);
-            System.out.println("topic partition's size is " + topicMessage.get(topic).get(partition).size());
+//            System.out.println("topic partition's size is " + topicMessage.get(topic).get(partition).size());
         }
 
 //        for ( String m : msgs)
@@ -219,12 +222,12 @@ public class Broker {
 
         // Send publishMessage to the corresponding topic partition replication holders
         Set<HostRecord> replicationHolders = topicPartitionReplicationBrokers.get(topic).get(partition);
-        System.out.println("This host : " + thisHost.getHost() + " " + thisHost.getPort() );
-        System.out.println("!replicationHolders.contains(thisHost) = " + !replicationHolders.contains(thisHost));
-        for ( HostRecord h : replicationHolders )
-            System.out.println(h.getPort());
+//        System.out.println("This host : " + thisHost.getHost() + " " + thisHost.getPort() );
+//        System.out.println("!replicationHolders.contains(thisHost) = " + !replicationHolders.contains(thisHost));
+//        for ( HostRecord h : replicationHolders )
+//            System.out.println(h.getPort());
         if ( !replicationHolders.contains(thisHost)) {
-            System.out.println("Hello!!!");
+//            System.out.println("Hello!!!");
             List<Object> argument = new ArrayList<>();
             argument.add(topic);
             argument.add(partition);
@@ -238,18 +241,17 @@ public class Broker {
 
         List<Object> arguments = new ArrayList<>();
         arguments.add(message);
-        arguments.add("Published Successful");
+        arguments.add("");
+//        arguments.add(" *** Created Successful *** ");
         Message response = new Message(MessageType.PUBLISH_MESSAGE_ACK, arguments);
         TcpClient sock = new TcpClient(producer.getHost(),producer.getPort());
         sock.setHandler(this, response);
         sock.run();
-
+        System.out.println("Broker > Published message success from Producer" + producer.getPort() + " *** " );
         return new Message(MessageType.ACK);
-//        return new Message(MessageType.ACK);
-//        return new Message(MessageType.ACK);
     }
     public void publishMessageAck(String message, String ackMessage) {
-        System.out.println("This is ack" + message + " " + ackMessage);
+        System.out.println("Broker > " + message + " " + ackMessage + " *** ");
     }
 
     public Message giveMessage(String groudID, String topic, Integer partition, HostRecord consumer, Integer maxFetchSize) throws InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException, IOException {
@@ -265,26 +267,26 @@ public class Broker {
         if ( !consumerGroup.containsKey(groudID) ) {
             consumerGroup.put(groudID,0);
         }
-        System.out.println("ready to give message to consumer!!!");
-        System.out.println("Topic : " + topic + " partition : " + partition);
+//        System.out.println("Broker > ready to give message to consumer!!!");
+//        System.out.println("Topic : " + topic + " partition : " + partition);
         List<String> sendingMessages;
         synchronized (this) {
             List<String> topicPartitionMessage = topicMessage.get(topic).get(partition);
-            System.out.println("Current message size : " + topicPartitionMessage.size());
+            System.out.println("Broker > Current message size : " + topicPartitionMessage.size());
             int offset = consumerGroup.get(groudID);
-            System.out.println("offset : " + offset);
+            System.out.println("Broker > offset : " + offset);
             if ( offset == topicPartitionMessage.size() ){
                 return new Message(MessageType.ACK);
             }
             int maxOffset = Integer.min(offset + maxFetchSize, topicPartitionMessage.size());
             consumerGroup.put(groudID,maxOffset);
-            System.out.println("offset : " + offset + " maxOffset : " + maxOffset);
+            System.out.println("Broker > offset : " + offset + " maxOffset : " + maxOffset);
             sendingMessages = new ArrayList<>(topicPartitionMessage.subList(offset, maxOffset));
         }
 
-        System.out.println("sendingMessages.size() : " + sendingMessages.size());
-        for (String s : sendingMessages )
-            System.out.println(s);
+        System.out.println("Broker > sendingMessages.size() : " + sendingMessages.size());
+//        for (String s : sendingMessages )
+//            System.out.println(s);
 //            list<String>, String, HostRecord
         List<Object> argument = new ArrayList<>();
         argument.add(sendingMessages);
@@ -301,8 +303,8 @@ public class Broker {
     ////////////////// Yao-Chia
 
     public void receiveNewBrokerRegistrationAck(String message) {
-        System.out.println("Register Success");
-        System.out.println(message);
+//        System.out.println("Broker > Register Success *** ");
+//        System.out.println(message);
 
         return;
     }
@@ -336,7 +338,7 @@ public class Broker {
         tcpClient.setHandler(this,request);
         tcpClient.run();
 
-        Message ack = new Message(MessageType.ACK, Collections.singletonList("Get coordinator successful"), true);
+        Message ack = new Message(MessageType.ACK, Collections.singletonList(" *** Get coordinator successful *** "), true);
         return ack;
     }
 
@@ -344,16 +346,16 @@ public class Broker {
 
         if (storeInfoAndGetTopic(topic, groupId, consumer)) {
             rebalance(groupId, consumer);
-            return new Message(MessageType.ACK, Collections.singletonList("subscribe"), true);
+            return new Message(MessageType.ACK, Collections.singletonList(" *** Subscribe successful *** "), true);
         }
-        return new Message(MessageType.ACK, Collections.singletonList("subscribed failed, no such topic found in the system"), true);
+        return new Message(MessageType.ACK, Collections.singletonList(" *** Subscribed failed, no such topic found in the system"), true);
     }
 
     public void updateCoordinator(String groupId, HostRecord coordinator) {
         System.out.println("add coordinator " + coordinator.getHost() + " " + coordinator.getPort()
                 + " to " + groupId);
         topics_coordinator.put(groupId, coordinator);
-        System.out.println("add coordinator " + coordinator.getHost() + " " + coordinator.getPort()
+        System.out.println("Broker > Added coordinator " + coordinator.getHost() + " " + coordinator.getPort()
                 + " to " + groupId);
     }
 
@@ -370,7 +372,7 @@ public class Broker {
         } else {
             topic_subscribedConsumer.put(topic, new ArrayList(Arrays.asList(consumer)));
             topic_consumer.put(groupId, topic_subscribedConsumer);
-            System.out.println();
+//            System.out.println();
             List<String> topics = group_topic.getOrDefault(groupId, new ArrayList<>());
             topics.add(topic);
             group_topic.put(groupId, topics);
@@ -470,7 +472,7 @@ public class Broker {
 
     public void updateTopicsPartitionLeaderCache(String topic, HashMap<Integer, HostRecord> topicPartitionLeaders) {
         topicsPartitionLeaderCache.put(topic, topicPartitionLeaders);
-        System.out.println("topic partitions update");
+        System.out.println("Broker > Topic partitions update.");
     }
 
     public Message addConsumerToGroup(String groupId, HostRecord consumer) throws IOException {
@@ -484,9 +486,9 @@ public class Broker {
 //        }
 
         List<Object> arguments = new ArrayList<>();
-        arguments.add("Consumer Registered Successful");
+        arguments.add("Broker > *** Consumer Registered Successful *** ");
         Message response = new Message(MessageType.ACK, arguments, true);
-        System.out.println("consumer added into the group successful");
+        System.out.println("Broker > Consumer added into the group successful");
         return response;
     }
 
@@ -498,7 +500,7 @@ public class Broker {
 
     public void replaceTopicPartitionLeader(HashMap<String, Map<Integer, Map<HostRecord, HostRecord>>> newInfo) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InterruptedException, IOException {
         // Map<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> balanceMap;
-        System.out.println("replaceTopicPartitionLeader start...");
+        System.out.println("Broker > Topic partition leaders start to replace...");
         Set<Pair<String, HostRecord>> changeSet = new HashSet<>();
 
         for (Map.Entry<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> eachGroup : balanceMap.entrySet()) {
@@ -515,7 +517,7 @@ public class Broker {
                                 HostRecord broker = eachPartition.getValue();
                                 if (eachPartition.getValue().equals(broker)) {
                                     changeSet.add(new Pair(groupId,consumer));
-                                    System.out.println("add " + consumer + " to set");
+                                    System.out.println("Broker > add " + consumer + " to set");
                                     HostRecord newBroker = partitionBroker.get(partition).get(broker);
                                     balanceMap.get(groupId).get(consumer).get(curTopic).put(partition, newBroker);
                                 }
@@ -525,7 +527,7 @@ public class Broker {
 
                         for (Pair<String, HostRecord> consumerNeedToReassign : changeSet) {
                             assignPartitionToConsumer(consumerNeedToReassign.getValue(), balanceMap.get(groupId).get(consumerNeedToReassign.getValue()));
-                            System.out.println("new replaceTopicPartitionLeader send...");
+                            System.out.println("Broker > Topic partition leaders updated.");
                         }
                     }
                 }
@@ -537,28 +539,6 @@ public class Broker {
         topicsPartitionLeader.put(topic, topicPartitionLeaders);
     }
 
-    public Message test1() throws
-            IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-//        TcpClient client = new TcpClient("localhost", 9007);
-//        Message request = new Message(MessageType.TEST2);
-//        client.setHandler(this, request);
-//        client.run();
-
-        TcpClient client = new TcpClient("localhost", 10001);
-        Message request = new Message(MessageType.TEST2);
-        client.setHandler(this, request);
-        client.run();
-        return new Message(MessageType.ACK, Collections.singletonList("broker received the request from consumer"), true);
-    }
-
-    public Message test2() throws
-            IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-        TcpClient client = new TcpClient("localhost", 1001);
-        Message request = new Message(MessageType.ACK, Collections.singletonList("broker2 send request to consumer"), true);
-        client.setHandler(this, request);
-        client.run();
-        return new Message(MessageType.ACK, Collections.singletonList("broker2 received the request from broker1"), true);
-    }
 
 
 ////////////////// Xin-Zhu
@@ -569,6 +549,7 @@ public class Broker {
     public void listen() throws
             IOException, ClassNotFoundException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         listenSocket.listen();
+        System.out.println("Broker > The server is listening at " + thisHost.getHost() + " " + thisHost.getPort());
 
     }
     public void sendHeartBeat() throws InterruptedException {

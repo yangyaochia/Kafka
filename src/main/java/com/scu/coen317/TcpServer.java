@@ -36,7 +36,7 @@ public class TcpServer {
     }
 
     public TcpServer(int port) {
-        System.out.println("The server is listening at " + port);
+
         if (server != null && !server.isClosed()) return;
         if (clients == null) clients = new ArrayList<TcpClient>();
         try {
@@ -125,6 +125,7 @@ public class TcpServer {
             }
 
             public void onClose(int client_id) {
+
 //                System.out.println("* <" + client_id + "> closed");
             }
         };

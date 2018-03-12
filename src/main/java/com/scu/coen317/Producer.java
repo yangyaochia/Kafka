@@ -32,6 +32,8 @@ public class Producer {
     boolean updateTopicPartitionLeaderACK = false;
     boolean publishMessageACK = false;
 
+    final int MONITOR_CLUSTER_INTERVAL = 4000;
+
     public Producer (String host, int port, String defaultBrokerIp, int defaultBrokerPort) throws IOException {
         this.host = host;
         this.port = port;
@@ -63,7 +65,7 @@ public class Producer {
             argument.add(thisProducer);
             Message request = new Message(MessageType.CREATE_TOPIC, argument);
             HostRecord defaultBroker = defaultBrokers.iterator().next();
-            System.out.println("Send createTopic request to default broker: " + defaultBroker.getPort());
+            System.out.println("Producer > Send createTopic request to default broker: " + defaultBroker.getPort());
             TcpClient sock = null;
 
 
@@ -75,7 +77,7 @@ public class Producer {
                     sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
                     break;
                 } catch (IOException e) {
-                    System.out.println("The first default broker is down");
+                    System.out.println("Producer > The first default broker " + defaultBroker.getPort() + " is not open.");
                     defaultBrokers.remove(defaultBrokers.iterator().next());
 //                    ack = true;
                 }
@@ -107,11 +109,11 @@ public class Producer {
 
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println("我來ＵＰＤＡＴＥ producer資料惹");
+        System.out.println("Producer > Receiving brokers information......");
         topicsMember.remove(topic);
         topicsMember.put(topic, partitionLeaders);
         for ( Map.Entry<Integer,HostRecord> pair : topicsMember.get(topic).entrySet() ) {
-            System.out.println("This topic is " + topic + " " + pair.getKey() + " " + pair.getValue());
+            System.out.println("Producer > This topic is : '" + topic + "' partition : " + pair.getKey() + "  Broker : " + pair.getValue());
             defaultBrokers.add(pair.getValue());
         }
         synchronized (this) {
@@ -139,7 +141,7 @@ public class Producer {
         if ( partition < 0 ) {
             partition += topicsMember.get(topic).size();
         }
-        System.out.println(topic + " " + message + " " + partition);
+//        System.out.println(topic + " " + message + " " + partition);
         HostRecord partitionLeader = null;
 
         List<Object> argument = new ArrayList<>();
@@ -149,33 +151,25 @@ public class Producer {
         argument.add(thisProducer);
         Message request = new Message(MessageType.PUBLISH_MESSAGE, argument);
 
-        int leaderAliveChance = 1;
-        while ( true ) {//leaderAliveChance >= 0) {
+        while ( true ) {
             partitionLeader = topicsMember.get(topic).get(partition);
-            System.out.println(partitionLeader.getPort());
+//            System.out.println(partitionLeader.getPort());
             try {
                 sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
-                System.out.println("Determine the partition leader " + partitionLeader.getPort());
+//                System.out.println("Determine the partition leader " + partitionLeader.getPort());
                 break;
             } catch (IOException e) {
 //                e.printStackTrace();
                 topicsMember.remove(topic);
-                leaderAliveChance--;
-//                ack = true;
-                if ( leaderAliveChance < 0 )
-                    return false;
                 // To indicate the topic partition leader broken case
-                Thread.sleep(10000);
+                Thread.sleep((long) (MONITOR_CLUSTER_INTERVAL*1.5));
                 createTopic(topic,1,1);
-//                while ( !createTopic(topic,1,1) ) {
-//
-//                }
             }
         }
 
 
 //        sock.setReadInterval(10000);this, request);
-
+        System.out.println("Producer > Sending message " + message + " to " + partitionLeader.getPort());
         TcpServer listenSock = new TcpServer(this.port);
         listenSock.setHandler(this);
         listenSock.listen();
@@ -198,7 +192,7 @@ public class Producer {
     }
 
     public void publishMessageAck(String message, String ackMessage) {
-        System.out.println("This is Ack message " + message + " " + ackMessage);
+//        System.out.println(" *** " + message + " " + ackMessage + " ***");
         synchronized (this) {
             publishMessageACK = true;
             notify();
@@ -225,9 +219,9 @@ public class Producer {
     }
 
     public void printDefaultBrokerList() {
-        System.out.println("Default broker list");
+        System.out.println("Producer > Default broker list");
         for ( HostRecord h : defaultBrokers )
-            System.out.println(h);
+            System.out.println("\t" + h);
     }
 
 }
