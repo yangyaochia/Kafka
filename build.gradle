@@ -1,0 +1,7 @@
+apply plugin: 'idea'
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+project.group = 'com.scu.COEN317'
+project.version = 'without-db'
