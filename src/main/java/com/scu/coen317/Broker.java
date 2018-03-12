@@ -17,7 +17,7 @@ public class Broker {
     // 某topic, partition 的其他組員是誰
     // Map<topic, Map<partition, message>>
     Map<String, Map<Integer, List<String>>> topicMessage;
-    Map<String, Map<Integer, HostRecord>> topicsPartitionLeader;
+    DataCache<String, Map<Integer, HostRecord>> topicsPartitionLeader;
 
     // Map<topic,Map<partition,List<replicationHolders>>
     Map<String, Map<Integer, Set<HostRecord>>> topicPartitionReplicationBrokers;
@@ -43,7 +43,7 @@ public class Broker {
     // Map<topic,Map<partition,Map<groupId,offset>>>
     Map<String, Map<Integer, Map<String,Integer>>> consumerGroupOffset;
 
-    final int heartBeatInterval = 3000;
+    final int heartBeatInterval = 8000;
 
 
     public Broker(String host, int port, String zookeeperHost, int zookeeperPort) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
@@ -54,7 +54,8 @@ public class Broker {
         listenSocket.setHandler(this);
 
         topicMessage = new HashMap<>();
-        topicsPartitionLeader = new HashMap();
+        topicsPartitionLeader = new DataCache<>();
+        topicsPartitionLeader.setTimeout(10);
         topicPartitionReplicationBrokers = new HashMap<>();
         topic_consumer = new HashMap<>();
 
@@ -85,7 +86,9 @@ public class Broker {
 //            System.out.println("This topic is " + topic + " " + pair.getKey() + " " + pair.getValue());
 //        }
         // This broker does now know the topic, then ask the zookeeper
+        topicsPartitionLeader.remove(topicName);
         if ( !topicsPartitionLeader.containsKey(topicName) ) {
+            System.out.println("Send get topic request to zookeeper!!");
             List<Object> argument = new ArrayList<>();
             argument.add(topic);
             argument.add(thisHost);
@@ -102,6 +105,7 @@ public class Broker {
                 wait();
             }
         }
+        System.out.println(" ----------- new assigned partition leader : " + topicsPartitionLeader.get(topicName).toString());
         List<Object> argument = new ArrayList<>();
         argument.add(topicName);
         argument.add(topicsPartitionLeader.get(topicName) );
@@ -118,7 +122,7 @@ public class Broker {
         return new Message(MessageType.ACK);
     }
     public void topicAssignmentToProducer(Topic topic, HashMap<Integer,HostRecord> partitionLeaders) {
-//        System.out.println("why????");
+        System.out.println("why????");
         for (Integer name: partitionLeaders.keySet()){
             String key =name.toString();
             partitionLeaders.get(name).toString();

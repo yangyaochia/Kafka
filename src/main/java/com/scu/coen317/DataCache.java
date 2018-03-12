@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 public class DataCache<K, V> {
-    private final long mDefaultTimeout = 5000;
+    private final long mDefaultTimeout = 15;
     private long mTimeout = 0;
     private HashMap<K, DataValue<V>> dataMap;
 
@@ -26,7 +26,8 @@ public class DataCache<K, V> {
         DataValue<V> data = dataMap.get(key);
         V result = null;
         if (data != null) {
-            long diff = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - data.insertTime);
+//            long diff = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - data.insertTime);
+            long diff = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - data.insertTime);
             if (diff >= mTimeout) {
                 dataMap.remove(key);
                 data.value = null;
@@ -37,6 +38,9 @@ public class DataCache<K, V> {
     }
 
     public boolean containsKey(K key) {
+        if (dataMap.containsKey(key)) {
+            this.get(key);
+        }
         return dataMap.containsKey(key);
     }
 
@@ -46,6 +50,12 @@ public class DataCache<K, V> {
 
     public long getTimeout() {
         return mDefaultTimeout;
+    }
+
+    public void remove(K key) {
+        if (dataMap.containsKey(key)) {
+            dataMap.remove(key);
+        }
     }
 
     private final class DataValue<T> {
