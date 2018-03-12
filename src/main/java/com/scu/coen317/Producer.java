@@ -109,11 +109,11 @@ public class Producer {
 
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
-        System.out.println("我來ＵＰＤＡＴＥ producer資料惹");
+        System.out.println("Receiving brokers information......");
         topicsMember.remove(topic);
         topicsMember.put(topic, partitionLeaders);
         for ( Map.Entry<Integer,HostRecord> pair : topicsMember.get(topic).entrySet() ) {
-            System.out.println("This topic is " + topic + " " + pair.getKey() + " " + pair.getValue());
+            System.out.println("This topic is : '" + topic + "' partition : " + pair.getKey() + "  Broker : " + pair.getValue());
             defaultBrokers.add(pair.getValue());
         }
         synchronized (this) {
@@ -141,7 +141,7 @@ public class Producer {
         if ( partition < 0 ) {
             partition += topicsMember.get(topic).size();
         }
-        System.out.println(topic + " " + message + " " + partition);
+//        System.out.println(topic + " " + message + " " + partition);
         HostRecord partitionLeader = null;
 
         List<Object> argument = new ArrayList<>();
@@ -153,23 +153,23 @@ public class Producer {
 
         while ( true ) {
             partitionLeader = topicsMember.get(topic).get(partition);
-            System.out.println(partitionLeader.getPort());
+//            System.out.println(partitionLeader.getPort());
             try {
                 sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
-                System.out.println("Determine the partition leader " + partitionLeader.getPort());
+//                System.out.println("Determine the partition leader " + partitionLeader.getPort());
                 break;
             } catch (IOException e) {
 //                e.printStackTrace();
                 topicsMember.remove(topic);
                 // To indicate the topic partition leader broken case
-                Thread.sleep((long) (MONITOR_CLUSTER_INTERVAL*1.4));
+                Thread.sleep((long) (MONITOR_CLUSTER_INTERVAL*1.5));
                 createTopic(topic,1,1);
             }
         }
 
 
 //        sock.setReadInterval(10000);this, request);
-
+        System.out.println("Sending message to " + partitionLeader.getPort());
         TcpServer listenSock = new TcpServer(this.port);
         listenSock.setHandler(this);
         listenSock.listen();

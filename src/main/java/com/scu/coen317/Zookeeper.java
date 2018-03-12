@@ -273,18 +273,18 @@ public class Zookeeper {
     public void monitorCluster() throws InterruptedException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException
     {
         //Set<HostRecord> brokerList;
-        System.out.println("brokerList.size() = " + brokerList.size());
+//        System.out.println("brokerList.size() = " + brokerList.size());
         while (true)
         {
             tempBrokerList = new HashSet<>(brokerList);
-            System.out.println("Before tempBrokerList.size() = " + tempBrokerList.size());
+//            System.out.println("Before tempBrokerList.size() = " + tempBrokerList.size());
             Thread.sleep(MONITOR_CLUSTER_INTERVAL);
-            System.out.println("After tempBrokerList.size() = " + tempBrokerList.size());
+//            System.out.println("After tempBrokerList.size() = " + tempBrokerList.size());
             if (!tempBrokerList.isEmpty())
             {
                 for(HostRecord item: tempBrokerList)
                 {
-                    System.out.println("tempBrokerList : " + item);
+                    System.out.println("Broken Broker's port : " + item);
                 }
                 Map<String, Map<Integer, Map<HostRecord, HostRecord>>> latestAssignment = reAssignLeader(tempBrokerList);
                 sendLastestAssignmentToCoordinator(latestAssignment);
@@ -296,7 +296,7 @@ public class Zookeeper {
 
     public void updateCluster(HostRecord healthyHeartBeat)
     {
-        System.out.println("Zookeeper says hi! " + healthyHeartBeat.getPort());
+        System.out.println("Zookeeper hears the heartbeat from " + healthyHeartBeat.getPort());
         synchronized (this)
         {
             tempBrokerList.remove(healthyHeartBeat);
@@ -557,7 +557,7 @@ public class Zookeeper {
             arguments.add(temp);
             displayBrokerList();
             Message response = new Message(MessageType.ACK, arguments, true);
-            System.out.println(brokerList.size());
+            System.out.println("In the cluster now we have " + brokerList.size() + " brokers.");
             return response;
         }
         String temp = "Already Registered";
@@ -594,6 +594,7 @@ public class Zookeeper {
     {
 
         listenSocket.listen();
+        System.out.println("The server is listening at " + this.host + " " + this.port);
     }
 
 

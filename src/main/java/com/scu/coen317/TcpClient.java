@@ -127,7 +127,7 @@ public class TcpClient {
         this.handler = new TcpClientEventHandler() {
             public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InterruptedException {
                 //handler.onMessage(cid, msg);
-                System.out.println("进入client的handler");
+//                System.out.println("enter client's handler");
 
                 if (msg.isAck()) {
 //                    System.out.println(msg.getMethodNameValue());
@@ -146,7 +146,7 @@ public class TcpClient {
             }
 
             public void onOpen() throws InterruptedException {
-                System.out.println("* socket connected");
+//                System.out.println("* socket connected");
                 int count = 1;  // Number of retry
                 that_sock.send(request);
                 while (true) {
@@ -168,7 +168,8 @@ public class TcpClient {
             }
 
             public void onClose() {
-                System.out.println("* socket closed");
+
+                //System.out.println("* socket closed");
             }
         };
     }
