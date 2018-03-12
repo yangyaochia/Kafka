@@ -103,9 +103,7 @@ public class Producer {
         }
     }
 
-    public void waitInvokeFunction(TcpServer listenSock) throws InterruptedException {
 
-    }
 
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
         System.out.println("我來ＵＰＤＡＴＥ producer資料惹");
@@ -179,9 +177,19 @@ public class Producer {
 
         sock.setHandler( this, request);
         sock.run();
-//        waitInvokeFunction(listenSock);
+        waitInvokeFunction(listenSock);
+//
 
         return true;
+    }
+
+    public void waitInvokeFunction(TcpServer listenSock) throws InterruptedException {
+        synchronized (this) {
+            while (!publishMessageACK) {
+                wait();
+            }
+            listenSock.close();
+        }
     }
 
     public void publishMessageAck(String message, String ackMessage) {

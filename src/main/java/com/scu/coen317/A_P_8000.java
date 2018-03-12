@@ -5,18 +5,18 @@ import java.util.List;
 
 public class A_P_8000 {
     public static void main(String argv[]) throws Exception {
-        Producer p = new Producer("localhost", 8001, "localhost", 9001);
+        Producer p = new Producer("localhost", 8000, "localhost", 9000);
 //        p.addDefaultBroker("localhost",9001);
-//        p.printDefaultBrokerList();
+        p.printDefaultBrokerList();
 //
-        p.createTopic("Distributed System Topic", 1,2);
-////        p.createTopic("Santa Clara Univ Topic", 3,1);
+        p.createTopic("Distributed System Topic", 1,1);
+        p.createTopic("Santa Clara Univ Topic", 1,1);
 //
-//        p.printDefaultBrokerList();
+        p.printDefaultBrokerList();
 //
-        for ( int i = 0 ; i < 150 ; i++) {
-            p.publishMessage("Distributed System Topic", "DS Topic: Message from P1 " + Integer.toString(i));
-        }
+//        for ( int i = 0 ; i < 25 ; i++) {
+//            p.publishMessage("Distributed System Topic", "DS Topic: Message from P1 " + Integer.toString(i));
+//        }
 //        for ( int i = 0 ; i < 25 ; i++) {
 //            p.publishMessage("Santa Clara Univ Topic", "SCU Topic: Message from P1 " + Integer.toString(i));
 //        }
