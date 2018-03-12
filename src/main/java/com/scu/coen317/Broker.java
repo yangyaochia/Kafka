@@ -67,7 +67,7 @@ public class Broker {
         topic_consumer = new HashMap<>();
         group_topic = new HashMap<>();
         topicsPartitionLeaderCache = new DataCache<>();
-        topicsPartitionLeaderCache.setTimeout(1);
+        topicsPartitionLeaderCache.setTimeout(20);
     }
 
     ////////////////// Yao-Chia
@@ -337,65 +337,22 @@ public class Broker {
         + " to " + groupId);
     }
 
-    public void rebalance(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-        // 让leader做rebalance
-        balanceMap.remove(groupId);
-        Map<String, Map<Integer, HostRecord>> topic_partitions = new HashMap<>();
-        for (String topic : group_topic.get(groupId)) {
-            topic_partitions.put(topic, topicsPartitionLeaderCache.get(topic));
-        }
-        while (!balanceMap.containsKey(groupId)) {
-            HostRecord leader = consumerLeader.get(groupId);
-
-            List<Object> arguments = new ArrayList<>();
-            arguments.add(topic_consumer.get(groupId));
-            // Map<String, List<HostRecord>>
-            arguments.add(topic_partitions);
-            // Map<String, Map<Integer, HostRecord>>
-
-            Message request = new Message(MessageType.REBALANCE, arguments);
-            TcpClient socket = new TcpClient(leader.getHost(), leader.getPort());
-            socket.setHandler(this, request);
-            socket.run();
-        }
-
-        assignNewBalance(groupId);
-    }
-
-    public void assignNewBalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-        // multicast
-        // Map<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> balanceMap;
-        Map<HostRecord, Map<String, Map<Integer, HostRecord>>> map = balanceMap.get(groupId);
-        for (HostRecord consumerInMap : map.keySet()) {
-            assignPartitionToConsumer(consumerInMap, map.get(consumerInMap));
-        }
-    }
-
-    public void assignPartitionToConsumer(HostRecord consumer, Map<String, Map<Integer, HostRecord>> topic_partitions) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
-        TcpClient client = new TcpClient(consumer.getHost(), consumer.getPort());
-        List<Object> arguments = new ArrayList<>();
-        arguments.add(topic_partitions);
-        Message request = new Message(MessageType.REBALANCE_RESULT, arguments);
-        client.setHandler(this, request);
-        client.run();
-    }
-
     public Message storeInfoAndGetTopicAndRebalance(String topic, String groupId, HostRecord consumer) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
-        storeInfoAndGetTopic(topic, groupId, consumer);
-        rebalance(groupId, consumer);
-        return new Message(MessageType.ACK, Collections.singletonList("subscribed"), true);
+
+        if (storeInfoAndGetTopic(topic, groupId, consumer)) {
+            rebalance(groupId, consumer);
+            return new Message(MessageType.ACK, Collections.singletonList("subscribe"), true);
+        }
+        return new Message(MessageType.ACK, Collections.singletonList("subscribed failed, no such topic found in the system"), true);
     }
 
-    public void updateConsumerLeader(String groupId, HostRecord consumer) {
-        consumerLeader.put(groupId, consumer);
-    }
-
-    public void storeInfoAndGetTopic(String topic, String groupId, HostRecord consumer) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
+    public boolean storeInfoAndGetTopic(String topic, String groupId, HostRecord consumer) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
         // Map<String, Map<String, List<HostRecord>>> topic_consumer;
         Map<String, List<HostRecord>> topic_subscribedConsumer = topic_consumer.getOrDefault(groupId, new HashMap<>());
         if (topic_subscribedConsumer.containsKey(topic)) {
             if (topic_subscribedConsumer.get(topic).contains(consumer)) {
-                return;
+                // no need to rebalance
+                return false;
             }
             topic_subscribedConsumer.get(topic).add(consumer);
             topic_consumer.put(groupId, topic_subscribedConsumer);
@@ -411,7 +368,71 @@ public class Broker {
         while (!topicsPartitionLeaderCache.containsKey(topic)) {
             getTopic(topic);
         }
+        if (topicsPartitionLeaderCache.get(topic).size() == 0) {
+            deleteTopic(groupId, topic);
+            return false;
+        }
+        return true;
+    }
 
+    public void deleteTopic(String groupId, String topic) {
+        topic_consumer.get(groupId).remove(topic);
+        topicsPartitionLeaderCache.remove(topic);
+        group_topic.remove(topic);
+    }
+
+    public void rebalance(String groupId, HostRecord consumer) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+        // 让leader做rebalance
+        balanceMap.remove(groupId);
+        Map<String, Map<Integer, HostRecord>> topic_partitions = new HashMap<>();
+        for (String topic : group_topic.get(groupId)) {
+            topic_partitions.put(topic, topicsPartitionLeaderCache.get(topic));
+        }
+        if (topic_partitions.size() == 0) {
+            balanceMap.put(groupId, new HashMap<>());
+        } else {
+            while (!balanceMap.containsKey(groupId)) {
+                HostRecord leader = consumerLeader.get(groupId);
+
+                List<Object> arguments = new ArrayList<>();
+                arguments.add(topic_consumer.get(groupId));
+                // Map<String, List<HostRecord>>
+                arguments.add(topic_partitions);
+                // Map<String, Map<Integer, HostRecord>>
+
+                Message request = new Message(MessageType.REBALANCE, arguments);
+                TcpClient socket = new TcpClient(leader.getHost(), leader.getPort());
+                socket.setHandler(this, request);
+                socket.run();
+            }
+            assignNewBalance(groupId);
+        }
+    }
+
+    public void assignNewBalance(String groupId) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+        // multicast
+        // Map<String, Map<HostRecord, Map<String, Map<Integer, HostRecord>>>> balanceMap;
+        Map<HostRecord, Map<String, Map<Integer, HostRecord>>> map = balanceMap.get(groupId);
+        for (HostRecord consumerInMap : map.keySet()) {
+            assignPartitionToConsumer(consumerInMap, map.get(consumerInMap));
+        }
+    }
+
+
+    public void updateConsumerLeader(String groupId, HostRecord consumer) {
+        consumerLeader.put(groupId, consumer);
+    }
+
+
+
+
+    public void assignPartitionToConsumer(HostRecord consumer, Map<String, Map<Integer, HostRecord>> topic_partitions) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
+        TcpClient client = new TcpClient(consumer.getHost(), consumer.getPort());
+        List<Object> arguments = new ArrayList<>();
+        arguments.add(topic_partitions);
+        Message request = new Message(MessageType.REBALANCE_RESULT, arguments);
+        client.setHandler(this, request);
+        client.run();
     }
 
     public void assignLeader(HostRecord consumer) throws IOException {
@@ -432,7 +453,6 @@ public class Broker {
             TcpClient sock = new TcpClient(defaultZookeeper.getHost(), defaultZookeeper.getPort());
             sock.setHandler(this, request);
             sock.run();
-
         }
     }
 
@@ -503,29 +523,6 @@ public class Broker {
 
     public void updateTopicsPartitionLeader(String topic, Map<Integer, HostRecord> topicPartitionLeaders) {
         topicsPartitionLeader.put(topic, topicPartitionLeaders);
-    }
-
-    public Message test1() throws
-            IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-//        TcpClient client = new TcpClient("localhost", 9007);
-//        Message request = new Message(MessageType.TEST2);
-//        client.setHandler(this, request);
-//        client.run();
-
-        TcpClient client = new TcpClient("localhost", 10001);
-        Message request = new Message(MessageType.TEST2);
-        client.setHandler(this, request);
-        client.run();
-        return new Message(MessageType.ACK, Collections.singletonList("broker received the request from consumer"), true);
-    }
-
-    public Message test2() throws
-            IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-        TcpClient client = new TcpClient("localhost", 1001);
-        Message request = new Message(MessageType.ACK, Collections.singletonList("broker2 send request to consumer"), true);
-        client.setHandler(this, request);
-        client.run();
-        return new Message(MessageType.ACK, Collections.singletonList("broker2 received the request from broker1"), true);
     }
 
 

@@ -1,9 +1,11 @@
-package com.scu.coen317;
+package com.scu.coen317.com.scu.coen317.test;
+
+import com.scu.coen317.Broker;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class BrokerTestYaoChia {
+public class Broker_9000 {
     public static void main(String argv[]) throws Exception {
 
 //        HostRecord z = new HostRecord("localhost", 2181);
@@ -15,7 +17,7 @@ public class BrokerTestYaoChia {
 //        Topic t = new Topic("topic1",1,1);
 //
 //
-        Broker b2 = new Broker("localhost", 9001, "localhost", 2181);
+        Broker b2 = new Broker("localhost", 9000, "localhost", 2181);
         b2.listen();
         b2.registerToZookeeper();
 //        b2.sendHeartBeat();

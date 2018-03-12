@@ -98,14 +98,14 @@ public class TcpServer {
         final Object this_object = object;
         this.handler = new TcpServerEventHandler() {
             public void onMessage(int client_id, Message message) throws InvocationTargetException, IllegalAccessException, IOException {
-                System.out.println("进入server onMessage");
+                // System.out.println("进入server onMessage");
                 Class<?>[] inputTypes = message.getInputParameterType();
                 try {
                     Method method = object.getClass().getMethod(message.getMethodNameValue(), inputTypes);
 
                     Object[] inputs = message.getInputValue();
 
-                    System.out.println("* <" + client_id + "> will invoke " + message.getMethodName());
+                    // System.out.println("* <" + client_id + "> will invoke " + message.getMethodName());
                     Message response = (Message) method.invoke(this_object, inputs);
 //                    System.out.println(response.getMethodNameValue());
 
@@ -113,19 +113,19 @@ public class TcpServer {
                     that_server.getClient(client_id).send(response);
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
-                    System.out.println("no such method");
+//                    System.out.println("no such method");
                 }
 
-                System.out.println("* < send to " + client_id + "> " + "successful");
+//                System.out.println("* < send to " + client_id + "> " + "successful");
             }
 
             public void onAccept(int client_id) {
-                System.out.println("* <" + client_id + "> connection accepted");
+//                System.out.println("* <" + client_id + "> connection accepted");
                 that_server.setReadInterval(100 + that_server.getClients().size() * 10);
             }
 
             public void onClose(int client_id) {
-                System.out.println("* <" + client_id + "> closed");
+//                System.out.println("* <" + client_id + "> closed");
             }
         };
     }

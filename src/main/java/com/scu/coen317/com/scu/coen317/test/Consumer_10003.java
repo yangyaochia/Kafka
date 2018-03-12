@@ -1,4 +1,8 @@
-package com.scu.coen317;
+package com.scu.coen317.com.scu.coen317.test;
+
+import com.scu.coen317.Consumer;
+import com.scu.coen317.HostRecord;
+import com.scu.coen317.TcpClient;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -7,17 +11,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TestConsumer3 {
+public class Consumer_10003 {
     public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException, InterruptedException {
         Consumer con3 = new Consumer("localhost", 10003,
                 "group1",
-                "localhost", 9005);
+                "localhost", 9000);
 //        con3.updateCoordinator(new HostRecord("localhost", 9005));
+        con3.findCoordinator();
         con3.joinToGroup();
-        con3.subscribe("topic1");
+        con3.subscribe("Distributed System Topic");
+        Thread.sleep(5000);
+        con3.poll();
 
-
-
+        /*
         TcpClient sendReplace = new TcpClient("localhost", 9005);
         HashMap<String, Map<Integer, Map<HostRecord, HostRecord>>> newInfo = new HashMap<>();
         HashMap<HostRecord, HostRecord> newPair = new HashMap<>();

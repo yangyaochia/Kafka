@@ -124,7 +124,11 @@ public class Producer {
         }
         TcpClient sock = null;
         Integer partition = hashCode(message) % topicsMember.get(topic).size();
-        System.out.println(topic + " " + message + " " + partition);
+        if (partition < 0) {
+            partition += topicsMember.get(topic).size();
+        }
+        System.out.println(" ********* Hashed Partition is " + partition);
+        System.out.println( topic + " " + message + " " + partition);
         HostRecord partitionLeader = null;
 
         List<Object> argument = new ArrayList<>();
