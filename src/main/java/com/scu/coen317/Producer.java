@@ -169,7 +169,7 @@ public class Producer {
 
 
 //        sock.setReadInterval(10000);this, request);
-        System.out.println("Sending message to " + partitionLeader.getPort());
+        System.out.println("Producer > Sending message " + message + " to " + partitionLeader.getPort());
         TcpServer listenSock = new TcpServer(this.port);
         listenSock.setHandler(this);
         listenSock.listen();
@@ -192,7 +192,7 @@ public class Producer {
     }
 
     public void publishMessageAck(String message, String ackMessage) {
-        System.out.println("This is Ack message " + message + " " + ackMessage);
+//        System.out.println(" *** " + message + " " + ackMessage + " ***");
         synchronized (this) {
             publishMessageACK = true;
             notify();
@@ -219,9 +219,9 @@ public class Producer {
     }
 
     public void printDefaultBrokerList() {
-        System.out.println("Default broker list");
+        System.out.println("Producer > Default broker list");
         for ( HostRecord h : defaultBrokers )
-            System.out.println(h);
+            System.out.println("\t" + h);
     }
 
 }

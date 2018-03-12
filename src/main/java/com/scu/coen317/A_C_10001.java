@@ -12,7 +12,7 @@ public class A_C_10001 {
 //        con1.updateCoordinator(new HostRecord("localhost", 9000));
         con1.joinToGroup();
         con1.subscribe("Distributed System Topic");
-        Thread.sleep(1000);
+//        Thread.sleep(1000);
         con1.poll();
 
     }

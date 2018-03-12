@@ -12,7 +12,7 @@ public class A_P_8001 {
 //        p.printDefaultBrokerList();
 //
         for (int i = 0; i < 1500; i++) {
-            p.publishMessage("Distributed System Topic", "DS Topic: Message from 8001 " + Integer.toString(i));
+            p.publishMessage("Santa Clara University Topic",  Integer.toString(i));
         }
     }
 }

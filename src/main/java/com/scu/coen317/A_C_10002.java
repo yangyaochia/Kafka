@@ -11,8 +11,8 @@ public class A_C_10002 {
 //        con2.updateCoordinator(new HostRecord("localhost", 9000));
         con2.joinToGroup();
         con2.subscribe("Distributed System Topic");
-//        con2.subscribe("Santa Clara Univ Topic");
-        Thread.sleep(1000);
+        con2.subscribe("Santa Clara University Topic");
+//        Thread.sleep(1000);
         con2.poll();
     }
 
