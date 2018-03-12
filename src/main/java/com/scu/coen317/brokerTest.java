@@ -111,8 +111,8 @@ public class brokerTest{
         // This broker does now know the topic, then ask the zookeeper
 //        if ( !topicsPartitionLeader.containsKey(topicName) ) {
         Topic topic = new Topic("hahaha");
-        topic.partition = 2;
-        topic.replication = 2;
+        topic.partition = 3;
+        topic.replication = 4;
         HostRecord temp = new HostRecord(this.host, this.port);
         argument.add(topic);
         argument.add(temp);
@@ -212,7 +212,7 @@ public class brokerTest{
     {
         System.out.println("In setTopicPartitionLeader already... ");
 
-        System.out.println("You ("+ this.host+ " "+this.port+ ")"+ "have been assigned Topic: "+topic+ "Partition: "+ partition.toString());
+        System.out.println("You ("+ this.host+ " "+this.port+ ")"+ "have been assigned Topic: "+topic+ " Partition: "+ partition.toString());
         System.out.println("=leader=");
         System.out.println(leader.toString());
         System.out.println("=followers=");
@@ -243,11 +243,18 @@ public class brokerTest{
     public void updateTopicPartitionLeader(String topic, List<Pair<Integer,Broker>> partitionLeaders) {
         topicPartitionLeaders.put(topic, partitionLeaders);
     }
+//    public void joinGroup()
+//    {
+//        String groupID = "5"
+//        GET_COORDINATOR(
+//
+//    }
+
+
+
     public void replaceTopicPartitionLeader(HashMap<String, Map<Integer, Map<HostRecord, HostRecord>>> newInfo)
     {
         System.out.println("In coordinator... replaceTopicPartitionLeader");
-
-
 
     }
 
@@ -313,6 +320,7 @@ public class brokerTest{
 //        p2.listen();
 //        p3.listen();
         p.registerToZookeeper();
+        p.getCoordinator("5");
 //        p2.registerToZookeeper();
 //        p3.registerToZookeeper();
 //        p.sendHeartBeat();;
