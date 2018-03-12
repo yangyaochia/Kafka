@@ -162,28 +162,31 @@ public class Zookeeper {
                 for(HostRecord leader: replicationHash.get(topic).get(partition).keySet())
                 {
                     HashSet<HostRecord> oldFollowers = (HashSet<HostRecord>) replicationHash.get(topic).get(partition).get(leader);
-                    if(!oldFollowers.isEmpty())
+//                    if(replicationHash.get(topic).get(partition).get(leader))
+//                    for(HostRecord follower : replicationHash.get(topic).get(partition).get(leader))
+//                    {
+//                        if (failLeaders.contains(follower))
+//                        {
+//                            replicationHash.get(topic).get(partition).get(leader).remove(follower);
+//                        }
+//                    }
+                    //Must be use iterator to remove item in hashSet, for each loop will cause big error
+                    Iterator<HostRecord> iterator = oldFollowers.iterator();
+                    while (iterator.hasNext())
                     {
-                        for(HostRecord follower : oldFollowers)
-                        {
-                            if (failLeaders.contains(follower)) {
-                                oldFollowers.remove(follower);
-                            }
+                        HostRecord element = iterator.next();
+                        if (failLeaders.contains(element)) {
+                            iterator.remove();
                         }
                     }
                     if(failLeaders.contains(leader))
                     {
-
                         if(!replicationHash.get(topic).get(partition).get(leader).isEmpty())
                         {
-//                            while(failLeaders.contains(oldFollowers.iterator().next()))
-//                            {
-//                                oldFollowers.remove(oldFollowers.iterator().next());
-//                            }
-                            HostRecord newLeader = oldFollowers.iterator().next();
+                            HostRecord newLeader =  replicationHash.get(topic).get(partition).get(leader).iterator().next();
 //                            System.out.println("=====New Leader : "+ newLeader.toString()+"=====");
-                            oldFollowers.remove(newLeader);
-                            HashSet<HostRecord> newFollowers = oldFollowers;
+                            replicationHash.get(topic).get(partition).get(leader).remove(newLeader);
+                            HashSet<HostRecord> newFollowers = (HashSet<HostRecord>) replicationHash.get(topic).get(partition).get(leader);
                             replicationHash.get(topic).get(partition).put(newLeader, newFollowers);
                             topicAssignmentHash.get(topic).put(partition, newLeader);
 
