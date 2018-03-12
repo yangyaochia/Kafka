@@ -565,47 +565,5 @@ public class Broker {
             }
         }
     }
-
-    public static void main(String argv[]) throws Exception {
-        Broker p = new Broker("localhost", 9008, "localhost", 2181);
-        Broker p2 = new Broker("localhost", 9007, "localhost", 2181);
-//        brokerTest p2 = new brokerTest("localhost", 9007, "localhost", 2181);
-//        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
-//        brokerTest p3 = new brokerTest("localhost", 9006, "localhost", 2181);
-        p.listen();
-        p2.listen();
-//        p2.listen();
-//        p3.listen();
-        p.registerToZookeeper();
-        p2.registerToZookeeper();
-        p.getCoordinator("5", p.thisHost);
-        p2.getCoordinator("4", p.thisHost);
-//        p2.registerToZookeeper();
-//        p3.registerToZookeeper();
-//        p.sendHeartBeat();;
-//        p3.sendHeartBeat();
-//        p.getTopicConsumer();
-//        p.getTopic();
-//
-//        p.sendHeartBeat();;
-//        p3.sendHeartBeat();
-
-//        sleep(5000);
-//        p.TestReassign();
-
-//
-//        p.getCoordinator("1111");
-//        p.registerToZookeeper();
-//
-//        p.sendMessage("topic1", "1");
-//        //sleep(1000);
-//        p.sendMessage("topic2", "2");
-//        //sleep(1000);
-//        p.sendMessage("topic3", "3");
-        //sleep(1000);
-
-
-    }
-
 }
 
