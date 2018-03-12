@@ -6,6 +6,7 @@ import javax.jws.Oneway;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.rmi.server.ExportException;
 import java.util.*;
 
 
@@ -146,17 +147,22 @@ public class Consumer {
 //                    Thread.sleep(1000);
 
                     HostRecord broker = partition.getValue();
-                    TcpClient client = new TcpClient(broker.getHost(), broker.getPort());
-                    List<Object> arguments = new ArrayList<>();
-                    arguments.add(groupId);
-                    arguments.add(topic);
-                    arguments.add(partition.getKey());
-                    arguments.add(thisHost);
-                    arguments.add(MAX_FETCH_SIZE);
-                    Message request = new Message(MessageType.PULLMESSAGE, arguments);
-                    System.out.println("Ready to poll!!!");
-                    client.setHandler(this, request);
-                    client.run();
+                    try {
+                        TcpClient client = new TcpClient(broker.getHost(), broker.getPort());
+                        List<Object> arguments = new ArrayList<>();
+                        arguments.add(groupId);
+                        arguments.add(topic);
+                        arguments.add(partition.getKey());
+                        arguments.add(thisHost);
+                        arguments.add(MAX_FETCH_SIZE);
+                        Message request = new Message(MessageType.PULLMESSAGE, arguments);
+                        System.out.println("Ready to poll!!!");
+                        client.setHandler(this, request);
+                        client.run();
+                    } catch (IOException e) {
+                        Thread.sleep(2000);
+                        poll();
+                    }
                 }
             }
         }
@@ -203,6 +209,7 @@ public class Consumer {
 
     public Message updateCoordinator(HostRecord coordinator) {
         this.coordinator = coordinator;
+        System.out.println("Coordinator is " + coordinator.toString());
         Message ack = new Message(MessageType.ACK, Collections.singletonList("Coordinator updated successful"), true);
         return ack;
     }

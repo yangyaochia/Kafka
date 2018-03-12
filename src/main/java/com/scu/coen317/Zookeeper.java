@@ -22,7 +22,7 @@ public class Zookeeper {
     Set<HostRecord> tempBrokerList;
     Map<HostRecord, Map<String, Integer>> brokerToTopicPartitionHash;
 
-    final int MONITOR_CLUSTER_INTERVAL = 30000;
+    final int MONITOR_CLUSTER_INTERVAL = 4000;
 
     public Zookeeper(String host, int port) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         this.host = host;
@@ -335,23 +335,15 @@ public class Zookeeper {
 
     public Message coordinatorAssignment(String groupID) {
 
-//        System.out.println("COORDINATORASSIGNMENT");
+        System.out.println("COORDINATORASSIGNMENT");
         if (!coordinatorAssignmentHash.containsKey(groupID)) {
             assignCoordinator(groupID);
         }
-
         HostRecord temp = coordinatorAssignmentHash.get(groupID);
-        if(temp == null)
-        {
-            System.out.println("temp == null");
-            assignCoordinator(groupID);
-        }
-
+        System.out.println("COORDINATORASSIGNMENT SUCCESS");
         List<Object> arguments = new ArrayList();
         arguments.add(groupID);
         arguments.add(temp);
-
-
         Message response = new Message(MessageType.COORDINATOR_ASSIGNMENT, arguments);
         return response;
     }
