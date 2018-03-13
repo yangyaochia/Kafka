@@ -169,7 +169,7 @@ public class Consumer {
 
     public Message dealWithMessage(ArrayList<String> messages, String topic, HostRecord broker) {
         for (String message : messages) {
-            System.out.println("Conserme at port " + thisHost.getPort() + " > * Receive message *");
+            System.out.println("Consumer at port " + thisHost.getPort() + " > * Receive message *");
             System.out.println("                    From : " + broker.getPort());
             System.out.println("                   Topic : " + topic);
             System.out.println("                 Content : " + message);
