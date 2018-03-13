@@ -4,4 +4,4 @@ repositories {
     mavenCentral()
 }
 project.group = 'com.scu.COEN317'
-project.version = 'without-db'
+project.version = '0.0.1'

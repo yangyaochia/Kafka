@@ -602,13 +602,4 @@ public class Zookeeper {
         listenSocket.listen();
         System.out.println("Zookeeper > The server is listening at " + this.host + " " + this.port);
     }
-
-
-
-    public static void main(String argv[]) throws Exception {
-        Zookeeper z = new Zookeeper("localhost", 2181);
-        z.listen();
-//        Thread.sleep(1000000);
-        z.monitorCluster();
-    }
 }
