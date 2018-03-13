@@ -8,10 +8,10 @@ public class A_C_10002 {
         Consumer con2 = new Consumer("localhost", 10002, "group1",
                 "localhost", 9000);
         con2.findCoordinator();
-//        con2.updateCoordinator(new HostRecord("localhost", 9000));
+//        con1.updateCoordinator(new HostRecord("localhost", 9005));
         con2.joinToGroup();
         con2.subscribe("Distributed System Topic");
-        con2.subscribe("Santa Clara University Topic");
+        con2.subscribe("SCU Topic");
 //        Thread.sleep(1000);
         con2.poll();
     }

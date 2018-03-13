@@ -159,8 +159,14 @@ public class Zookeeper {
         {
             for(Integer partition: replicationHash.get(topic).keySet())
             {
+
+//                for(HashMap<HostRecord, HashSet<HostRecord>> leaderFollower : replicationHash.get(topic).get(partition) )
+//                {
+//
+//                }
                 for(HostRecord leader: replicationHash.get(topic).get(partition).keySet())
                 {
+//                    HashSet<HostRecord> oldFollowers = new HashSet<>(replicationHash.get(topic).get(partition).get(leader));
                     HashSet<HostRecord> oldFollowers = (HashSet<HostRecord>) replicationHash.get(topic).get(partition).get(leader);
 //                    if(replicationHash.get(topic).get(partition).get(leader))
 //                    for(HostRecord follower : replicationHash.get(topic).get(partition).get(leader))
@@ -172,6 +178,7 @@ public class Zookeeper {
 //                    }
                     //Must be use iterator to remove item in hashSet, for each loop will cause big error
                     Iterator<HostRecord> iterator = oldFollowers.iterator();
+//                    Iterator<HostRecord> iterator = replicationHash.get(topic).get(partition).get(leader).iterator();
                     while (iterator.hasNext())
                     {
                         HostRecord element = iterator.next();
@@ -183,10 +190,25 @@ public class Zookeeper {
                     {
                         if(!replicationHash.get(topic).get(partition).get(leader).isEmpty())
                         {
-                            HostRecord newLeader =  replicationHash.get(topic).get(partition).get(leader).iterator().next();
+                            HostRecord newLeader = oldFollowers.iterator().next();
+//                            HostRecord newLeader =  replicationHash.get(topic).get(partition).get(leader).iterator().next();
 //                            System.out.println("=====New Leader : "+ newLeader.toString()+"=====");
-                            replicationHash.get(topic).get(partition).get(leader).remove(newLeader);
-                            HashSet<HostRecord> newFollowers = (HashSet<HostRecord>) replicationHash.get(topic).get(partition).get(leader);
+                            Iterator<HostRecord> iterator2 = oldFollowers.iterator();
+                            while (iterator2.hasNext())
+                            {
+                                HostRecord element = iterator2.next();
+                                if (element.equals(newLeader)) {
+                                    iterator2.remove();
+                                }
+                            }
+
+
+
+//                            replicationHash.get(topic).get(partition).get(leader).remove(newLeader);
+//                            HashSet<HostRecord> newFollowers = (HashSet<HostRecord>) replicationHash.get(topic).get(partition).get(leader);
+                            HashSet<HostRecord> newFollowers = oldFollowers;
+
+
                             replicationHash.get(topic).get(partition).put(newLeader, newFollowers);
                             topicAssignmentHash.get(topic).put(partition, newLeader);
 
@@ -210,8 +232,19 @@ public class Zookeeper {
                         }
                         else
                         {
-                            System.out.println("Topic: "+topic+"Partition: "+partition);
+//                            replicationHash.get(topic).get(partition).remove(leader);
+                            System.out.println("failLeader: "+ leader.toString());
+                            System.out.println("Topic: "+topic+" Partition: "+partition);
                             System.out.println("Has no replicas already");
+//                            Iterator<HostRecord> iterator3 = replicationHash.get(topic).get(partition).get(leader).iterator();
+//                            while (iterator3.hasNext())
+//                            {
+//                                HostRecord element = iterator3.next();
+//                                if (element.equals(leader)) {
+//                                    iterator3.remove();
+//                                }
+//                            }
+//                            replicationHash.get(topic).get(partition).remove(leader);
                         }
                     }
                 }
@@ -276,6 +309,7 @@ public class Zookeeper {
 //        System.out.println("brokerList.size() = " + brokerList.size());
         while (true)
         {
+
             tempBrokerList = new HashSet<>(brokerList);
 //            System.out.println("Before tempBrokerList.size() = " + tempBrokerList.size());
             Thread.sleep(MONITOR_CLUSTER_INTERVAL);
@@ -336,9 +370,10 @@ public class Zookeeper {
 
 
 
-    public Message coordinatorAssignment(String groupID) {
+    public Message coordinatorAssignment(String groupID, HostRecord sender) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
 
         System.out.println("Zookeeper > Coordinator assigning...");
+
         if (!coordinatorAssignmentHash.containsKey(groupID)) {
             assignCoordinator(groupID);
         }
@@ -347,15 +382,22 @@ public class Zookeeper {
         List<Object> arguments = new ArrayList();
         arguments.add(groupID);
         arguments.add(temp);
+
         Message response = new Message(MessageType.COORDINATOR_ASSIGNMENT, arguments);
+        TcpClient sock = new TcpClient(sender.getHost(), sender.getPort());
+        sock.setHandler( this, response );
+        sock.run();
         return response;
     }
 
     public void assignCoordinator(String groupID) {
-        HostRecord tempBroker = coordinatorBrokerQueue.poll();
-        coordinatorAssignmentHash.put(groupID, tempBroker);
-        System.out.println("Zookeeper > Coordinator for Group "+ groupID + " "+ tempBroker.toString());
-        coordinatorBrokerQueue.add(tempBroker);
+        synchronized (this)
+        {
+            HostRecord tempBroker = coordinatorBrokerQueue.poll();
+            coordinatorAssignmentHash.put(groupID, tempBroker);
+            System.out.println("COORDINATOR for Group " + groupID + " " + tempBroker.toString());
+            coordinatorBrokerQueue.add(tempBroker);
+        }
     }
 
 
