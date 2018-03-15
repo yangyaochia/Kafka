@@ -1,4 +1,5 @@
 # Nano Kafka Briefing
+
   1. Implement Kafka-based publish-subscribe system 
   2. Producer applications could create specific topics and send messages to that topics anytime and anywhere (decoupled)
   3. Consumer applications could subscrbe to topics and poll the messages anytime and anywhere (decoupled)
@@ -39,11 +40,13 @@
       6.) Start 1 Consumer in Group1 and Subscribe to topic1 and topic2
       
     * Process and Result:
+      
       -> Producer Side:
         1.) Producer send createTopic request to defaultBroker, and defaultBroker forward it to Zookeeper.
         2.) Zookeeper will assign different brokers for each partition in a topic if the topic is not created before.
         3.) Producer will receive the a list of (topic,partition) leaders. Cache these leaders into his defaultBroker.
         4.) Producer will send messages to the corresponding Broker.
+      
       -> Consumer Side:
         5.) Consumer send register/subscribe request to defaultBroker, and defaultBroker forward it to Zookeeper.
         6.) Zookeeper will assign Coordinator(Broker) if this group has not registered before.
