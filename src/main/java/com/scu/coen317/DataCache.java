@@ -26,7 +26,6 @@ public class DataCache<K, V> {
         DataValue<V> data = dataMap.get(key);
         V result = null;
         if (data != null) {
-//            long diff = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - data.insertTime);
             long diff = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - data.insertTime);
             if (diff >= mTimeout) {
                 dataMap.remove(key);
