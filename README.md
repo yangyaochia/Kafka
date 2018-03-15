@@ -27,7 +27,7 @@
         - At least one topic, at most two topic names
 
 # Sample Running Case
-  1. Normal Publish-Subscribe : Test Partition and Consumer Group Functionality
+  -> Normal Publish-Subscribe : Test Partition and Consumer Group Functionality
     * Setup Example
       1.) Start Zookeeper
       2.) Start 3 Brokers 
