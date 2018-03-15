@@ -63,5 +63,5 @@
       5.) Shut Down the topic leader and test whether 
         -> Zookeeper could detect the shutdown of a broker
         -> Producer could continue sending messages without human restoration.
-        -> Consumer could continue receiving messages without  human restoration.
-        
+        -> Consumer could continue receiving messages without human restoration and Coordinator activates rebalance within the            consumer group for the specific topic.
+        
