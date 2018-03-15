@@ -76,57 +76,29 @@ public class TcpServer {
             }
         }.start();
 
-//        new Thread(){
-//            public void run(){
-//                while(true){
-//                    try{
-//                        Thread.sleep(20000);
-//                    }
-//                    catch(Exception ex){
-//                    }
-//                    for(TcpClient sock : clients){
-//                        sock.send(Collections.singletonList(""));
-//                    }
-//                }
-//            }
-//        }.start();
-    }
-
-
     public void setHandler(Object object) {
         final TcpServer that_server = this;
         final Object this_object = object;
         this.handler = new TcpServerEventHandler() {
             public void onMessage(int client_id, Message message) throws InvocationTargetException, IllegalAccessException, IOException {
-//                System.out.println("进入server onMessage");
                 Class<?>[] inputTypes = message.getInputParameterType();
                 try {
                     Method method = object.getClass().getMethod(message.getMethodNameValue(), inputTypes);
-
                     Object[] inputs = message.getInputValue();
-
-//                    System.out.println("* <" + client_id + "> will invoke " + message.getMethodName());
                     Message response = (Message) method.invoke(this_object, inputs);
-//                    System.out.println(response.getMethodNameValue());
 
-                //msg.add(0, "echo : <"+client_id+"> ");
                     that_server.getClient(client_id).send(response);
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
                     System.out.println("no such method");
                 }
-
-//                System.out.println("* < send to " + client_id + "> " + "successful");
             }
 
             public void onAccept(int client_id) {
-//                System.out.println("* <" + client_id + "> connection accepted");
                 that_server.setReadInterval(100 + that_server.getClients().size() * 10);
             }
 
             public void onClose(int client_id) {
-
-//                System.out.println("* <" + client_id + "> closed");
             }
         };
     }
@@ -150,6 +122,4 @@ public class TcpServer {
     public void addEventHandler(TcpServerEventHandler serverHandler) {
         this.handler = serverHandler;
     }
-
-
 }
