@@ -22,21 +22,16 @@ public class TcpClient {
     }
 
     private ObjectInputStream inFromClient;
-//    private BufferedReader bReader;
-
-    //    private BufferedWriter bWriter;
     private ObjectOutputStream outToServer;
     private TcpClientEventHandler handler;
     private boolean closer = false;
 
     public TcpClient(String host, int port) throws IOException {
         this.host = host;
-
         this.port = port;
         this.sock = new Socket(host, port);
         outToServer = new ObjectOutputStream(this.sock.getOutputStream());
         inFromClient = new ObjectInputStream(this.sock.getInputStream());
-
     }
 
     public TcpClient(Socket connected_socket) {
@@ -60,7 +55,6 @@ public class TcpClient {
         }
         final TcpClient that = this;
         new Thread(() -> {
-
             while (!closer) {
                 try {
                     Thread.sleep(readInterval);
@@ -68,7 +62,6 @@ public class TcpClient {
                     if (message != null) {
                         if (handler != null) handler.onMessage(message);
                     }
-
                 } catch (SocketException ex) {
                     that.close();
                 } catch (IOException ex) {
@@ -106,6 +99,7 @@ public class TcpClient {
             sock = null;
             if (handler != null) handler.onClose();
         } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -126,32 +120,23 @@ public class TcpClient {
         final Object this_object = object;
         this.handler = new TcpClientEventHandler() {
             public void onMessage(Message msg) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InterruptedException {
-                //handler.onMessage(cid, msg);
-//                System.out.println("enter client's handler");
-
                 if (msg.isAck()) {
-//                    System.out.println(msg.getMethodNameValue());
                     System.out.println(msg.arguments.get(0));
                     that_sock.close();
                 } else {
-
                     Class<?>[] inputTypes = msg.getInputParameterType();
                     Method method = object.getClass().getMethod(msg.getMethodNameValue(), inputTypes);
                     Object[] inputs = msg.getInputValue();
                     method.invoke(this_object, inputs);
-//                    Message response = (Message) method.invoke(this_object, inputs);
-//                    that_sock.send(response);
                     System.out.println(msg.getMethodName());
                 }
             }
 
             public void onOpen() throws InterruptedException {
-//                System.out.println("* socket connected");
-                int count = 1;  // Number of retry
+                // System.out.println("* socket connected");
+                int count = 1;  
                 that_sock.send(request);
                 while (true) {
-//                    if ( count == 1 )
-//                        that_sock.send(request);
                     if (count < 1) {
 //                        Thread.sleep(1000);
                         that_sock.close();
@@ -164,11 +149,9 @@ public class TcpClient {
                         ex.printStackTrace();
                     }
                 }
-
             }
 
             public void onClose() {
-
                 //System.out.println("* socket closed");
             }
         };
@@ -177,7 +160,6 @@ public class TcpClient {
     public boolean getCloser() {
         return closer;
     }
-
 
     public void addEventHandler(TcpClientEventHandler handler) {
         this.handler = handler;
