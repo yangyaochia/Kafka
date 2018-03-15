@@ -3,12 +3,13 @@ package com.scu.coen317;
 import java.io.Serializable;
 
 public class HostRecord implements Serializable {
-    String host;
-    Integer port;
-    HostRecord(String host, Integer port) {
+    private String host;
+    private Integer port;
+    public HostRecord(String host, Integer port) {
         this.host = host;
         this.port = port;
     }
+    
     String getHost() { return host;}
     Integer getPort() { return port;}
 
@@ -20,7 +21,8 @@ public class HostRecord implements Serializable {
                 && ((HostRecord)that).getPort().equals(port);
     }
 
-    @Override public int hashCode() {
+    @Override 
+    public int hashCode() {
         int hash = 5381;
         int i = 0;
         while (i < host.length()) {
