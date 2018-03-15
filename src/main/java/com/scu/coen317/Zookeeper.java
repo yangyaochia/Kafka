@@ -12,7 +12,6 @@ public class Zookeeper {
     String host;
     int port;
     TcpServer listenSocket;
-
     Queue<HostRecord> topicBrokerQueue;
     Queue<HostRecord> coordinatorBrokerQueue;
     HashMap<String, HashMap<Integer, HostRecord>> topicAssignmentHash;
@@ -39,212 +38,92 @@ public class Zookeeper {
 
         this.tempBrokerList = new HashSet<>();
         this.brokerToTopicPartitionHash = new HashMap<>();
-
-//        HostRecord ha = new HostRecord("localhost", 1 );
-////        HostRecord haha = new HostRecord("localhost", 2 );
-////        HostRecord hahaha = new HostRecord("localhost",3 );
-////        HostRecord hahahaha = new HostRecord("localhost",4 );
-//
-//        topicBrokerQueue.add(ha);
-//        coordinatorBrokerQueue.add(ha);
-//
-////        replicationBrokerQueue.add(ha);
-//        brokerList.add(ha);
-//        topicBrokerQueue.add(haha);
-//        coordinatorBrokerQueue.add(haha);
-////        replicationBrokerQueue.add(haha);
-//        brokerList.add(haha);
-//        topicBrokerQueue.add(hahaha);
-//        coordinatorBrokerQueue.add(hahaha);
-//        brokerList.add(hahaha);
-////        replicationBrokerQueue.add(hahaha);
-//        topicBrokerQueue.add(hahahaha);
-//        coordinatorBrokerQueue.add(hahahaha);
-//        brokerList.add(hahahaha);
-
-//        replicationBrokerQueue.add(hahahaha);
-
-//        Topic one = new Topic("hahaha");
-//        one.replication = 3;
-//        one.partition = 3;
-//        HostRecord temp = new HostRecord("localhost", 9004);
-
-
-
-//        createTopicAssignment(one);
-//
-//        topicAssignment(one, temp);
-//        Set<HostRecord> failSet = new HashSet<>();
-//        failSet.add(haha);
-//        failSet.add(hahahaha);
-//        Map<String, Map<Integer, Map<HostRecord, HostRecord>>> fail= reAssignLeader(failSet);
-
-//        ;  displayRelicationsHash()
-//        displayRelicationsHash("hahaha");
-//        displayMapFailNewBroker(fail);
-//
-//        displayRelicationsHash("hahaha");
-
-//        displayAllQueue();
-
-
-//        System.out.println(topicBrokerQueue.peek().getBorkerInfo().getPort().toString()+topicBrokerQueue.poll().getTimeStamp().toString());
-//        System.out.println(topicBrokerQueue.peek().getBorkerInfo().getPort().toString()+topicBrokerQueue.poll().getTimeStamp().toString());
-//        System.out.println(topicBrokerQueue.peek().getBorkerInfo().getPort().toString()+topicBrokerQueue.poll().getTimeStamp().toString());
-
     }
 
-
-
-    public void displayAllQueue()
-    {
+    public void displayAllQueue() {
         System.out.println("topicBrokerQueue: ");
         displayOneQueue(topicBrokerQueue);
         System.out.println("coordinatorBrokerQueue: ");
         displayOneQueue(coordinatorBrokerQueue);
     }
 
-
-
-    public void displayOneQueue(Queue<HostRecord> oneQueue )
-    {
-
-        for(HostRecord item : oneQueue)
-        {
+    public void displayOneQueue(Queue<HostRecord> oneQueue ) {
+        for (HostRecord item : oneQueue) {
             System.out.println(item.toString());
         }
     }
 
-
-
-    public void displayMapFailNewBroker(Map<String, Map<Integer, Map<HostRecord, HostRecord>>> oneHash)
-    {
-        for(String topic : oneHash.keySet())
-        {
-            for(Integer partition : oneHash.get(topic).keySet())
-            {
-                for(HostRecord leader : oneHash.get(topic).get(partition).keySet())
-                {
+    public void displayMapFailNewBroker(Map<String, Map<Integer, Map<HostRecord, HostRecord>>> oneHash) {
+        for (String topic : oneHash.keySet()) {
+            for (Integer partition : oneHash.get(topic).keySet()) {
+                for (HostRecord leader : oneHash.get(topic).get(partition).keySet()) {
                     System.out.println("Topic : " + topic + " partition: " + partition);
                     System.out.println("Fail Leader: "+ leader.toString());
                     System.out.println("New Leader: "+ oneHash.get(topic).get(partition).get(leader));
-
                 }
             }
         }
     }
 
-
-
-    public void removeFailLeader(Set<HostRecord> failLeaders)
-    {
-        for(HostRecord leader : failLeaders)
-        {
+    public void removeFailLeader(Set<HostRecord> failLeaders) {
+        for(HostRecord leader : failLeaders) {
             brokerToTopicPartitionHash.remove(leader);
-//            coordinatorAssignmentHash.remove(leader);
             topicBrokerQueue.remove(leader);
             coordinatorBrokerQueue.remove(leader);
             brokerList.remove(leader);
         }
     }
 
-
-
     public Map<String, Map<Integer, Map<HostRecord, HostRecord>>> reAssignLeader(Set<HostRecord> failLeaders) throws InvocationTargetException, NoSuchMethodException, IllegalAccessException, InterruptedException, IOException {
-
         removeFailLeader(failLeaders);
-
         Map<String, Map<Integer, Map<HostRecord, HostRecord>>> failHash = new HashMap<>();
-        for(String topic : replicationHash.keySet())
-        {
-            for(Integer partition: replicationHash.get(topic).keySet())
-            {
-
-//                for(HashMap<HostRecord, HashSet<HostRecord>> leaderFollower : replicationHash.get(topic).get(partition) )
-//                {
-//
-//                }
-                for(HostRecord leader: replicationHash.get(topic).get(partition).keySet())
-                {
-//                    HashSet<HostRecord> oldFollowers = new HashSet<>(replicationHash.get(topic).get(partition).get(leader));
+        for (String topic : replicationHash.keySet()) {
+            for (Integer partition: replicationHash.get(topic).keySet()) {
+                for (HostRecord leader: replicationHash.get(topic).get(partition).keySet()) {
                     HashSet<HostRecord> oldFollowers = (HashSet<HostRecord>) replicationHash.get(topic).get(partition).get(leader);
-//                    if(replicationHash.get(topic).get(partition).get(leader))
-//                    for(HostRecord follower : replicationHash.get(topic).get(partition).get(leader))
-//                    {
-//                        if (failLeaders.contains(follower))
-//                        {
-//                            replicationHash.get(topic).get(partition).get(leader).remove(follower);
-//                        }
-//                    }
-                    //Must be use iterator to remove item in hashSet, for each loop will cause big error
+                    
                     Iterator<HostRecord> iterator = oldFollowers.iterator();
-//                    Iterator<HostRecord> iterator = replicationHash.get(topic).get(partition).get(leader).iterator();
-                    while (iterator.hasNext())
-                    {
+                    while (iterator.hasNext()) {
                         HostRecord element = iterator.next();
                         if (failLeaders.contains(element)) {
                             iterator.remove();
                         }
                     }
-                    if(failLeaders.contains(leader))
-                    {
-                        if(!replicationHash.get(topic).get(partition).get(leader).isEmpty())
-                        {
+                    
+                    if (failLeaders.contains(leader)) {
+                        if (!replicationHash.get(topic).get(partition).get(leader).isEmpty()) {
                             HostRecord newLeader = oldFollowers.iterator().next();
-//                            HostRecord newLeader =  replicationHash.get(topic).get(partition).get(leader).iterator().next();
-//                            System.out.println("=====New Leader : "+ newLeader.toString()+"=====");
                             Iterator<HostRecord> iterator2 = oldFollowers.iterator();
-                            while (iterator2.hasNext())
-                            {
+                            while (iterator2.hasNext()) {
                                 HostRecord element = iterator2.next();
                                 if (element.equals(newLeader)) {
                                     iterator2.remove();
                                 }
                             }
 
-
-
-//                            replicationHash.get(topic).get(partition).get(leader).remove(newLeader);
-//                            HashSet<HostRecord> newFollowers = (HashSet<HostRecord>) replicationHash.get(topic).get(partition).get(leader);
                             HashSet<HostRecord> newFollowers = oldFollowers;
-
-
                             replicationHash.get(topic).get(partition).put(newLeader, newFollowers);
                             topicAssignmentHash.get(topic).put(partition, newLeader);
 
-                            if(!brokerToTopicPartitionHash.containsKey(newLeader))
-                            {
+                            if(!brokerToTopicPartitionHash.containsKey(newLeader)) {
                                 brokerToTopicPartitionHash.put(newLeader, new HashMap<>());
                             }
+                            
                             brokerToTopicPartitionHash.get(newLeader).put(topic, partition);
-
-                            if(!failHash.containsKey(topic))
-                            {
+                            if(!failHash.containsKey(topic)) {
                                 failHash.put(topic, new HashMap<>());
                             }
-                            if(!failHash.get(topic).containsKey(partition))
-                            {
+                            
+                            if(!failHash.get(topic).containsKey(partition)) {
                                 failHash.get(topic).put(partition, new HashMap<>());
                             }
+                            
                             failHash.get(topic).get(partition).put(leader, newLeader);
-
                             sendSetTopicPartitionLeader(topic, partition, newLeader, newFollowers);
-                        }
-                        else
-                        {
-//                            replicationHash.get(topic).get(partition).remove(leader);
+                        } else {
                             System.out.println("failLeader: "+ leader.toString());
                             System.out.println("Topic: "+topic+" Partition: "+partition);
                             System.out.println("Has no replicas already");
-//                            Iterator<HostRecord> iterator3 = replicationHash.get(topic).get(partition).get(leader).iterator();
-//                            while (iterator3.hasNext())
-//                            {
-//                                HostRecord element = iterator3.next();
-//                                if (element.equals(leader)) {
-//                                    iterator3.remove();
-//                                }
-//                            }
-//                            replicationHash.get(topic).get(partition).remove(leader);
                         }
                     }
                 }
@@ -252,41 +131,6 @@ public class Zookeeper {
         }
         return failHash;
     }
-
-
-     //Hsuan-Chih
-//    public void TEST_REASSIGN(String TEST ) throws InterruptedException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-//        Set<HostRecord> failSet = new HashSet<>();
-//        HostRecord ha = new HostRecord("localhost", 9007 );
-//        failSet.add(ha);
-////       failSet.add(hahahaha);
-//        Map<String, Map<Integer, Map<HostRecord, HostRecord>>> fail= reAssignLeader(failSet);
-//
-//
-//        displayRelicationsHash("hahaha");
-//        displayMapFailNewBroker(fail);
-//
-//        displayRelicationsHash("hahaha");
-//
-//        displayAllQueue();
-//
-//    }
-
-    // Yao-Chia
-
-//    public void informCoordinator(HostRecord brokenBroker) {
-////        HostRecord broken = new HostRecord();
-////        HostRecord newAssigned
-//        //Map<HostRecord,Set< Pair<String,Integer> > > brokerTopicPartionMap
-//        Set<Pair<String,Integer>> topicPartitionPairs = brokerTopicPartionMap.get(brokenBroker);
-//
-//        List<Object> argument = new ArrayList<>();
-//        Message request = new Message(MessageType.REPLACE_BROKER, argument);
-//        // Coordinator 要的資料是 Topic -> Partition -> <Broken,New>
-//
-//    }
-
-
 
     public void sendLastestAssignmentToCoordinator(Map<String, Map<Integer, Map<HostRecord, HostRecord>>> latestAssignment) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException
     {
@@ -301,23 +145,13 @@ public class Zookeeper {
         }
     }
 
-
-
-    public void monitorCluster() throws InterruptedException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException
-    {
-        //Set<HostRecord> brokerList;
-//        System.out.println("brokerList.size() = " + brokerList.size());
-        while (true)
-        {
-
+    public void monitorCluster() throws InterruptedException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        while (true) {
             tempBrokerList = new HashSet<>(brokerList);
-//            System.out.println("Before tempBrokerList.size() = " + tempBrokerList.size());
             Thread.sleep(MONITOR_CLUSTER_INTERVAL);
-//            System.out.println("After tempBrokerList.size() = " + tempBrokerList.size());
-            if (!tempBrokerList.isEmpty())
-            {
-                for(HostRecord item: tempBrokerList)
-                {
+
+            if (!tempBrokerList.isEmpty()) {
+                for (HostRecord item: tempBrokerList) {
                     System.out.println("Zookeeper > Broken Broker's port : " + item);
                 }
 
@@ -325,53 +159,16 @@ public class Zookeeper {
                 sendLastestAssignmentToCoordinator(latestAssignment);
                 System.out.println("Zookeeper > In the cluster now we have " + brokerList.size() + " brokers.");
             }
-
         }
     }
 
-
-
-    public void updateCluster(HostRecord healthyHeartBeat)
-    {
-//        System.out.println("^ > Zookeeper received the heartbeat from " + healthyHeartBeat.getPort());
-        synchronized (this)
-        {
+    public void updateCluster(HostRecord healthyHeartBeat) {
+        synchronized (this) {
             tempBrokerList.remove(healthyHeartBeat);
         }
     }
 
-    // Yao-Chia
-
-    //public void monitorCluster(HostRecord oneBrokerHeart)
-    //{
-
-//        if(replicationHash.containsKey(oneLeader))
-//        {
-//            for(HashMap<Pair<String, Integer>, HashSet<HostRecord>> oneLeaderContent: replicationHash.get(oneLeader))
-//            {
-//
-//            }
-//
-//        }
-
-//       for()
-//        for(Map<Integer, Map<HostRecord, Set<HostRecord>>> oneTopicContent : replicationHash )
-//        {
-//            for(Map<HostRecord, Set<HostRecord>>) onePartitionContent : oneTopicContent)
-//            {
-//                if(onePart)
-//            }
-//        }
-//            Map<String, Map<Integer, Set<HostRecord>>> temp = replicationHash.get(oneLeader);
-//
-//        HashMap<HostRecord, HashSet<HostRecord>> LeaderFollowers
-
-    //}
-
-
-
     public Message coordinatorAssignment(String groupID, HostRecord sender) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
-
         System.out.println("Zookeeper > Coordinator assigning...");
 
         if (!coordinatorAssignmentHash.containsKey(groupID)) {
@@ -391,49 +188,38 @@ public class Zookeeper {
     }
 
     public void assignCoordinator(String groupID) {
-        synchronized (this)
-        {
+        synchronized (this) {
             HostRecord tempBroker = coordinatorBrokerQueue.poll();
             coordinatorAssignmentHash.put(groupID, tempBroker);
-            System.out.println("COORDINATOR for Group " + groupID + " " + tempBroker.toString());
+            System.out.println("Coordinator for Group " + groupID + " " + tempBroker.toString());
             coordinatorBrokerQueue.add(tempBroker);
         }
     }
 
-
-
-    public void createTopicAssignment(Topic topic)
-    {
+    public void createTopicAssignment(Topic topic) {
         System.out.println("Zookeeper > Topic assignment creating...");
-        for (Integer i = 0; i < topic.partition; i++)
-        {
+        for (Integer i = 0; i < topic.partition; i++) {
             HostRecord tempBroker = topicBrokerQueue.poll();
-            if (!topicAssignmentHash.containsKey(topic.getName()))
-            {
+            
+            if (!topicAssignmentHash.containsKey(topic.getName())) {
                 HashMap<Integer, HostRecord> h = new HashMap<>();
                 h.put(i, tempBroker);
                 topicAssignmentHash.put(topic.getName(), h);
-            }
-            else
-            {
+            } else {
                 topicAssignmentHash.get(topic.getName()).put(i, tempBroker);
             }
-            if(!brokerToTopicPartitionHash.containsKey(tempBroker))
-            {
+            
+            if (!brokerToTopicPartitionHash.containsKey(tempBroker)) {
                 HashMap<String, Integer> t = new HashMap<>();
                 t.put(topic.getName(), i);
                 brokerToTopicPartitionHash.put(tempBroker, t);
-            }
-            else
-            {
+            } else {
                 brokerToTopicPartitionHash.get(tempBroker).put(topic.getName(), i);
             }
             topicBrokerQueue.add(tempBroker);
         }
         System.out.println("Zookeeper > Topic assignment created.");
     }
-
-
 
     public Message topicPartitions(String topic, HostRecord coordinator) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
         List<Object> arguments = new ArrayList();
@@ -442,6 +228,7 @@ public class Zookeeper {
         if (topicAssignmentHash.containsKey(topic)) {
             result = topicAssignmentHash.get(topic);
         }
+        
         TcpClient returnNewPartition = new TcpClient(coordinator.getHost(), coordinator.getPort());
         arguments.add(topic);
         arguments.add(result);
@@ -449,69 +236,54 @@ public class Zookeeper {
         returnNewPartition.setHandler(this, request);
         returnNewPartition.run();
         return new Message(MessageType.ACK, Collections.singletonList(" *** partition leaders send successful *** "), true);
-//        ("updateTopicsPartitionLeaderCache")
-//        public void updateTopicsPartitionLeader(String topic, Map<Integer, HostRecord> topicPartitionLeaders)
     }
-
-
 
     public Message topicAssignment(Topic topic, HostRecord sender) throws InterruptedException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, IOException {
 
-        if(!topicAssignmentHash.containsKey(topic.getName()))
-        {
+        if(!topicAssignmentHash.containsKey(topic.getName())) {
             createTopicAssignment(topic);
         }
-//        System.out.println("TOPICASSIGNMENT for producer");
-//        System.out.println("Topic: "+topic.getName());
-//        System.out.println();
-
+        
         displayTopicAssignment(topic.getName());
-
         leaderReplicasAssignment(topic);
         List<Object> arguments = new ArrayList();
         arguments.add(topic);
         arguments.add(topicAssignmentHash.get(topic.getName()));
         Message response = new Message(MessageType.TOPIC_ASSIGNMENT_TO_BROKER, arguments);
-
         TcpClient sock = new TcpClient(sender.getHost(), sender.getPort());
         sock.setHandler( this, response );
         sock.run();
         return response;
     }
 
-
-    public void leaderReplicasAssignment(Topic topic) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException
-    {
+    public void leaderReplicasAssignment(Topic topic) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
         System.out.println("Zookeeper > ReplicationAssignment...");
         HashMap<Integer, HostRecord> partitions = topicAssignmentHash.get(topic.getName());
-        for (Integer partition: partitions.keySet()){
+        for (Integer partition: partitions.keySet()) {
             HashSet<HostRecord> temp = new HashSet();
             int repCount = min(topicBrokerQueue.size(),topic.replication);
-            for(Integer i=0; i<repCount-1;i++) {
-
+            
+            for (Integer i=0; i<repCount-1;i++) {
                 HostRecord tempRep = topicBrokerQueue.poll();
-                if(!tempRep.equals(partitions.get(partition))){
+                if (!tempRep.equals(partitions.get(partition))) {
                     temp.add(tempRep);
-                }
-                else {
+                } else {
                     i--;
                 }
                 topicBrokerQueue.add(tempRep);
             }
-            if(!replicationHash.containsKey(topic.getName()))
-            {
+            
+            if(!replicationHash.containsKey(topic.getName())) {
                 replicationHash.put(topic.getName(), new HashMap<>());
             }
-            if(!replicationHash.get(topic.getName()).containsKey(partition))
-            {
+            
+            if(!replicationHash.get(topic.getName()).containsKey(partition)) {
                 replicationHash.get(topic.getName()).put(partition, new HashMap<>());
             }
+            
             replicationHash.get(topic.getName()).get(partition).put(partitions.get(partition), temp);
-
-            for(HostRecord follower : temp )
-            {
-                if(!brokerToTopicPartitionHash.containsKey(follower))
-                {
+            for (HostRecord follower : temp ) {
+                if (!brokerToTopicPartitionHash.containsKey(follower)) { 
                     brokerToTopicPartitionHash.put(follower, new HashMap<>());
                 }
                 brokerToTopicPartitionHash.get(follower).put(topic.getName(), partition);
@@ -525,60 +297,41 @@ public class Zookeeper {
             System.out.println("Zookeeper > Partition " +key.toString());
             System.out.println("          > Leader :  " + partitions.get(partition).getHost() + " " + partitions.get(partition).getPort());
             System.out.println("          > Followers : ");
-            for(HostRecord oneFollower : replicationHash.get(topic.getName()).get(partition).get(partitions.get(partition)))
-            {
+            for (HostRecord oneFollower : replicationHash.get(topic.getName()).get(partition).get(partitions.get(partition))) {
                 System.out.println("                      " + oneFollower.getHost() + " "+ oneFollower.getPort());
             }
         }
     }
 
-
-
-
     public void sendSetTopicPartitionLeader(String topic, Integer partition, HostRecord leader, HashSet<HostRecord> followers ) throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
-
         List<Object> arguments = new ArrayList();
         arguments.add(topic);
         arguments.add(partition);
         arguments.add(leader);
-//            arguments.add(replicationHash.get(partitions.get(partition)).get(new Pair(topic.getName(), partition)));
         arguments.add(replicationHash.get(topic).get(partition).get(leader));
         Message assignment = new Message(MessageType.SET_TOPIC_PARTITION_LEADER, arguments);
         TcpClient sock = new TcpClient(leader.getHost(), leader.getPort());
         sock.setHandler( this, assignment );
         sock.run();
-
     }
 
-
-
-    public void displayRelicationsHash(String topic)
-    {
+    public void displayRelicationsHash(String topic) {
         HashMap<Integer, HostRecord> partitions = topicAssignmentHash.get(topic);
         for (Integer name: partitions.keySet()){
-            String key =name.toString();
+            String key = name.toString();
             partitions.get(name).toString();
-//            System.out.println("Zookeeper > Replication Partition " +key.toString() + "  at " + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
-        }
-
-    }
-
-
-
-    public void displayTopicAssignment(String topic)
-    {
-
-        HashMap<Integer, HostRecord> partitions = topicAssignmentHash.get(topic);
-        for (Integer name: partitions.keySet()){
-
-            String key =name.toString();
-            partitions.get(name).toString();
-//            System.out.println("Zookeeper > Partition " +key.toString() + "  at " + partitions.get(name).getHost() + " "+ partitions.get(name).getPort());
         }
     }
 
-    public Message topicAssignmentToBroker()
-    {
+    public void displayTopicAssignment(String topic) {
+        HashMap<Integer, HostRecord> partitions = topicAssignmentHash.get(topic);
+        for (Integer name: partitions.keySet()) {
+            String key =name.toString();
+            partitions.get(name).toString();
+        }
+    }
+
+    public Message topicAssignmentToBroker() {
         List<Object> arguments = new ArrayList<>();
         String temp = " *** Topic assignment sucesssful ***  ";
         arguments.add(temp);
@@ -587,20 +340,15 @@ public class Zookeeper {
         return response;
     }
 
-
-
-    public Message newBrokerRegister(HostRecord oneBroker)
-    {
+    public Message newBrokerRegister(HostRecord oneBroker) {
         System.out.println("Zookeeper > Start to register for broker...");   //如果在這掛掉怎辦
         List<Object> arguments = new ArrayList();
-//        System.out.println(brokerList.size());
         if (!containsBroker(oneBroker)) {
             brokerList.add(oneBroker);
             coordinatorBrokerQueue.add(oneBroker);
             topicBrokerQueue.add(oneBroker);
 
-            System.out.println("Zookeeper > Broker at port " + oneBroker.getPort() + " register completed");   //如果在這掛掉怎辦
-//        arguments.add(coordinator);
+            System.out.println("Zookeeper > Broker at port " + oneBroker.getPort() + " register completed");  
             String temp = " *** " + oneBroker.toString() + " register to zookeeper Success *** ";
             arguments.add(temp);
             displayBrokerList();
@@ -608,39 +356,28 @@ public class Zookeeper {
             System.out.println("Zookeeper > In the cluster now we have " + brokerList.size() + " broker(s).");
             return response;
         }
+        
         String temp = " *** Already Registered *** ";
         arguments.add(temp);
         Message response = new Message(MessageType.ACK, arguments, true);
         return response;
     }
 
-
-
     public void displayBrokerList(){
-        for(HostRecord aBroker: brokerList)
-        {
-//            System.out.println("    " + aBroker.getHost()+" "+aBroker.getPort());
+        for (HostRecord aBroker: brokerList) {
         }
     }
 
-
-
-    public boolean containsBroker(HostRecord oneBroker)
-    {
-        for(HostRecord aBroker : brokerList)
-        {
-            if(aBroker.getHost().equalsIgnoreCase(oneBroker.getHost()) && aBroker.getPort().equals(oneBroker.getPort())) {
+    public boolean containsBroker(HostRecord oneBroker) {
+        for (HostRecord aBroker : brokerList) {
+            if (aBroker.getHost().equalsIgnoreCase(oneBroker.getHost()) && aBroker.getPort().equals(oneBroker.getPort())) {
                 return true;
             }
         }
         return false;
     }
 
-
-
-    public void listen() throws IOException, ClassNotFoundException, InterruptedException
-    {
-
+    public void listen() throws IOException, ClassNotFoundException, InterruptedException {
         listenSocket.listen();
         System.out.println("Zookeeper > The server is listening at " + this.host + " " + this.port);
     }
