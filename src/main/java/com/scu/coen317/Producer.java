@@ -1,7 +1,6 @@
 package com.scu.coen317;
 
 import javafx.util.Pair;
-
 import java.io.BufferedReader;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
@@ -10,21 +9,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 import java.io.*;
-
 import java.util.*;
 import java.io.*;
-
 import static java.lang.Thread.sleep;
 
 public class Producer {
     String host;
     int port;
     HostRecord thisProducer;
-    // Set of default brokers
-    // If the producer does not know whom to contact
-    //
     Set<HostRecord> defaultBrokers;
 
     Map<String, Map<Integer,HostRecord>> topicsMember;
@@ -41,7 +34,6 @@ public class Producer {
         HostRecord h = new HostRecord(defaultBrokerIp, defaultBrokerPort);
         defaultBrokers = new HashSet<>();
         defaultBrokers.add(h);
-
         topicsMember = new HashMap<>();
     }
 
@@ -53,12 +45,9 @@ public class Producer {
         }
         return hash;
     }
+    
     public boolean createTopic(String topic, int partition, int replication) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
-        // This producer has not store the topic information before
         if ( !topicsMember.containsKey(topic) ) {
-//            if ( partition == -1 ) {
-//                Thread.sleep(10000);
-//            }
             List<Object> argument = new ArrayList<>();
             Topic t = new Topic(topic, partition, replication);
             argument.add(t);
@@ -68,10 +57,8 @@ public class Producer {
             System.out.println("Producer > Send createTopic request to default broker: " + defaultBroker.getPort());
             TcpClient sock = null;
 
-
             // Handle the case : default broker down
             while (!defaultBrokers.isEmpty()) {
-//                System.out.println(defaultBrokers.size());
                 defaultBroker = defaultBrokers.iterator().next();
                 try {
                     sock = new TcpClient(defaultBroker.getHost(), defaultBroker.getPort());
@@ -79,16 +66,16 @@ public class Producer {
                 } catch (IOException e) {
                     System.out.println("Producer > The first default broker " + defaultBroker.getPort() + " is not open.");
                     defaultBrokers.remove(defaultBrokers.iterator().next());
-//                    ack = true;
                 }
             }
-            if ( defaultBrokers.isEmpty() )
+            
+            if (defaultBrokers.isEmpty()) {
                 return false;
-//            sock.setReadInterval(10000);
+            }
+            
             TcpServer listenSock = new TcpServer(this.port);
             listenSock.setHandler(this);
             listenSock.listen();
-
             sock.setHandler( this, request);
             sock.run();
 
@@ -106,16 +93,16 @@ public class Producer {
         }
     }
 
-
-
     public void updateTopicPartitionLeader(String topic, HashMap<Integer,HostRecord> partitionLeaders) {
         System.out.println("Producer > Receiving brokers information......");
         topicsMember.remove(topic);
         topicsMember.put(topic, partitionLeaders);
+        
         for ( Map.Entry<Integer,HostRecord> pair : topicsMember.get(topic).entrySet() ) {
             System.out.println("Producer > This topic is : '" + topic + "' partition : " + pair.getKey() + "  Broker : " + pair.getValue());
             defaultBrokers.add(pair.getValue());
         }
+        
         synchronized (this) {
             updateTopicPartitionLeaderACK = true;
             notify();
@@ -124,26 +111,19 @@ public class Producer {
     }
 
     public boolean publishMessage(String topic, String message) throws IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        // Hardcode
-//        Map<Integer,HostRecord> partitionLeaders = new HashMap<>();
-//        partitionLeaders.put(0, new HostRecord("localhost", 9000));
-//        partitionLeaders.put(1, new HostRecord("localhost", 9000));
-
-//        topicsMember.put(topic, partitionLeaders);
-//        System.out.println("Initial topic " + topic + " " + 0 + " leader " + topicsMember.get(topic).get(0));
-        // Hardcode
         while ( !topicsMember.containsKey(topic) ) {
             // Reuse the createTopic function to get corresponding topic partition leaders
             createTopic(topic,1,1);
         }
+        
         TcpClient sock = null;
         Integer partition = (hashCode(message)) % topicsMember.get(topic).size();
+        
         if ( partition < 0 ) {
             partition += topicsMember.get(topic).size();
         }
-//        System.out.println(topic + " " + message + " " + partition);
+        
         HostRecord partitionLeader = null;
-
         List<Object> argument = new ArrayList<>();
         argument.add(topic);
         argument.add(partition);
@@ -153,13 +133,10 @@ public class Producer {
 
         while ( true ) {
             partitionLeader = topicsMember.get(topic).get(partition);
-//            System.out.println(partitionLeader.getPort());
             try {
                 sock = new TcpClient(partitionLeader.getHost(), partitionLeader.getPort());
-//                System.out.println("Determine the partition leader " + partitionLeader.getPort());
                 break;
             } catch (IOException e) {
-//                e.printStackTrace();
                 topicsMember.remove(topic);
                 // To indicate the topic partition leader broken case
                 Thread.sleep((long) (MONITOR_CLUSTER_INTERVAL*1.5));
@@ -167,18 +144,13 @@ public class Producer {
             }
         }
 
-
-//        sock.setReadInterval(10000);this, request);
         System.out.println("Producer > Sending message " + message + " to " + partitionLeader.getPort());
         TcpServer listenSock = new TcpServer(this.port);
         listenSock.setHandler(this);
         listenSock.listen();
-
         sock.setHandler( this, request);
         sock.run();
         waitInvokeFunction(listenSock);
-//
-
         return true;
     }
 
@@ -192,21 +164,11 @@ public class Producer {
     }
 
     public void publishMessageAck(String message, String ackMessage) {
-//        System.out.println(" *** " + message + " " + ackMessage + " ***");
         synchronized (this) {
             publishMessageACK = true;
             notify();
         }
-//        synchronized (this) {
-//            while (!updateTopicPartitionLeaderACK ) {
-//                wait();
-//            }
-//            updateTopicPartitionLeaderACK = false;
-//            listenSock.close();
-//        }
     }
-
-
 
     public void addDefaultBroker(String host, Integer port) {
         HostRecord h = new HostRecord(host, port);
@@ -220,8 +182,8 @@ public class Producer {
 
     public void printDefaultBrokerList() {
         System.out.println("Producer > Default broker list");
-        for ( HostRecord h : defaultBrokers )
+        for ( HostRecord h : defaultBrokers ) {
             System.out.println("\t" + h);
+        }
     }
-
 }
