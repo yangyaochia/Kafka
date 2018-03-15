@@ -21,7 +21,7 @@
 
     -> Start Producer Input Format :
         - Identity Producer_host Producer_port defaultBroker_host defaultBroker_port Topic_Name #Partition #Replication
-        - e.g. java -jar Kafka.jar Producer localhost 8000 localhost 9000 DS 3 3
+        - e.g. java -jar Kafka.jar Producer localhost 8000 localhost 9000 DistributedSystem 3 3
 
     -> Start Consumer Input Format :
         - Identity Consumer_host Consumer_port Group_Name defaultBroker_host defaultBroker_port Topic_Name1 (Topic_Name2)
