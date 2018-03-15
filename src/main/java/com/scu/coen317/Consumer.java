@@ -1,14 +1,12 @@
 package com.scu.coen317;
 
 import javafx.util.Pair;
-
 import javax.jws.Oneway;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.rmi.server.ExportException;
 import java.util.*;
-
 
 public class Consumer {
     String host;
@@ -31,7 +29,6 @@ public class Consumer {
         thisHost = new HostRecord(this.host = host, this.port = port);
         this.groupId = groupId;
 
-
         // ask default broker this group's coordinator (broker)
         this.defaultBroker = new HostRecord(defaultBrokerIp, defaultBrokerPort);
         brokers = new ArrayList();
@@ -40,15 +37,14 @@ public class Consumer {
         serverSocket = new TcpServer(thisHost.getPort());
         serverSocket.setHandler(this);
         serverSocket.listen();
-        /*findCoordinator();
-        joinToGroup();
-        */
     }
-
+    
+    // consumer join to the group
     public void joinToGroup() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         while (coordinator == null) {
             findCoordinator();
         }
+        
         TcpClient client = new TcpClient(coordinator.getHost(), coordinator.getPort());
         List<Object> arguments = new ArrayList<>();
         arguments.add(this.groupId);
@@ -57,8 +53,7 @@ public class Consumer {
         client.setHandler(this, request);
         client.run();
     }
-
-
+    
     public void initialLeader() {
         serverSocket = new TcpServer(thisHost.getPort());
         serverSocket.setHandler(this);
@@ -90,20 +85,11 @@ public class Consumer {
         consumerClient.run();
     }
 
-    // Map<String, List<HostRecord>>, Map<String, Map<Integer, HostRecord>>
-    // t1 : c1, t1 : []
-    //
     public Message rebalance(HashMap<String, List<HostRecord>> topic_consumers, HashMap<String, Map<Integer, HostRecord>> topic_partitions) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         HashMap<HostRecord, Map<String, Map<Integer, HostRecord>>> rebalanceResult = new HashMap<>();
         for (Map.Entry<String, List<HostRecord>> eachTopic : topic_consumers.entrySet()) {
             List<HostRecord> consumerList = eachTopic.getValue();
-            // t1 : c1, c2
-            // t2 : c2
-            // t1 : p1, p2
-
-            // c1 : t1 ::
-            // c2 : t1 ::
-                  //t2 ::
+     
             for (HostRecord consumer : consumerList) {
                 Map<String, Map<Integer, HostRecord>> topicMap = rebalanceResult.getOrDefault(consumer, new HashMap<>());
                 topicMap.put(eachTopic.getKey(), new HashMap<>());
@@ -132,18 +118,13 @@ public class Consumer {
     }
 
     public void poll() throws IOException, InvocationTargetException, NoSuchMethodException, InterruptedException, IllegalAccessException {
-        // Map<String, Map<Integer, HostRecord>> subscribedTopicPartitions;
-        // multicast of each partition in subscribedPartitions;
-
         List<String> messages = new ArrayList<>();
         while (true) {
             Thread.sleep(MAX_POLL_INTERVAL_MS);
             for (Map.Entry<String, Map<Integer, HostRecord>> eachTopic : subscribedTopicPartitions.entrySet()) {
-
                 String topic = eachTopic.getKey();
                 Map<Integer, HostRecord> partitions = eachTopic.getValue();
                 for (Map.Entry<Integer, HostRecord> partition : partitions.entrySet()) {
-//                    Thread.sleep(1000);
 
                     HostRecord broker = partition.getValue();
                     try {
@@ -164,10 +145,10 @@ public class Consumer {
                 }
             }
         }
-
     }
 
     public Message dealWithMessage(ArrayList<String> messages, String topic, HostRecord broker) {
+        // print out the message in the console
         for (String message : messages) {
             System.out.println("Consumer at port " + thisHost.getPort() + " > * Receive message *");
             System.out.println("                    From : " + broker.getPort());
@@ -175,27 +156,14 @@ public class Consumer {
             System.out.println("                 Content : " + message);
         }
         List<Object> arguments = new ArrayList<>();
-//        arguments.add(" *** Message in topic of " + topic
-//                + " received successful from " + broker + " *** ");
         arguments.add("");
-
         Message responseAck = new Message(MessageType.ACK, arguments, true);
         return responseAck;
-    }
-
-
-    void pickBroker() throws IOException {
-        if (brokers.size() != 0) {
-            defaultBroker = brokers.get(0);
-        } else {
-
-        }
     }
 
     public void receiveConsumerJoinGroupRegistrationAck(String ack) {
         System.out.println(ack);
     }
-
 
     public void findCoordinator() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
         List<Object> arguments = new ArrayList<>();
@@ -217,17 +185,5 @@ public class Consumer {
 
     // to coordinator
     public void sendHeartBeat() {
-
     }
-
-    public Message test1() {
-        Message response = new Message(MessageType.TEST1);
-        return response;
-    }
-
-    public Message test2() {
-        System.out.println("received message from broker1");
-        return new Message(MessageType.ACK, Collections.singletonList("consumer received message from broker1"), true);
-    }
-
 }
