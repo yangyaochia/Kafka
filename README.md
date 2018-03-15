@@ -9,6 +9,7 @@
 
 # Setup Steps
   1. Run jar file to activate specific node with the corresponding arguments
+  
     -> Start Zookeeper Input Format :
         - Identity Zookeeper_host Zookeeper_port
         - e.g. java -jar Kafka.jar Zookeeper localhost 2181
@@ -28,6 +29,7 @@
 
 # Sample Running Case
   -> Normal Publish-Subscribe : Test Partition and Consumer Group Functionality
+  
     * Setup Example
       1.) Start Zookeeper
       2.) Start 3 Brokers 
@@ -35,6 +37,7 @@
       4.) Start 1 Producer and Create a topic2 with 2 partitions and 1 replication
       5.) Start 1 Consumer in Group1 and Subscribe to topic1
       6.) Start 1 Consumer in Group1 and Subscribe to topic1 and topic2
+      
     * Process and Result:
       -> Producer Side:
         1.) Producer send createTopic request to defaultBroker, and defaultBroker forward it to Zookeeper.
@@ -48,6 +51,7 @@
         (8.)) Consumers in a consumer group will only receive disjoint messgaes from different partition.
       
   2. One broker down : Test Single Point of Failure
+  
     * Setup Example
       1.) Start Zookeeper
       2.) Start 3 Brokers 
