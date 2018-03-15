@@ -11,11 +11,13 @@ public class Topic implements Serializable {
     public Topic(String name) {
         this.name = name;
     }
+    
     public Topic(String name, int partition, int replication) {
         this.name = name;
         this.partition = partition;
         this.replication = replication;
     }
+    
     public String getName() {
         return this.name;
     }
