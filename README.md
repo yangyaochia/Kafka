@@ -53,7 +53,7 @@
         7.) Consumer send poll request to the (topic,partition) leaders, and receive the messages batch by batch.
         (8.)) Consumers in a consumer group will only receive disjoint messgaes from different partition.
       
-  2. One broker down : Test Single Point of Failure
+  -> One broker down : Test Single Point of Failure
   
     * Setup Example
       1.) Start Zookeeper
